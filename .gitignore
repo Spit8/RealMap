@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Build outputs (SvelteKit, Vite, Tauri / Rust)
+app/build/
+app/.svelte-kit/
+app/src-tauri/target/
+app/src-tauri/gen/schemas/
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Generated mod build (regenerated from importcity.tfui.json)
+importcity/build/
+*.tfui.autosave.json
+
+# Local test outputs (real-data runs, Overpass answers, previews)
+e2e_out/
+*.log
+
+# Environment and local settings
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
