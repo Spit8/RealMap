@@ -1,0 +1,15 @@
+{
+  "authors": [
+    {
+      "name": "Author",
+      "role": "CREATOR"
+    }
+  ],
+  "description": "Créé avec TFUI.",
+  "name": "Import your Town",
+  "summary": "Mod UI Import your Town",
+  "tags": [
+    "Script Mod"
+  ],
+  "url": ""
+}

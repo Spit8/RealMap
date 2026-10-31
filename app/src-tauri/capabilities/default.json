@@ -1,0 +1,41 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Main window: download open data, write heightmaps and towns into the TF3 userdata folder.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "dialog:default",
+    "fs:default",
+    "fs:allow-read-text-file",
+    "fs:allow-read-file",
+    "fs:allow-write-text-file",
+    "fs:allow-write-file",
+    "fs:allow-read-dir",
+    "fs:allow-stat",
+    "fs:allow-exists",
+    "fs:allow-mkdir",
+    "fs:allow-remove",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        { "path": "$HOME/**" },
+        { "path": "$APPCACHE/**" },
+        { "path": "$PUBLIC/**" }
+      ]
+    },
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://overpass-api.de/*" },
+        { "url": "https://maps.mail.ru/osm/tools/overpass/*" },
+        { "url": "https://copernicus-dem-30m.s3.amazonaws.com/*" },
+        { "url": "https://esa-worldcover.s3.eu-central-1.amazonaws.com/*" },
+        { "url": "https://data.geopf.fr/*" },
+        { "url": "https://ows.emodnet-bathymetry.eu/*" },
+        { "url": "https://coastwatch.pfeg.noaa.gov/erddap/*" }
+      ]
+    }
+  ]
+}
