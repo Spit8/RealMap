@@ -46,6 +46,7 @@
       "msi",
       "appimage",
       "deb",
+      "app",
       "dmg"
     ],
     "icon": [
