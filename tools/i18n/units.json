@@ -652,8 +652,8 @@
   },
   {
     "id": "app:advanced.countTitle",
-    "text": "0 = the game's count for this density ({n})",
-    "ref": "0 = nombre du jeu pour cette densité ({n})",
+    "text": "0 = the game's count for this density ({n}), with at least one base resource of every chain (the total may then be higher)",
+    "ref": "0 = nombre du jeu pour cette densité ({n}), avec au moins une ressource de base de chaque chaîne (le total peut alors dépasser)",
     "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
     "kind": "tooltip"
   },
@@ -3545,6 +3545,13 @@
     "id": "mod:roads_partly",
     "text": " (partly refused)",
     "ref": " (refusées en partie)",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:roads_simple",
+    "text": "%d / %d road segment(s) turned into simple dirt roads (2 lanes).",
+    "ref": "%d / %d tronçon(s) de route transformé(s) en chemins de terre simples (2 voies).",
     "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
     "kind": "label"
   },

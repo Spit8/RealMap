@@ -92,7 +92,7 @@ app:advanced.economy;label;;Economy;Économie;Wirtschaft;Economy.;
 app:advanced.economyTitle;tooltip;;The same economy as the map's climate in the Map Editor;Même économie que le climat de la carte dans l'éditeur;Die gleiche Wirtschaft wie das Klima der Karte im Karten-Editor;The same economy as the climate of the map in the map editor.;
 app:advanced.density;label;;Game density;Densité du jeu;Spieldichte;Game density.;
 app:advanced.count;label;;Count (0 = game: {n});Nombre (0 = jeu : {n});Anzahl (0 = Spiel: {n});Number (0 = Game: {n});
-app:advanced.countTitle;tooltip;;0 = the game's count for this density ({n});0 = nombre du jeu pour cette densité ({n});0 = Die Anzahl, die das Spiel für diese Dichte verwendet ({n});0 = The number that the game uses for this density ({n}).;
+app:advanced.countTitle;tooltip;overridden;0 = the game's count for this density ({n}), with at least one base resource of every chain (the total may then be higher);0 = nombre du jeu pour cette densité ({n}), avec au moins une ressource de base de chaque chaîne (le total peut alors dépasser);0 = the game's count for this density ({n}), with at least one base resource of every chain (the total may then be higher);0 = the game's count for this density ({n}), with at least one base resource of every chain (the total may then be higher).;0 = Anzahl des Spiels für diese Dichte ({n}), mit mindestens einem Grundrohstoff jeder Produktionskette (die Summe kann dann höher sein)
 app:advanced.industrySpacing;label;;Distance between industries (m);Écart entre industries (m);Abstand zwischen Industrien (m);Distance between industries (m).;
 app:advanced.townClearance;label;;Distance to towns (m);Distance aux villes (m);Entfernung zu Städten (m);Distance to cities (masculine).;
 app:advanced.rail;title;;Railway;Voie ferrée;Bahnstrecke;Railway line.;
@@ -566,4 +566,5 @@ mod:industries_missing;label;;, %d impossible;, %d impossible(s);, %d unmöglich
 mod:roads_building;label;;Roads: %d link(s) between towns…;Routes : %d liaison(s) entre villes…;Strassen: %d Verbindung(en) zwischen Städten…;Streets: %d connection(s) between cities...;
 mod:roads_done;label;;%d road link(s)%s.;%d liaison(s) routière(s)%s.;%d Straßenverbindung(en)%s.;%d road connection(s)%s.;
 mod:roads_partly;label;; (partly refused); (refusées en partie); (teilweise abgelehnt);(partially rejected);
+mod:roads_simple;label;;%d / %d road segment(s) turned into simple dirt roads (2 lanes).;%d / %d tronçon(s) de route transformé(s) en chemins de terre simples (2 voies).;%d / %d Strassenabschnitt(e) wurden in einfache Feldwege (2 Fahrbahnen) umgewandelt.;%d / %d road sections were converted into simple dirt roads (2 lanes).;
 mod:done;sentence;;Map “%s” generated. Save it (Map Editor menu).;Carte « %s » générée. Enregistre-la (menu de l'éditeur).;Die Karte „%s“ wurde erstellt. Speichere sie (im Menü des Karten-Editors).;"The map ""%s"" has been created. Save it (in the menu of the map editor).";

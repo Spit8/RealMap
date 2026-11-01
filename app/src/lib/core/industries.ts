@@ -54,6 +54,22 @@ export const INDUSTRIES: Record<string, { label: string; water?: boolean; primar
   tire_factory: { label: "Usine de pneus" },
 };
 
+/**
+ * The game's tier of each industry (`economy/placementparamsutil.lua`, like the goods' tiers): only
+ * tier 0 exists when a map starts (DECISION-027); tiers 1 and 2 come as the towns grow.
+ */
+export const INDUSTRY_TIER: Record<string, number> = {
+  bricks_works: 0, cement_plant: 0, clay_pit: 0, farm: 0, fishing_grounds: 0, forest: 0, livestock_farm: 0,
+  oil_platform: 0, oil_refinery: 0, oil_well: 0, quarry: 0, saw_mill: 0,
+  brewery: 1, chemical_plant: 1, coal_mine: 1, cotton_farm: 1, food_factory: 1, furniture_factory: 1, glass_works: 1,
+  iron_ore_mine: 1, machine_factory: 1, paper_mill: 1, printing_press: 1, sand_excavator: 1, sand_pit: 1,
+  steel_mill: 1, textile_factory: 1, tool_factory: 1, weaving_mill: 1,
+  rubber_farm: 2, tire_factory: 2, vehicle_factory: 2,
+};
+/** The highest industry tier a new map starts with. */
+export const START_TIER = 0;
+export const atStart = (tag: string): boolean => (INDUSTRY_TIER[tag] ?? 2) <= START_TIER;
+
 export type EconomyId = "temperate" | "dry" | "tropic" | "subarctic";
 
 export const ECONOMY_LABELS: Record<EconomyId, string> = {
@@ -440,7 +456,6 @@ export function planIndustries(
   // 3. Selection. How present each industry is in reality: real sites (3 for a primary, 4 for a
   // factory, + 2 log2 of their number: rarer and more telling than land cover), land cover
   // (1 + 2 × the share of blocks where it qualifies).
-  const quota = o.maxIndustries > 0 ? o.maxIndustries : defaultIndustryCount(f, o.density);
   const evidence: Record<string, number> = {};
   const siteCount: Record<string, number> = {};
   for (const r of real) siteCount[r.tag] = (siteCount[r.tag] ?? 0) + r.score;
@@ -455,11 +470,27 @@ export function planIndustries(
   // adding one adds it, nothing is swapped in behind the user's back.
   // Whole chains (one per cargo the towns need), greedily: the chain bringing the industry most
   // present in reality, slightly penalised by the other industries it needs, as long as it fits.
+  // Only the chains a new map can have: every industry of tier 0 (DECISION-027). Real sites of
+  // later tiers stay in the list, for the user to add by hand.
   const chains = Object.values(eco.chains)
     .map((set) => set.map(resolve))
-    .filter((set): set is string[] => set.every((t) => t !== null))
+    .filter((set): set is string[] => set.every((t) => t !== null && atStart(t)))
     .map((set) => [...new Set(set)]);
-  const types: string[] = [];
+  // The game's minimum, gameplay first (DECISION-026): with the automatic count, at least one base
+  // resource of every chain, the fewest that do it (the one in most chains left first, ties to the
+  // one most present in reality); the count grows to leave room for two more industries.
+  const auto = o.maxIndustries <= 0;
+  const base: string[] = [];
+  if (auto) {
+    const primaries = [...new Set(chains.flat().filter((t) => INDUSTRIES[t].primary))];
+    const left = () => chains.filter((set) => set.some((t) => INDUSTRIES[t].primary) && !set.some((t) => base.includes(t)));
+    for (let open = left(); open.length; open = left()) {
+      const score = (t: string) => open.filter((set) => set.includes(t)).length + ev(t) / 100;
+      base.push(primaries.filter((t) => !base.includes(t)).sort((a, b) => score(b) - score(a))[0]);
+    }
+  }
+  const quota = auto ? Math.max(defaultIndustryCount(f, o.density), base.length + 2) : o.maxIndustries;
+  const types: string[] = [...base];
   for (;;) {
     let best: { add: string[]; value: number } | null = null;
     for (const set of chains) {

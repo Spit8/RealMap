@@ -92,7 +92,7 @@
   "app:advanced.economyTitle": "与地图编辑工具中的地形生成器相同的经济模式",
   "app:advanced.density": "游戏密度",
   "app:advanced.count": "数量 (0 = 游戏: {n})",
-  "app:advanced.countTitle": "0 = 游戏中此密度的计数 ({n})",
+  "app:advanced.countTitle": "0 = 游戏中针对此密度的计数 ({n})，每个资源类型至少包含一个基础资源（总数可能因此超过）",
   "app:advanced.industrySpacing": "产业间距 (米)",
   "app:advanced.townClearance": "与城镇的距离 (米)",
   "app:advanced.rail": "铁路",
@@ -506,5 +506,6 @@
   "mod:roads_building": "道路：%d 条连接城镇的线路…",
   "mod:roads_done": "%d 个公路连接%s.",
   "mod:roads_partly": " （部分已拒绝）",
+  "mod:roads_simple": "%d / %d 个道路段已转换为简单的土路（双车道）。",
   "mod:done": "地图“%s”已生成。请保存它（在地图编辑工具的菜单中）。"
 }

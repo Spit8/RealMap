@@ -3,7 +3,8 @@
 --  - industries, built like the Map Editor does (`createIndustries` + `createIndustryProposal`) and
 --    named (`industries[i].name`, FACT-024);
 --  - roads between the town pairs the app chose (`connections`), by the game's own command (its
---    routing, its road type for the year; it also links every industry that exists);
+--    routing; it also links every industry that exists), its medium roads then replaced by simple
+--    dirt roads (`simplifyRoads`);
 --  - the main railway (`rail.lines`): track segments along the points, a few at a time; a refused
 --    piece is tried segment by segment, then skipped and counted, with the game's reason.
 -- Each block calls `nextStep()` once its commands have answered (callbacks).
@@ -12,6 +13,11 @@ local i18n = ug_require "importcity::/gui/importcity_i18n.lua"
 
 local B = {}
 
+--- The roads between towns: the game's connection command always lays medium country roads (4
+--- lanes); they are then replaced by the old small country road (2 lanes, dirt look).
+local ROAD_SIMPLE = "::/infrastructure/street/country/country_old_small.street_template"
+--- Road edges replaced in one proposal.
+local ROAD_CHUNK = 20
 local TRACK_SIMPLE = "::/infrastructure/track/simple/simple.street_template"
 local TRACK_STANDARD = "::/infrastructure/track/standard/standard.street_template"
 local STANDARD_FROM = 1930
@@ -218,8 +224,10 @@ function B.connect(ctx, nextStep)
 	if #ctx.conns == 0 then
 		return nextStep()
 	end
-	api.cmd.sendCommand(api.cmd.makeTownConnectWithIndustriesCmd(ctx.townEntities, ctx.conns, false), function(_, success)
+	api.cmd.sendCommand(api.cmd.makeTownConnectWithIndustriesCmd(ctx.townEntities, ctx.conns, false), function(_, success, entities)
 		ctx.report.roadsOk = ctx.report.roadsOk and success
+		-- What it built ({entity, revision} pairs): candidates for `simplifyRoads`.
+		ctx.roadEntities = type(entities) == "table" and entities or {}
 		if not success then
 			ctx.log("town connections refused")
 		end
@@ -480,6 +488,107 @@ function B.setTowns(ctx, note, map, towns, byName)
 		end
 	end
 	ctx.report.connections = #ctx.conns
+end
+
+--- The street template of a road edge (its BASE_EDGE `roadTemplate`), or nil.
+local function edgeTemplate(base)
+	local ok, t = pcall(function()
+		return base.roadTemplate
+	end)
+	return ok and type(t) == "string" and t or nil
+end
+
+--- Replace the country roads the connection command laid (medium, 4 lanes) by ROAD_SIMPLE: same
+--- nodes, curves, bridges and tunnels, only the street template changes, as the game's own
+--- `mission/tasks/auto_builder/electrify.tl` does for tracks (edgesToRemove + edgesToAdd).
+--- Town streets and industry access roads (other templates) are left alone. ROAD_CHUNK edges per
+--- proposal; a refused one is tried edge by edge, a refused edge stays as the game built it.
+function B.simplifyRoads(ctx, nextStep)
+	local r = ctx.report
+	r.roadEdges, r.roadEdgesSimple = 0, 0
+	local okT, template = pcall(function()
+		return api.res.streetTemplateRep.get(api.res.streetTemplateRep.find(ROAD_SIMPLE))
+	end)
+	if not okT or template == nil then
+		ctx.log("simple road template not found: " .. ROAD_SIMPLE)
+		return nextStep()
+	end
+	-- Candidate edges: what the connection command answered, and the whole map from the octree (as
+	-- the game's `mission/name_util.tl` searches it); `forEachEntityWithComponent` refuses street
+	-- edges (« Cannot loop over this component type », seen in game).
+	local edges, seen, sampled = {}, {}, false
+	local function consider(entity)
+		if type(entity) ~= "number" or seen[entity] then
+			return
+		end
+		seen[entity] = true
+		local base = comp(entity, "BASE_EDGE")
+		local name = base and edgeTemplate(base)
+		if name and not sampled then
+			sampled = true
+			ctx.log("first road edge template: " .. name)
+		end
+		if name and name:find("/country/country_", 1, true) and name ~= ROAD_SIMPLE then
+			edges[#edges + 1] = { entity = entity, base = base }
+		end
+	end
+	for _, e in ipairs(ctx.roadEntities or {}) do
+		consider(type(e) == "table" and e[1] or e)
+	end
+	local fromCommand = #edges
+	for _, ct in ipairs({ "BASE_EDGE_STREET", "BASE_EDGE" }) do
+		local ok, list = pcall(function()
+			return api.engine.util.octree.findEntitiesInCircle(vec2(0, 0), 1e10, api.type.ComponentType[ct])
+		end)
+		if ok and type(list) == "table" then
+			for _, e in ipairs(list) do
+				consider(e)
+			end
+		else
+			ctx.log("octree " .. ct .. " not searched: " .. tostring(list))
+		end
+	end
+	ctx.log(string.format("road edges: %d from the command, %d in all", fromCommand, #edges))
+	r.roadEdges = #edges
+	ctx.log(string.format("country road edges to simplify: %d", #edges))
+	local k, retryUntil = 1, 0
+	local function step()
+		if k > #edges then
+			return nextStep()
+		end
+		local n = k < retryUntil and 1 or ROAD_CHUNK
+		local last = math.min(#edges, k + n - 1)
+		local proposal = api.type.SimpleProposal.new()
+		local remove, add = {}, {}
+		for i = k, last do
+			local e = edges[i]
+			remove[#remove + 1] = e.entity
+			local seg = api.type.SegmentAndEntity.new()
+			seg.entity = -(i - k + 1)
+			seg.type = 0 -- street
+			e.base.laneConfigs = template.laneConfigs
+			e.base.roadTemplate = ROAD_SIMPLE
+			e.base.roadStyle = template.streetStyle
+			seg.comp = e.base
+			add[#add + 1] = seg
+		end
+		proposal.streetProposal.edgesToRemove = remove
+		proposal.streetProposal.edgesToAdd = add
+		local reason = n == 1 and refusal(proposal) or nil
+		api.cmd.sendCommand(api.cmd.makeWorldBuildProposalCmd(proposal, nil, false, false), function(_, success)
+			if success then
+				r.roadEdgesSimple = r.roadEdgesSimple + (last - k + 1)
+				k = last + 1
+			elseif n > 1 then
+				retryUntil = last + 1
+			else
+				ctx.log("road edge " .. tostring(edges[k].entity) .. " kept: " .. tostring(reason))
+				k = k + 1
+			end
+			step()
+		end)
+	end
+	step()
 end
 
 return B

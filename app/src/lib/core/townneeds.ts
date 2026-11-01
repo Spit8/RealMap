@@ -1,9 +1,9 @@
 /**
- * What each town asks for at the start (DECISION-015, -016, -017): like the game at level 0, one
- * commercial and one industrial good of tier 0 or 1 (FACT-030: the game adds the others as the town
- * grows), drawn at random among the final goods of the production chains actually on the map,
- * weighted towards goods made far away (the whole point of the game is to carry them) and spread
- * over the goods like the game does. Sent to the mod, which applies them with
+ * What each town asks for at the start (DECISION-015, -016, -017, -025, -028): like a new game,
+ * one commercial and one industrial good of tier 0, as the industries a map starts with (FACT-030:
+ * the game adds the others as the town grows), drawn at random among every such good and spread over them like the game does (a good
+ * many towns already ask for weighs less). Goods made on the map weigh MADE_HERE_WEIGHT times more,
+ * except for a town next to their factory. Sent to the mod, which applies them with
  * `makeTownUpdateCargoNeedsCmd`.
  */
 import { ECONOMIES, type EconomyId } from "./industries";
@@ -50,8 +50,10 @@ export const CARGO_TIER: Record<string, number> = {
   vehicles: 2,
 };
 
-/** A town this close (game m) to the industry making a good only gets it when no other can. */
+/** A town this close (game m) to the industry making a good never asks for it. */
 export const NEAR_PRODUCER_M = 2000;
+/** How much more a good made on the map weighs in the draw (a light preference: the game ignores it). */
+export const MADE_HERE_WEIGHT = 2;
 
 export interface TownNeeds {
   com: string[];
@@ -84,6 +86,15 @@ export function availableGoods(industries: NeedIndustry[], economy: EconomyId, g
   return out;
 }
 
+/**
+ * Every good of `goods` the economy has (a production chain; temperate has no books nor cement),
+ * with where the map makes it (`at` empty when its chain is not all there).
+ */
+export function candidateGoods(industries: NeedIndustry[], economy: EconomyId, goods: string[]): { cargo: string; at: NeedIndustry[] }[] {
+  const made = new Map(availableGoods(industries, economy, goods).map((g) => [g.cargo, g.at]));
+  return goods.filter((cargo) => ECONOMIES[economy].chains[cargo]).map((cargo) => ({ cargo, at: made.get(cargo) ?? [] }));
+}
+
 /** Small seeded random generator (mulberry32): the same map always gets the same needs. */
 export function seededRandom(seed: string): () => number {
   let h = 1779033703;
@@ -98,22 +109,32 @@ export function seededRandom(seed: string): () => number {
   };
 }
 
-/** The goods a new town may start with (level 0): tiers 0 and 1, never 2. */
-export function startGoods<T extends { cargo: string }>(goods: T[]): T[] {
-  return goods.filter((g) => (CARGO_TIER[g.cargo] ?? 2) <= 1);
+/** The highest tier a new town starts with (the game's starter needs: no furniture, tools, machines). */
+export const START_GOOD_TIER = 0;
+
+/**
+ * The goods a new town may start with: tier 0 only; fish only when the map makes it (the game's
+ * `isCargoAvailable` in `town_growth.script.tl`).
+ */
+export function startGoods<T extends { cargo: string; at?: unknown[] }>(goods: T[]): T[] {
+  return goods.filter((g) => (CARGO_TIER[g.cargo] ?? 2) <= START_GOOD_TIER && (g.cargo !== "fish" || !!g.at?.length));
 }
 
 /**
  * One good per town for one land use, drawn at random like the game, with the game's balance
- * (a good already asked by many towns of the map weighs less: max count + 1 − its count) times
- * the distance to the nearest industry making it; a town closer than NEAR_PRODUCER_M to a good's
- * producer never gets that good, and a town near every producer gets none (the game draws its own).
- * Towns are visited in a random order.
+ * (a good already asked by many towns of the map weighs less: max count + 1 − its count), times
+ * MADE_HERE_WEIGHT for a good made on the map (`at` not empty); a town closer than NEAR_PRODUCER_M
+ * to a good's producer never gets that good, and a town with no good left gets none (the game draws
+ * its own). Towns are visited in a random order.
  */
 export function drawGoods(towns: NeedTown[], goods: { cargo: string; at: NeedIndustry[] }[], random: () => number): string[][] {
   const out: string[][] = towns.map(() => []);
   if (!goods.length || !towns.length) return out;
-  const dist = goods.map((g) => towns.map((t) => Math.min(...g.at.map((i) => Math.hypot(i.x - t.x, i.y - t.y)))));
+  // Preference of each good for each town: 0 next to its factory, MADE_HERE_WEIGHT when made on the map, else 1.
+  const pref = goods.map((g) => towns.map((t) => {
+    if (!g.at.length) return 1;
+    return Math.min(...g.at.map((i) => Math.hypot(i.x - t.x, i.y - t.y))) < NEAR_PRODUCER_M ? 0 : MADE_HERE_WEIGHT;
+  }));
   const count = goods.map(() => 0);
   const order = towns.map((_, i) => i);
   for (let i = order.length - 1; i > 0; i--) {
@@ -122,7 +143,7 @@ export function drawGoods(towns: NeedTown[], goods: { cargo: string; at: NeedInd
   }
   for (const t of order) {
     const most = Math.max(...count);
-    const w = goods.map((_, k) => (dist[k][t] < NEAR_PRODUCER_M ? 0 : dist[k][t] * (most + 1 - count[k])));
+    const w = goods.map((_, k) => pref[k][t] * (most + 1 - count[k]));
     const sum = w.reduce((x, y) => x + y, 0);
     if (sum <= 0) continue;
     let r = random() * sum;
@@ -136,12 +157,12 @@ export function drawGoods(towns: NeedTown[], goods: { cargo: string; at: NeedInd
 }
 
 /**
- * Start goods per town: one commercial and one industrial, drawn among the goods made on the map
- * (`seed`: the same map always gets the same draw).
+ * Start goods per town: one commercial and one industrial, drawn among every start good, those made
+ * on the map preferred (`seed`: the same map always gets the same draw).
  */
 export function townNeeds(towns: NeedTown[], industries: NeedIndustry[], economy: EconomyId, seed = ""): TownNeeds[] {
   const random = seededRandom(seed);
-  const com = drawGoods(towns, startGoods(availableGoods(industries, economy, COMMERCIAL_CARGO)), random);
-  const ind = drawGoods(towns, startGoods(availableGoods(industries, economy, INDUSTRIAL_CARGO)), random);
+  const com = drawGoods(towns, startGoods(candidateGoods(industries, economy, COMMERCIAL_CARGO)), random);
+  const ind = drawGoods(towns, startGoods(candidateGoods(industries, economy, INDUSTRIAL_CARGO)), random);
   return towns.map((_, i) => ({ com: com[i], ind: ind[i] }));
 }

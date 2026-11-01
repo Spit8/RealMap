@@ -17,7 +17,8 @@
     "app:msg.noAnswer": "Das Spiel reagiert nicht: Der RealMap-Mod gibt in {dir} kein Lebenszeichen. Starte Transport Fever 3, öffne den Karten-Editor mit einer neuen, leeren Karte „{size}“ und aktiviertem, aktuellem RealMap-Mod, und versuche es dann erneut.",
     "app:msg.noAnswerOtherDir": "Das Spiel reagiert hier nicht, aber der RealMap-Mod läuft in einem anderen Spielordner: {dir}. Wähle diesen Ordner im Reiter „Export“ und versuche es dann erneut.",
     "app:export.buildNewer": "Spielversion {build}: neuer als die Versionen, mit denen RealMap getestet wurde ({tested}). Wenn die Erstellung fehlschlägt, prüfe, ob es ein RealMap-Update gibt, oder sende das Spielprotokoll.",
-    "app:export.buildOlder": "Spielversion {build}: älter als die Versionen, mit denen RealMap getestet wurde ({tested}). Wenn die Erstellung fehlschlägt, aktualisiere das Spiel."
+    "app:export.buildOlder": "Spielversion {build}: älter als die Versionen, mit denen RealMap getestet wurde ({tested}). Wenn die Erstellung fehlschlägt, aktualisiere das Spiel.",
+    "app:advanced.countTitle": "0 = Anzahl des Spiels für diese Dichte ({n}), mit mindestens einem Grundrohstoff jeder Produktionskette (die Summe kann dann höher sein)"
   },
   "it": {
     "app:lists.sharesTitle": "Commerciale / industriale (% della capacità)",

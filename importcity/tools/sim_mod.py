@@ -52,7 +52,8 @@ def main() -> int:
     rt.globals().MODDIR = str(MOD).replace("\\", "/")
     ok = rt.execute(r'''
 SIM = { queue = {}, cmds = {}, saves = {}, names = {}, nodes = {}, nextEntity = 5000, stages = {},
-        editor = true, tiles = { 32, 32 }, gameTowns = {}, constructions = {}, logs = {}, missing = {} }
+        editor = true, tiles = { 32, 32 }, gameTowns = {}, constructions = {}, logs = {}, missing = {},
+        streetEdges = {} }
 local _print = print
 print = function(...) SIM.logs[#SIM.logs + 1] = table.concat({ ... }, " ") end
 --- A line logged by the mod (stdout.txt in the game) matching `pattern`.
@@ -158,7 +159,8 @@ api = {
     SimpleProposal = { new = function() return { streetProposal = {} } end },
     NodeAndEntity = { new = function() return { comp = {} } end },
     SegmentAndEntity = { new = function() return { comp = {} } end },
-    ComponentType = { TOWN = "TOWN", CONSTRUCTION = "CONSTRUCTION", BASE_NODE = "BASE_NODE" },
+    ComponentType = { TOWN = "TOWN", CONSTRUCTION = "CONSTRUCTION", BASE_NODE = "BASE_NODE",
+                      BASE_EDGE = "BASE_EDGE", BASE_EDGE_STREET = "BASE_EDGE_STREET" },
     enum = { BaseEdgeType = { NORMAL = "NORMAL", BRIDGE = "BRIDGE", TUNNEL = "TUNNEL" }, RoadType = { TRACK = "TRACK" } },
   },
   gui = {
@@ -195,6 +197,13 @@ api = {
       end,
     },
     util = {
+      -- Street edges (the town connection command lays them), found by the octree.
+      octree = { findEntitiesInCircle = function(_, _, ct)
+        local ids = {}
+        if ct == "BASE_EDGE_STREET" then for e in pairs(SIM.streetEdges) do ids[#ids + 1] = e end end
+        table.sort(ids)
+        return ids
+      end },
       getWorld = function() return 1 end,
       getYear = function() return 1925 end,
       proposal = {
@@ -203,7 +212,15 @@ api = {
         makeProposalData = function() return { errorState = { messages = { "Trop pentu" }, critical = true } } end,
       },
     },
+    -- As in game: edges cannot be looped over this way.
+    forEachEntityWithComponent = function(fn, ct)
+      if ct == "BASE_EDGE_STREET" or ct == "BASE_EDGE" then error("Cannot loop over this component type") end
+    end,
     getComponent = function(e, ct)
+      if ct == "BASE_EDGE" and SIM.streetEdges[e] then
+        local s = SIM.streetEdges[e]
+        return { roadTemplate = s.roadTemplate, type = s.type, node0 = e * 10, node1 = e * 10 + 1, laneConfigs = { "old" } }
+      end
       if ct == "TOWN" and e >= 101 and e <= 199 then return { initialLandUseCapacities = { 100, 60, 40 }, sizeFactors = { 1, 1, 1 }, cargoNeeds = { { { 5, 1 } }, {}, {} } } end
       if ct == "CONSTRUCTION" and SIM.constructions[e] then return {} end
       if ct == "BASE_NODE" and SIM.nodes[e] then return { position = SIM.nodes[e] } end
@@ -262,13 +279,41 @@ app = {
   end,
 }
 
+local COUNTRY = "::/infrastructure/street/country/"
 local function answer(c)
+  if c.kind == "makeTownConnectWithIndustriesCmd" then
+    -- The game's roads: medium country roads (one over a bridge), a town street, an industry access.
+    SIM.streetEdges = {
+      [9001] = { roadTemplate = COUNTRY .. "country_old_medium.street_template", type = "NORMAL" },
+      [9002] = { roadTemplate = COUNTRY .. "country_old_medium.street_template", type = "BRIDGE" },
+      [9003] = { roadTemplate = "::/infrastructure/street/town/town_old_small.street_template", type = "NORMAL" },
+      [9004] = { roadTemplate = COUNTRY .. "ind_country_old_small.street_template", type = "NORMAL" },
+      [9005] = { roadTemplate = COUNTRY .. "country_new_medium.street_template", type = "NORMAL" },
+    }
+    return true, { { 9005, 1 }, { 9001, 1 } }
+  end
   if c.kind == "makeWorldReplaceTerrainCmd" then SIM.replaced = (SIM.replaced or {}); SIM.replaced[#SIM.replaced + 1] = c.args[1].computed; return true, {} end
   if c.kind == "makeTownCreateCmd" then
     for i = #c.args[1], 1, -1 do
       local t = c.args[1][i]
       SIM.gameTowns[#SIM.gameTowns + 1] = { existing = 100 + #SIM.gameTowns + 1, name = t.name, pos = t.pos }
     end
+    return true, {}
+  end
+  local sp0 = c.kind == "makeWorldBuildProposalCmd" and c.args[1].streetProposal
+  if sp0 and #(sp0.edgesToRemove or {}) > 0 then
+    -- A street type change (electrify.tl's way): each removed edge comes back, same nodes and type.
+    for i, e in ipairs(sp0.edgesToRemove) do
+      local seg, old = sp0.edgesToAdd[i], SIM.streetEdges[e]
+      if not old or seg.type ~= 0 or seg.comp.roadTemplate ~= COUNTRY .. "country_old_small.street_template"
+         or seg.comp.laneConfigs[1] ~= "lanes" or seg.comp.roadStyle ~= "style" or seg.comp.type ~= old.type
+         or seg.comp.node0 ~= e * 10 then
+        SIM.malformed = true
+        return false, {}
+      end
+      if e == SIM.refuseRoad then return false, {} end
+    end
+    for i, e in ipairs(sp0.edgesToRemove) do SIM.streetEdges[e].roadTemplate = sp0.edgesToAdd[i].comp.roadTemplate end
     return true, {}
   end
   if c.kind == "makeWorldBuildProposalCmd" then
@@ -381,6 +426,7 @@ assert(last().stage == "error" and last().message:match("56 × 56") and last().m
 
 -- 3. The real thing.
 SIM.tiles = { 32, 32 }
+SIM.refuseRoad = 9005
 SIM.stages = {}
 SIM.request = { id = now() * 1000 + 2, name = "Test", createdAt = 42 }
 SIM.play(pumpStep)
@@ -400,11 +446,19 @@ for _, c in ipairs(SIM.cmds) do
   elseif c.kind == "makeTownSetInitialLandUseCapacitiesCmd" then order[#order + 1] = "size"
   elseif c.kind == "makeWorldBuildProposalCmd" and c.args[1].industry then order[#order + 1] = "industry"
   elseif c.kind == "makeTownConnectWithIndustriesCmd" then order[#order + 1] = "roads"
+  elseif c.kind == "makeWorldBuildProposalCmd" and #(c.args[1].streetProposal.edgesToRemove or {}) > 0 then order[#order + 1] = "simplify"
   elseif c.kind == "makeWorldBuildProposalCmd" then order[#order + 1] = "rail" end
 end
 local cmdSeq = table.concat(order, " ")
 _print("commands: " .. cmdSeq)
-assert(cmdSeq:match("^terrain terrain rail[ rail]* towns size size size industry industry roads$"), "command order: " .. cmdSeq)
+assert(cmdSeq:match("^terrain terrain rail[ rail]* towns size size size industry industry roads simplify simplify simplify simplify$"), "command order: " .. cmdSeq)
+-- Medium country roads (4 lanes) replaced by the simple old one, in one proposal; the edge refused
+-- (SIM.refuseRoad) fails the batch, then each edge alone: it stays, the others pass.
+for e, want in pairs({ [9001] = "country_old_small", [9002] = "country_old_small", [9003] = "town/town_old_small",
+                       [9004] = "ind_country_old_small", [9005] = "country_new_medium" }) do
+  assert(SIM.streetEdges[e].roadTemplate:find(want, 1, true), "road " .. e .. ": " .. SIM.streetEdges[e].roadTemplate)
+end
+assert(table.concat(last().report, " "):match("2 / 3 tronçon"), "simple roads report")
 local conn
 for _, c in ipairs(SIM.cmds) do if c.kind == "makeTownConnectWithIndustriesCmd" then conn = c end end
 -- Game order: Givors (101), Bron (102), Lyon (103). Lyon–Bron = {2, 1}, Lyon–Givors = {2, 0}.

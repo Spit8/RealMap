@@ -102,7 +102,7 @@ export const fr = {
   "advanced.economyTitle": "Même économie que le climat de la carte dans l'éditeur",
   "advanced.density": "Densité du jeu",
   "advanced.count": "Nombre (0 = jeu : {n})",
-  "advanced.countTitle": "0 = nombre du jeu pour cette densité ({n})",
+  "advanced.countTitle": "0 = nombre du jeu pour cette densité ({n}), avec au moins une ressource de base de chaque chaîne (le total peut alors dépasser)",
   "advanced.industrySpacing": "Écart entre industries (m)",
   "advanced.townClearance": "Distance aux villes (m)",
   "advanced.rail": "Voie ferrée",

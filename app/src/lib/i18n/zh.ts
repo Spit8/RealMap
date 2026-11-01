@@ -101,7 +101,7 @@ export const zh: Record<MessageKey, string> = {
   "advanced.economyTitle": "与地图编辑工具中的地形生成器相同的经济模式",
   "advanced.density": "游戏密度",
   "advanced.count": "数量 (0 = 游戏: {n})",
-  "advanced.countTitle": "0 = 游戏中此密度的计数 ({n})",
+  "advanced.countTitle": "0 = 游戏中针对此密度的计数 ({n})，每个资源类型至少包含一个基础资源（总数可能因此超过）",
   "advanced.industrySpacing": "产业间距 (米)",
   "advanced.townClearance": "与城镇的距离 (米)",
   "advanced.rail": "铁路",

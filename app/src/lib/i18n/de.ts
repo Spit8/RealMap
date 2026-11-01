@@ -101,7 +101,7 @@ export const de: Record<MessageKey, string> = {
   "advanced.economyTitle": "Die gleiche Wirtschaft wie das Klima der Karte im Karten-Editor",
   "advanced.density": "Spieldichte",
   "advanced.count": "Anzahl (0 = Spiel: {n})",
-  "advanced.countTitle": "0 = Die Anzahl, die das Spiel für diese Dichte verwendet ({n})",
+  "advanced.countTitle": "0 = Anzahl des Spiels für diese Dichte ({n}), mit mindestens einem Grundrohstoff jeder Produktionskette (die Summe kann dann höher sein)",
   "advanced.industrySpacing": "Abstand zwischen Industrien (m)",
   "advanced.townClearance": "Entfernung zu Städten (m)",
   "advanced.rail": "Bahnstrecke",

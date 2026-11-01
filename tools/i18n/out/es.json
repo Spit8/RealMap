@@ -92,7 +92,7 @@
   "app:advanced.economyTitle": "La misma economía que el clima del mapa en el editor de mapas",
   "app:advanced.density": "Densidad del juego",
   "app:advanced.count": "Conteo (0 = juego: {n})",
-  "app:advanced.countTitle": "0 = el valor que usa el juego para esta densidad ({n})",
+  "app:advanced.countTitle": "0 = el número que usa el juego para esta densidad ({n}), con al menos un recurso básico de cada cadena (el total puede ser mayor)",
   "app:advanced.industrySpacing": "Distancia entre industrias (m)",
   "app:advanced.townClearance": "Distancia a las localidades (m)",
   "app:advanced.rail": "Ferrocarril",
@@ -506,5 +506,6 @@
   "mod:roads_building": "Carreteras: %d conexión(es) entre localidades…",
   "mod:roads_done": "%d enlace(s) por carretera%s.",
   "mod:roads_partly": " (parcialmente rechazado)",
+  "mod:roads_simple": "%d / %d tramo(s) de carretera convertido(s) en caminos de tierra simples (2 carriles).",
   "mod:done": "El mapa \"%s\" ha sido generado. Guárdalo (en el menú del editor de mapas)."
 }

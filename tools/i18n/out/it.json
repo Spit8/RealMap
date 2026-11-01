@@ -92,7 +92,7 @@
   "app:advanced.economyTitle": "Stessa economia del clima della mappa nell'editor di mappe",
   "app:advanced.density": "Densità del gioco",
   "app:advanced.count": "Conteggio (0 = gioco: {n})",
-  "app:advanced.countTitle": "0 = il valore utilizzato dal gioco per questa densità ({n})",
+  "app:advanced.countTitle": "0 = il numero di elementi che il gioco assegna a questa densità ({n}), con almeno una risorsa di base per ogni categoria (il totale potrebbe quindi essere superiore)",
   "app:advanced.industrySpacing": "Distanza tra le industrie (m)",
   "app:advanced.townClearance": "Distanza dalle cittadine (m)",
   "app:advanced.rail": "Ferrovia",
@@ -506,5 +506,6 @@
   "mod:roads_building": "Strade: %d collegamento/i tra le cittadine…",
   "mod:roads_done": "%d collegamento(i) stradale(i)%s.",
   "mod:roads_partly": " (parzialmente rifiutate)",
+  "mod:roads_simple": "%d / %d tratto/i di strada trasformato/i in semplici strade sterrate (2 corsie).",
   "mod:done": "Mappa \"%s\" generata. Salvala (nel menu dell'editor di mappe)."
 }

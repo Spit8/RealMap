@@ -462,7 +462,13 @@ local function startRun(request, opts)
 			status("roads", tr("roads_building", ctx.report.connections))
 			build.connect(ctx, function()
 				say(tr("roads_done", ctx.report.connections, ctx.report.roadsOk and "" or tr("roads_partly")))
-				nextStep()
+				-- The game laid medium roads (4 lanes): simple dirt roads instead.
+				build.simplifyRoads(ctx, function()
+					if (ctx.report.roadEdges or 0) > 0 then
+						say(tr("roads_simple", ctx.report.roadEdgesSimple, ctx.report.roadEdges))
+					end
+					nextStep()
+				end)
 			end)
 		end,
 	}

@@ -74,7 +74,7 @@ describe("town shares and needs", () => {
     for (const s of [a, b, low]) expect(s.res + s.com + s.ind).toBeCloseTo(1, 2);
   });
 
-  it("asks only for goods made on the map, at random, never near their factory", () => {
+  it("draws at random, never near the good's factory", () => {
     const industries = [
       { tag: "forest", x: 0, y: 0 },
       { tag: "saw_mill", x: 0, y: 0 },
@@ -95,10 +95,30 @@ describe("town shares and needs", () => {
       expect(per(c)).toBeGreaterThan(5);
       expect(per(c)).toBeLessThan(0.6 * many.length);
     }
-    // Level 0: tiers 0 and 1, never vehicles; one commercial and one industrial at most.
-    expect(startGoods([{ cargo: "beverages" }, { cargo: "meat" }, { cargo: "vehicles" }]).map((g) => g.cargo)).toEqual(["beverages", "meat"]);
+    // A new town: tier 0 only (no beverages, furniture, machines), fish only when made on the map.
+    expect(startGoods([{ cargo: "beverages" }, { cargo: "meat" }, { cargo: "vehicles" }, { cargo: "furniture" }]).map((g) => g.cargo)).toEqual(["meat"]);
+    expect(startGoods([{ cargo: "fish", at: [] }, { cargo: "fish", at: [{ tag: "fishing_grounds", x: 0, y: 0 }] }]).length).toBe(1);
     const needs = townNeeds(towns, industries, "temperate", "s");
-    expect(needs.every((x) => x.com.length <= 1 && x.ind.length <= 1)).toBe(true);
-    expect(needs[0].ind).toEqual([]);
+    expect(needs.every((x) => x.com.length === 1 && x.ind.length === 1)).toBe(true);
+    // Next to the saw mill: never planks (its producer), another good instead.
+    expect(needs[0].ind).not.toEqual(["planks"]);
+  });
+
+  it("draws among the tier 0 goods of the economy, like a new game, those made on the map preferred", () => {
+    // Lyon case: only the refinery chain is complete; the towns did all ask for fuel.
+    const industries = [{ tag: "oil_platform", x: 0, y: 40000 }, { tag: "oil_refinery", x: 0, y: 30000 }];
+    const towns = Array.from({ length: 40 }, (_, i) => ({ x: (i % 8) * 3000, y: Math.floor(i / 8) * 3000, capacity: 100 }));
+    const needs = townNeeds(towns, industries, "temperate", "lyon");
+    const ind = needs.map((n) => n.ind[0]);
+    // Temperate tier 0 industrial goods: bricks, fuel, planks (no cement in this economy).
+    expect(new Set(ind)).toEqual(new Set(["bricks", "fuel", "planks"]));
+    // Spread like the game (its balance dominates the light preference for fuel, made here).
+    for (const c of ["bricks", "fuel", "planks"]) {
+      const k = ind.filter((x) => x === c).length;
+      expect(k).toBeGreaterThan(0.2 * towns.length);
+      expect(k).toBeLessThan(0.5 * towns.length);
+    }
+    // Commercial: meat and vegetables, no fish without fishing grounds, nothing of tier 1.
+    expect(new Set(needs.map((n) => n.com[0]))).toEqual(new Set(["meat", "vegetables"]));
   });
 });

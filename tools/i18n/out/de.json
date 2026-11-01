@@ -92,7 +92,7 @@
   "app:advanced.economyTitle": "Die gleiche Wirtschaft wie das Klima der Karte im Karten-Editor",
   "app:advanced.density": "Spieldichte",
   "app:advanced.count": "Anzahl (0 = Spiel: {n})",
-  "app:advanced.countTitle": "0 = Die Anzahl, die das Spiel für diese Dichte verwendet ({n})",
+  "app:advanced.countTitle": "0 = Anzahl des Spiels für diese Dichte ({n}), mit mindestens einem Grundrohstoff jeder Produktionskette (die Summe kann dann höher sein)",
   "app:advanced.industrySpacing": "Abstand zwischen Industrien (m)",
   "app:advanced.townClearance": "Entfernung zu Städten (m)",
   "app:advanced.rail": "Bahnstrecke",
@@ -506,5 +506,6 @@
   "mod:roads_building": "Strassen: %d Verbindung(en) zwischen Städten…",
   "mod:roads_done": "%d Straßenverbindung(en)%s.",
   "mod:roads_partly": " (teilweise abgelehnt)",
+  "mod:roads_simple": "%d / %d Strassenabschnitt(e) wurden in einfache Feldwege (2 Fahrbahnen) umgewandelt.",
   "mod:done": "Die Karte „%s“ wurde erstellt. Speichere sie (im Menü des Karten-Editors)."
 }

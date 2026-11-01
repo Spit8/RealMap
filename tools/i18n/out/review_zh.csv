@@ -92,7 +92,7 @@ app:advanced.economy;label;;Economy;Économie;经济;Economy.;
 app:advanced.economyTitle;tooltip;;The same economy as the map's climate in the Map Editor;Même économie que le climat de la carte dans l'éditeur;与地图编辑工具中的地形生成器相同的经济模式;The economic model is the same as the terrain generator found in the map editing tools.;
 app:advanced.density;label;;Game density;Densité du jeu;游戏密度;Game density.;
 app:advanced.count;label;;Count (0 = game: {n});Nombre (0 = jeu : {n});数量 (0 = 游戏: {n});Quantity (0 = game: {n});
-app:advanced.countTitle;tooltip;;0 = the game's count for this density ({n});0 = nombre du jeu pour cette densité ({n});0 = 游戏中此密度的计数 ({n});0 = In the game, the count of this density ({n}).;
+app:advanced.countTitle;tooltip;;0 = the game's count for this density ({n}), with at least one base resource of every chain (the total may then be higher);0 = nombre du jeu pour cette densité ({n}), avec au moins une ressource de base de chaque chaîne (le total peut alors dépasser);0 = 游戏中针对此密度的计数 ({n})，每个资源类型至少包含一个基础资源（总数可能因此超过）;0 = The count ( {n} ) within the game, specifically for this density, where each resource type includes at least one basic resource (and the total count may therefore exceed).;
 app:advanced.industrySpacing;label;;Distance between industries (m);Écart entre industries (m);产业间距 (米);Inter-industry distance (meters).;
 app:advanced.townClearance;label;;Distance to towns (m);Distance aux villes (m);与城镇的距离 (米);Distance to the town (meters).;
 app:advanced.rail;title;;Railway;Voie ferrée;铁路;Railway.;
@@ -506,4 +506,5 @@ mod:industries_missing;label;;, %d impossible;, %d impossible(s);, %d 个无法�
 mod:roads_building;label;;Roads: %d link(s) between towns…;Routes : %d liaison(s) entre villes…;道路：%d 条连接城镇的线路…;Roads: %d lines connecting towns...;
 mod:roads_done;label;;%d road link(s)%s.;%d liaison(s) routière(s)%s.;%d 个公路连接%s.;%d roads connect to %s.;
 mod:roads_partly;label;; (partly refused); (refusées en partie); （部分已拒绝）;(Partially rejected);
+mod:roads_simple;label;;%d / %d road segment(s) turned into simple dirt roads (2 lanes).;%d / %d tronçon(s) de route transformé(s) en chemins de terre simples (2 voies).;%d / %d 个道路段已转换为简单的土路（双车道）。;%d / %d road segments have been converted to simple dirt roads (two-lane).;
 mod:done;sentence;;Map “%s” generated. Save it (Map Editor menu).;Carte « %s » générée. Enregistre-la (menu de l'éditeur).;地图“%s”已生成。请保存它（在地图编辑工具的菜单中）。;"The map ""%s"" has been generated. Please save it (in the menu of the map editing tool).";

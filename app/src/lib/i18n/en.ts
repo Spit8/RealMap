@@ -103,7 +103,7 @@ export const en: Record<MessageKey, string> = {
   "advanced.economyTitle": "The same economy as the map's climate in the Map Editor",
   "advanced.density": "Game density",
   "advanced.count": "Count (0 = game: {n})",
-  "advanced.countTitle": "0 = the game's count for this density ({n})",
+  "advanced.countTitle": "0 = the game's count for this density ({n}), with at least one base resource of every chain (the total may then be higher)",
   "advanced.industrySpacing": "Distance between industries (m)",
   "advanced.townClearance": "Distance to towns (m)",
   "advanced.rail": "Railway",

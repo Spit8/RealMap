@@ -101,7 +101,7 @@ export const es: Record<MessageKey, string> = {
   "advanced.economyTitle": "La misma economía que el clima del mapa en el editor de mapas",
   "advanced.density": "Densidad del juego",
   "advanced.count": "Conteo (0 = juego: {n})",
-  "advanced.countTitle": "0 = el valor que usa el juego para esta densidad ({n})",
+  "advanced.countTitle": "0 = el número que usa el juego para esta densidad ({n}), con al menos un recurso básico de cada cadena (el total puede ser mayor)",
   "advanced.industrySpacing": "Distancia entre industrias (m)",
   "advanced.townClearance": "Distancia a las localidades (m)",
   "advanced.rail": "Ferrocarril",
