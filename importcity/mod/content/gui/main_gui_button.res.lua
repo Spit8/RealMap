@@ -4,7 +4,7 @@ function data()
 		type = "react-plugin ::MainModButtonAreaExtension",
 		data = {
 			filePath = "importcity::/gui/main_gui.script@ImportcityModButton",
-			order = 100,
+			order = 110,
 		},
 	}
 end

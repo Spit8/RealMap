@@ -6,6 +6,7 @@
 import { frameProjection, type Frame } from "./area";
 import { cellToWorld, worldToCell } from "./grid";
 import type { LuaValue } from "./luadata";
+import { msg, type Msg } from "./msg";
 import { distanceTo } from "./raster";
 import { WATER_LAKE, WATER_RIVER, WATER_SEA } from "./terrain";
 
@@ -140,7 +141,7 @@ export interface TownCandidate {
   /** Manual choice, or null when the filter decides. */
   pick: boolean | null;
   status: CandidateStatus;
-  reason?: string;
+  reason?: Msg;
   capacity?: number;
 }
 
@@ -188,7 +189,7 @@ export interface TownsOptions {
 }
 
 export const DEFAULT_TOWNS: TownsOptions = {
-  refCapacity: 300,
+  refCapacity: 100,
   sizeExponent: 0.5,
   minCapacity: 60,
   maxCapacity: 2500,
@@ -211,19 +212,23 @@ export interface MapTown {
   oy: number;
   /** Game metres moved (0 when the OSM place was fine), and why. */
   shift: number;
-  moveReason?: string;
+  moveReason?: Msg;
   /** Target capacity in game (applied by the importcity mod, FACT-016). */
   capacity: number;
   place: PlaceKind;
   population?: number;
   /** Picked by hand. */
   forced: boolean;
+  /** Share of each land use in its capacity (real commercial / industrial areas, `landuse.ts`). */
+  shares?: { res: number; com: number; ind: number; real: boolean };
+  /** Goods asked for by its commercial and industrial land use (`townneeds.ts`). */
+  needs?: { com: string[]; ind: string[] };
 }
 
 export interface DroppedTown {
   key: string;
   name: string;
-  reason: string;
+  reason: Msg;
 }
 
 /** Valid-ground test for town centres on a grid, from a composed terrain. */
@@ -300,15 +305,15 @@ export function settleTowns(
   o: TownsOptions,
 ): { towns: MapTown[]; dropped: DroppedTown[] } {
   /** Why a cell cannot hold a town centre, or null when it can. */
-  const problem = (c: number, r: number): string | null => {
-    if (c < 0 || r < 0 || c >= ground.nx || r >= ground.ny) return "hors carte";
+  const problem = (c: number, r: number): Msg | null => {
+    if (c < 0 || r < 0 || c >= ground.nx || r >= ground.ny) return msg("why.offMap");
     const i = r * ground.nx + c;
-    if (ground.water[i]) return "dans l'eau";
-    if (ground.waterDist[i] < o.waterClearanceM) return "trop près de la mer ou d'un lac";
-    if (ground.riverDist[i] < o.riverClearanceM) return "trop près d'une rivière";
+    if (ground.water[i]) return msg("why.inWater");
+    if (ground.waterDist[i] < o.waterClearanceM) return msg("why.nearSea");
+    if (ground.riverDist[i] < o.riverClearanceM) return msg("why.nearRiver");
     const [x, y] = toWorld(c, r);
-    if (Math.abs(x) > halfW - o.edgeMarginM || Math.abs(y) > halfH - o.edgeMarginM) return "trop près du bord";
-    return localSlope(ground, c, r) < MAX_TOWN_SLOPE ? null : "terrain en pente";
+    if (Math.abs(x) > halfW - o.edgeMarginM || Math.abs(y) > halfH - o.edgeMarginM) return msg("why.nearEdge");
+    return localSlope(ground, c, r) < MAX_TOWN_SLOPE ? null : msg("why.slope");
   };
   const valid = (c: number, r: number) => problem(c, r) === null;
   const search = (c0: number, r0: number, R: number) => nearestValidCell(c0, r0, R, valid);
@@ -327,14 +332,14 @@ export function settleTowns(
     if (why) {
       const found = search(c0, r0, Math.ceil(o.maxShiftM / ground.step));
       if (!found) {
-        dropped.push({ key: p.key, name: p.name, reason: `${why}, pas de terrain constructible à moins de ${Math.round(o.maxShiftM)} m` });
+        dropped.push({ key: p.key, name: p.name, reason: msg("why.noLandNear", { why, m: Math.round(o.maxShiftM) }) });
         continue;
       }
       [x, y] = toWorld(found[0], found[1]);
     }
     const near = towns.find((t) => Math.hypot(t.x - x, t.y - y) < o.minSpacingM);
     if (near) {
-      dropped.push({ key: p.key, name: p.name, reason: `trop près de ${near.name}` });
+      dropped.push({ key: p.key, name: p.name, reason: msg("why.nearTown", { town: near.name }) });
       continue;
     }
     towns.push({
@@ -445,7 +450,11 @@ export function townsIndustriesData(towns: MapTown[], industries: LuaValue[] = [
 
 const round1 = (v: number) => Math.round(v * 10) / 10;
 
-/** Town targets for the importcity mod (the `towns` field of `<UD>/importcity/<name>.lua`). */
+/**
+ * Town targets for the importcity mod (the `towns` field of `<UD>/importcity/<name>.lua`): capacity,
+ * land-use shares from real areas (when known) and the goods asked for, which the mod applies with
+ * `makeTownUpdateCargoNeedsCmd` (the import file only takes cargo categories, FACT-029).
+ */
 export function townSizesData(towns: MapTown[]): LuaValue {
   return towns.map((t) => ({
     name: t.name,
@@ -453,5 +462,7 @@ export function townSizesData(towns: MapTown[]): LuaValue {
     y: round1(t.y),
     population: t.population ?? 0,
     capacity: t.capacity,
+    ...(t.shares?.real ? { shares: { res: t.shares.res, com: t.shares.com, ind: t.shares.ind } } : {}),
+    ...(t.needs ? { needs: { com: t.needs.com, ind: t.needs.ind } } : {}),
   }));
 }

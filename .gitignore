@@ -17,11 +17,21 @@ importcity/build/
 e2e_out/
 *.log
 
+# Release packages (attached to the GitHub releases)
+dist/
+
+# Translator cache (lowCost_Translator, rebuilt on demand)
+tools/i18n/.cache/
+
+# Slide source (the exported PNGs in captures/slides/ are kept)
+captures/*.pptx
+
 # Environment and local settings
 .env
 .env.*
 !.env.example
-.claude/settings.local.json
+.claude/*
+!.claude/launch.json
 
 # Editors and OS
 .vscode/

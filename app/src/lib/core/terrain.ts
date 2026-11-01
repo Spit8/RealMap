@@ -40,6 +40,8 @@ export interface TerrainOptions {
   seaDepth: number;
   /** Deepest sea (game m) from sea-floor data (real depth × vertical scale, capped). */
   seaMaxDepth: number;
+  /** Shallowest sea (game m) once off the shore ramp: sea-floor data only ever makes it deeper. */
+  coastDepth: number;
   /** Deepest point of lakes and rivers (game m), reached away from their shores. */
   lakeDepth: number;
   riverDepth: number;
@@ -87,8 +89,9 @@ export const DEFAULT_TERRAIN: Omit<TerrainOptions, "verticalScale"> = {
   refHeight: null,
   seaDepth: 15,
   seaMaxDepth: 40,
+  coastDepth: 20,
   lakeDepth: 8,
-  riverDepth: 9,
+  riverDepth: 20,
   underwaterSlope: 0.5,
   landMin: 0.5,
   maxCarve: 30,
@@ -106,7 +109,7 @@ export const DEFAULT_TERRAIN: Omit<TerrainOptions, "verticalScale"> = {
   waterJoinM: 64,
   wetlandLakes: true,
   wetlandMinHa: 5,
-  marshDepth: 4,
+  marshDepth: 20,
 };
 
 /**
@@ -182,10 +185,28 @@ export function realHeights(f: Frame, g: Grid, ign: Float32Array | null, rasters
   return out;
 }
 
+/** Real length (m) of a lon/lat line. */
+function lineLengthM(f: Frame, pts: [number, number][]): number {
+  const p = frameProjection(f);
+  let len = 0;
+  let prev: [number, number] | null = null;
+  for (const [lon, lat] of pts) {
+    const q = p.toWorld(lon, lat);
+    if (prev) len += Math.hypot(q[0] - prev[0], q[1] - prev[1]);
+    prev = q;
+  }
+  return len * f.scale;
+}
+
 /** Default real widths (m) of OSM water lines without a `width` tag. */
 const RIVER_WIDTH: Record<string, number> = { river: 30, canal: 10 };
 /** One heightmap sample (game m): rivers are never thinner, narrower canals are dropped. */
 const MIN_WATER_WIDTH = 4;
+/**
+ * A named canal at least this long (real m) is a waterway, kept even when narrow (e.g. the Douve
+ * near Carentan is partly tagged as a canal): marsh ditches are short or unnamed.
+ */
+const NAMED_CANAL_M = 1000;
 /** Half the widest gap (game m) closed between two pieces of river. */
 const RIVER_GAP_M = 12;
 
@@ -239,8 +260,8 @@ export function waterMask(f: Frame, g: Grid, shapes: OsmShape[], riverMinWidth =
     const kind = s.tags.waterway;
     if (!kind || !(kind in RIVER_WIDTH)) continue;
     const widthGame = (parseWidth(s.tags.width) ?? RIVER_WIDTH[kind]) / f.scale;
-    // Small canals (drainage ditches in marshes) would grid the map: keep those a sample wide.
-    if (kind === "canal" && widthGame < MIN_WATER_WIDTH) continue;
+    // Small canals (drainage ditches in marshes) would grid the map: dropped, unless named and long.
+    if (kind === "canal" && widthGame < MIN_WATER_WIDTH && !(s.tags.name && lineLengthM(f, s.pts) >= NAMED_CANAL_M)) continue;
     // Width in game metres, so the coarse preview grid does not widen rivers.
     lines.push({ pts: s.pts.map(toCell), half: Math.max(MIN_WATER_WIDTH, riverMinWidth, widthGame) / 2 / g.step });
   }
@@ -411,12 +432,22 @@ function percentile(values: number[], q: number): number {
 
 /** Depth of a water cell next to the shore (game m): with land at `landMin` (0.5), a 1 m step. */
 const SHORE_DEPTH = 0.5;
+/**
+ * Shallowest river water (game m), even at the bank: the game builds roads across very shallow
+ * water on a fill instead of a bridge (QUESTION-013). The land bank stays gentle.
+ */
+const RIVER_SHORE_DEPTH = 2;
 /** A river widens no profile beyond this half width (cells): wider water is deep anyway. */
 const MAX_RIVER_HALF_CELLS = 64;
 /** Around a river mouth the sea or lake is dug to the river's depth over this distance (game m). */
 const MOUTH_M = 300;
-/** Distance from the bank (game m) where the game's own rivers reach their flat bed (FACT-023). */
-const RIVER_BED_M = 48;
+/**
+ * Distance from the bank (game m) where a river reaches its full depth. The game's own rivers take
+ * ~48 m (FACT-023) but are 110–165 m wide; ours are narrower (64 m), so the submerged slope is
+ * steeper (~0.7 m/m, a straight slope) and most of the bed is at full depth (a V-shaped bed looked shallow). The
+ * visible land banks stay gentle (`riverBankSlope`).
+ */
+const RIVER_BED_M = 20;
 
 /**
  * `seaFloor`: real sea-floor height per cell (negative below sea level, NaN = unknown), used for
@@ -480,9 +511,9 @@ export function composeTerrain(
   const land = new Uint8Array(n);
   for (let i = 0; i < n; i++) land[i] = water[i] ? 0 : 1;
   const fromShore = distanceTo(land, g.nx, g.ny);
-  // Rivers: the game's own cross-section (FACT-023: −3.8 m at 20 m from the bank, −6.3 m at 32 m,
-  // flat bed from ~48 m), and, for rivers narrower than that, a profile scaled to the local half
-  // width (the furthest any nearby river cell is from its bank) so the middle still reaches 70 %.
+  // Rivers: the shape of the game's own cross-section (FACT-023), full depth from `RIVER_BED_M`, and,
+  // for rivers narrower than that, a profile scaled to the local half width (the furthest any nearby
+  // river cell is from its bank) so the middle of every river reaches `riverDepth`.
   const riverShore = new Float32Array(n);
   let widest = 0;
   for (let i = 0; i < n; i++) {
@@ -507,14 +538,14 @@ export function composeTerrain(
     }
     if (w === WATER_RIVER) {
       const fromBank = (fromShore[i] - 0.5) * g.step;
-      const own = o.riverDepth * Math.min(1, (fromBank / RIVER_BED_M) ** 0.8);
+      const own = o.riverDepth * Math.min(1, fromBank / RIVER_BED_M);
       const t = Math.min(1, (fromShore[i] - 0.5) / Math.max(0.5, localHalf[i] - 0.5));
-      game[i] = -Math.max(SHORE_DEPTH, own, 0.7 * o.riverDepth * smooth(t));
+      game[i] = -Math.max(Math.min(RIVER_SHORE_DEPTH, o.riverDepth), own, o.riverDepth * smooth(t));
       continue;
     }
-    let deepest = w === WATER_LAKE ? (marsh?.[i] ? o.marshDepth : o.lakeDepth) : o.seaDepth;
+    let deepest = w === WATER_LAKE ? (marsh?.[i] ? o.marshDepth : o.lakeDepth) : Math.max(o.coastDepth, o.seaDepth);
     if (w === WATER_SEA && seaFloor && Number.isFinite(seaFloor[i])) {
-      deepest = Math.min(o.seaMaxDepth, Math.max(SHORE_DEPTH, -seaFloor[i] * v));
+      deepest = Math.max(o.coastDepth, Math.min(o.seaMaxDepth, -seaFloor[i] * v));
     }
     let depth = Math.min(deepest, SHORE_DEPTH + (fromShore[i] - 1) * g.step * o.underwaterSlope);
     const dm = toRiver ? toRiver[i] * g.step : Infinity;
@@ -567,7 +598,9 @@ export function composeTerrain(
     const across = blurGrid(game, g.nx, g.ny, 1);
     for (let i = 0; i < n; i++) {
       if (water[i]) {
-        if (fromShore[i] <= 1) game[i] = Math.min(-SHORE_DEPTH, Math.max(game[i], across[i]));
+        // Rivers keep their bed (that first ring is a large part of a river on the 16 m preview
+        // grid); only on grids coarser than the bed slope would they get a wall at the bank.
+        if (fromShore[i] <= 1 && (water[i] !== WATER_RIVER || g.step > RIVER_BED_M)) game[i] = Math.min(-SHORE_DEPTH, Math.max(game[i], across[i]));
       } else if (toWater[i] <= 2) game[i] = Math.max(o.landMin, Math.min(game[i], across[i]));
     }
   }

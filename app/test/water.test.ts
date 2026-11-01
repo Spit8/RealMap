@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import type { Grid } from "../src/lib/core/grid";
+import { frameProjection, makeFrame } from "../src/lib/core/area";
+import { previewGrid, worldToCell, type Grid } from "../src/lib/core/grid";
 import { maxFilter } from "../src/lib/core/raster";
 import {
-  bridgeWater, composeTerrain, DEFAULT_TERRAIN, enforceMinWidth, marshLakes, WATER_LAKE, WATER_NONE, WATER_RIVER,
+  bridgeWater, composeTerrain, DEFAULT_TERRAIN, enforceMinWidth, marshLakes, waterMask, WATER_LAKE, WATER_NONE, WATER_RIVER,
 } from "../src/lib/core/terrain";
 
 /** A 4 m grid of 120 × 80 cells (only `nx`, `ny`, `step` matter here). */
@@ -71,25 +72,37 @@ describe("water passes", () => {
     expect(out[44 * g.nx + 60]).toBe(0);
   });
 
-  it("rivers follow the game's cross-section; a narrow one still reaches 70 % in the middle (FACT-023)", () => {
+  it("every river reaches its full depth in the middle, with gentle land banks (FACT-023)", () => {
     const real = new Float32Array(n).fill(30);
     const osm = new Uint8Array(n);
     band(osm, 56, 63);
     for (let r = 0; r < g.ny; r++) for (let c = 56; c <= 63; c++) real[r * g.nx + c] = 10;
     const t = composeTerrain(real, g, osm, opts);
     const row = 40 * g.nx;
-    expect(Math.min(t.game[row + 59], t.game[row + 60])).toBeLessThanOrEqual(-opts.riverDepth * 0.7 + 1e-4);
-    // A 128 m wide river: flat bed at full depth from ~48 m, about −6 m at 32 m from the bank.
+    // 32 m wide: still full depth in the middle.
+    expect(Math.min(t.game[row + 59], t.game[row + 60])).toBeCloseTo(-opts.riverDepth, 4);
+    // 128 m wide: flat bed at full depth from 32 m off the bank, about half depth at 12–16 m.
     const wide = new Uint8Array(n);
     band(wide, 30, 61);
     const w = composeTerrain(real, g, wide, opts);
     expect(w.game[row + 45]).toBeCloseTo(-opts.riverDepth, 4);
-    expect(w.game[row + 38]).toBeLessThan(-5);
-    expect(w.game[row + 38]).toBeGreaterThan(-opts.riverDepth);
-    // Shallow at the bank, deeper towards the middle, no step bigger than the shore one.
-    expect(t.game[row + 56]).toBeGreaterThan(-2);
+    expect(w.game[row + 38]).toBeCloseTo(-opts.riverDepth, 4);
+    expect(w.game[row + 33]).toBeLessThan(-3);
+    expect(w.game[row + 33]).toBeGreaterThan(-opts.riverDepth);
+    // Land banks stay gentle: within 40 m of the water, at most 0.15 m per m (+ the shore step).
+    for (let c = 21; c <= 29; c++) expect(w.game[row + c]).toBeLessThanOrEqual(opts.landMin + (30 - c) * g.step * opts.riverBankSlope + 0.6);
+    // At least 2 m at the bank (no road fill across), deeper towards the middle.
+    expect(t.game[row + 56]).toBeLessThanOrEqual(-2);
+    expect(t.game[row + 56]).toBeGreaterThan(-4);
     expect(t.game[row + 55]).toBeGreaterThanOrEqual(opts.landMin);
     expect(t.game[row + 55]).toBeLessThan(2);
+    // Deep across most of the bed, not only on the centre line (a 64 m river).
+    const mid64 = new Uint8Array(n);
+    band(mid64, 52, 67);
+    const m = composeTerrain(real, g, mid64, opts);
+    let sum = 0;
+    for (let c = 52; c <= 67; c++) sum += -m.game[row + c];
+    expect(sum / 16).toBeGreaterThanOrEqual(0.65 * opts.riverDepth);
   });
 
   it("digs the sea at a river mouth", () => {
@@ -101,5 +114,24 @@ describe("water passes", () => {
     const t = composeTerrain(real, g, osm, opts);
     // Sea just off the mouth vs the same distance from the shore elsewhere.
     expect(t.game[40 * g.nx + 28]).toBeLessThan(t.game[10 * g.nx + 28] - 2);
+  });
+
+  it("keeps a long named canal, drops an unnamed ditch", () => {
+    const f = makeFrame({ lon: -1.25, lat: 49.3, size: 0, format: 0, landscape: false, scale: 6, verticalScale: null });
+    const pg = previewGrid(f, 200);
+    const line = (name: string | undefined, lat: number) => ({
+      kind: "line" as const,
+      tags: { waterway: "canal", ...(name ? { name } : {}) },
+      pts: [[-1.27, lat], [-1.23, lat]] as [number, number][],
+    });
+    const m = waterMask(f, pg, [line("Canal de Carentan", 49.305), line(undefined, 49.295)]).mask;
+    const p = frameProjection(f);
+    const wetAt = (lat: number) => {
+      const [x, y] = p.toWorld(-1.25, lat);
+      const [c, r] = worldToCell(f, pg, x, y);
+      return m[Math.round(r) * pg.nx + Math.round(c)] !== 0;
+    };
+    expect(wetAt(49.305)).toBe(true);
+    expect(wetAt(49.295)).toBe(false);
   });
 });

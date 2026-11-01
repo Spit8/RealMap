@@ -10,7 +10,7 @@
 1. App: click the map → centre; pick the game size / format / orientation and the scale (1:1 … 1:8) → outline = covered real area.
 2. Left panel, 3 tabs (v0.7): « Zone et données réelles » (fetch), « Transformation » (settings, auto re-run on the coarse ≤ 1 024 px grid, stats), « Export » (town / industry selection and lists, name, folder, « Générer »). The result is drawn on the area map only (no preview tab or window since v0.7).
 3. « Générer la carte »: IGN blocks (cache `$APPCACHE/ign`) and/or Copernicus tiles (`$APPCACHE/dem`) + WorldCover windows (`$APPCACHE/worldcover`) + one Overpass query (places, water; `$APPCACHE/overpass`) → worker: real heights → water → game heights → biomes → PNGs. Writes `<UD>/heightmaps/<n>.png`, `<UD>/biomes/<n>_{biomes,mountains,rivers}.png`, `<UD>/towns_industries/<n>.lua`, note `<UD>/importcity/<n>.lua`.
-4. Map Editor (by hand): new map of the shown size → Import Heightmap (Min/Max shown, Water Level 0) → Biomes → Towns/Industries.
+4. Map Editor: the user opens a new empty map of the shown size; « Générer la carte » in the app writes the files and `importcity/request.lua`; the importcity mod builds heightmap > biomes > towns (sizes) > industries (names) > roads > rail by itself and reports in `importcity/status.lua`, followed by the app (DECISION-012). The user then saves the map.
 
 ## Entry points
 | Area | File / symbol | Role |
@@ -32,12 +32,15 @@
 | Heightmap | `app/src/lib/core/heightmap.ts` | 16-bit / 8-bit PNG encoding |
 | Towns | `app/src/lib/core/towns.ts` (`selectTowns`, `placeTowns`, `townCandidates`, `targetCapacity`) | manual picks + population filter, settling on valid ground, towns_industries file, capacities for the mod (FACT-002, FACT-014, FACT-016) |
 | Town markers | `app/src/lib/ui/townMarkers.ts` | green / orange / grey markers, hover titles, detail sheets (`townDetails`, `industryDetails`) |
-| Mod | `importcity/mod/content/gui/main_gui.handlers.lua` | « Appliquer les tailles réelles » (reads `<UD>/importcity/latest.lua`) |
+| Mod | `importcity/mod/content/gui/main_gui.handlers.lua` (pump, sizes, « RealMap » button), `importcity_auto.lua` (checks, stages, the mod's only window hosting `MapPreviewComp`), `importcity_build.lua` (industries, roads, rail with bridges) | automatic generation (DECISION-012/013); simulation `python importcity/tools/sim_mod.py` (lupa, stubbed API) |
+| App ↔ game | `app/src/lib/core/gamelink.ts`, `importer.watchGame` | `request.lua` / `status.lua` protocol, stages shown in the Export tab |
 | Userdata files | `app/src/lib/core/luadata.ts` (copied from HQminiMap) | `toUserdata` / `parseUserdata` |
 | IO | `app/src/lib/platform/{fsx,paths,download}.ts`, Rust `detect_paths` / `allow_dirs` | files, folders, http plugin |
 | Run | `app/src/lib/state/importer.svelte.ts`, `app/src/lib/workers/terrain.worker.ts` | orchestration |
 | UI | `app/src/routes/+page.svelte` (left panel, 3 tabs), `app/src/lib/ui/AreaMap.svelte`, `app/src/lib/ui/LogPanel.svelte` | map: Ctrl + click = centre (ghost while Ctrl held), click = sheet, right click = add / remove, links and railway, legend, height readout; log panel at the bottom of the panel |
-| Network | `app/src/lib/core/network.ts` (`overpassNetworkQuery`, `parseNetwork`, `planNetwork`, `networkData`) | real roads / railways → town pairs, town–industry links, main railway points for the mod |
+| Network | `app/src/lib/core/network.ts` (`overpassNetworkQuery`, `parseNetwork`, `planNetwork`, `networkData`) | real roads / railways → town pairs, town pairs, guide line of the main railway |
+| Railway | `app/src/lib/core/railway.ts` (`designRail`, `townZones`, `alignHorizontal`, `profile`, `structures`) | buildable alignment from the guide: town zones, min radius, max grade, bridges / tunnels, nodes with tangents (DECISION-014) |
+| Export inputs | `importer.svelte.ts` `fullInputs` | phase-1 data + IGN full resolution + WorldCover fine level, no new data retrieval |
 
 ## Réglages (explications retirées de l'interface en v0.8)
 - Échelle : 1 m de jeu = n m réels ; échelle verticale vide = 1/√échelle ; niveau de l'eau vide = auto (mer, sinon bas des eaux, sinon point le plus bas).

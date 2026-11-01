@@ -2,17 +2,22 @@
   import { onMount } from "svelte";
   import AreaMap from "$lib/ui/AreaMap.svelte";
   import LogPanel from "$lib/ui/LogPanel.svelte";
+  import ListsPanel from "$lib/ui/ListsPanel.svelte";
+  import Section from "$lib/ui/Section.svelte";
+  import ResetRoads from "$lib/ui/ResetRoads.svelte";
+  import UpdatesPanel from "$lib/ui/UpdatesPanel.svelte";
+  import { updates } from "$lib/state/updates.svelte";
   import { errorText, importer, type ReliefSource } from "$lib/state/importer.svelte";
-  import { defaultVerticalScale, type Area } from "$lib/core/area";
-  import { MAP_FORMATS, MAP_SIZES, availableFormats, availableSizes, formatKm, mapSizeLabel } from "$lib/core/mapsizes";
+  import { defaultVerticalScale, TILE_M, type Area } from "$lib/core/area";
+  import { MAP_FORMATS, MAP_SIZES, availableFormats, availableSizes, mapTiles } from "$lib/core/mapsizes";
   import { gameTownLimit } from "$lib/core/towns";
-  import { foldName, industryColor, industryTitle, shownTownKeys, townTitle } from "$lib/ui/townMarkers";
-  import { defaultIndustryCount, DENSITY_LABELS, ECONOMY_LABELS } from "$lib/core/industries";
-  import { COVER_LABELS } from "$lib/core/biomes";
+  import { defaultIndustryCount, ECONOMIES, ECONOMY_LABELS, INDUSTRIES } from "$lib/core/industries";
+  import { fmtNum, i18n, LOCALES, t, tk, type Locale, type MessageKey } from "$lib/i18n/index.svelte";
 
-  type PanelTab = "data" | "transform" | "export";
+  type PanelTab = "data" | "advanced" | "export" | "log";
   const TAB_KEY = "importcity.panelTab";
   const HIDE_KEY = "importcity.hideOff";
+  const LISTS_KEY = "importcity.listsOpen";
   function stored(key: string): string | null {
     try {
       return localStorage.getItem(key);
@@ -28,10 +33,20 @@
     }
   }
 
+  const TABS: { id: PanelTab; label: MessageKey }[] = [
+    { id: "data", label: "tabs.data" },
+    { id: "advanced", label: "tabs.advanced" },
+    { id: "export", label: "tabs.export" },
+    { id: "log", label: "tabs.log" },
+  ];
+  const DENSITIES = [0, 1, 2, 3, 4];
   let mapRef: ReturnType<typeof AreaMap> | undefined = $state();
   let mapView = $state<"real" | "game">("game");
-  let panelTab = $state<PanelTab>((stored(TAB_KEY) as PanelTab | null) ?? "data");
+  const savedTab = stored(TAB_KEY);
+  let panelTab = $state<PanelTab>(TABS.some((x) => x.id === savedTab) ? (savedTab as PanelTab) : "data");
   let hideOff = $state(stored(HIDE_KEY) === "1");
+  let listsOpen = $state(stored(LISTS_KEY) === "1");
+  $effect(() => store(LISTS_KEY, listsOpen ? "1" : "0"));
   $effect(() => store(TAB_KEY, panelTab));
   $effect(() => store(HIDE_KEY, hideOff ? "1" : "0"));
   let autoPreview = $state(true);
@@ -48,16 +63,28 @@
 
   onMount(() => {
     // Rendering errors and forgotten promises must not fail silently: show them in the log.
-    const onError = (ev: ErrorEvent) => importer.report(ev.error ?? ev.message, "Affichage");
-    const onRejection = (ev: PromiseRejectionEvent) => importer.report(ev.reason, "Tâche");
+    const onError = (ev: ErrorEvent) => importer.report(ev.error ?? ev.message, "UI");
+    const onRejection = (ev: PromiseRejectionEvent) => importer.report(ev.reason, "Task");
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onRejection);
     importer.detect();
+    const stopUpdates = updates.start();
     return () => {
+      stopUpdates();
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onRejection);
     };
   });
+
+  /** Header badge: the Export tab with the updates section open. */
+  function showUpdates(): void {
+    try {
+      localStorage.setItem("importcity.section.export.updates", "1");
+    } catch {
+      /* storage unavailable */
+    }
+    panelTab = "export";
+  }
 
   const s = $derived(importer.settings);
   const f = $derived(importer.frame);
@@ -65,27 +92,24 @@
   const realKm2 = $derived((f.widthM * f.scale * f.heightM * f.scale) / 1e6);
   const townLimit = $derived(gameTownLimit(f));
   const placedTowns = $derived((pv?.candidates ?? []).filter((c) => c.status === "placed").length);
-
-  // Towns: the chosen ones and the 10 most populous others; the rest is reached through « Ajouter ».
-  const listedTowns = $derived.by(() => {
-    const all = pv?.candidates ?? [];
-    const keys = shownTownKeys(all);
-    return all.filter((c) => keys.has(c.key));
-  });
-  let townQuery = $state("");
-  let townFocus = $state(false);
-  const suggestions = $derived.by(() => {
-    const all = pv?.candidates ?? [];
-    const listed = new Set(listedTowns.map((c) => c.key));
-    const rest = all.filter((c) => c.status === "off" && !listed.has(c.key));
-    const q = foldName(townQuery.trim());
-    return (q ? rest.filter((c) => foldName(c.name).includes(q)) : rest).slice(0, 30);
-  });
-  function addTown(key: string): void {
-    importer.setPick(key, true);
-    townQuery = "";
-    townFocus = false;
-  }
+  const errors = $derived(importer.events.filter((e) => e.level === "error").length);
+  // Each step's button: green when done and up to date, orange when something is left to apply.
+  const dataOk = $derived(!!importer.dataSummary && !importer.dataStale);
+  const resultOk = $derived(!!pv && !importer.stale && !importer.dataStale);
+  /** Industry types of the chosen economy, for « Ajouter une industrie » on the map. */
+  const industryTypes = $derived(
+    Object.entries(INDUSTRIES)
+      .filter(([tag]) => !ECONOMIES[s.industries.economy].exclude.includes(tag))
+      .map(([tag]) => ({ tag, label: tk(`industry.${tag}`) }))
+      .sort((a, b) => a.label.localeCompare(b.label, i18n.tag)),
+  );
+  const townName = (key: string) => pv?.towns.find((x) => x.key === key)?.name;
+  const km = (m: number) => fmtNum(m / 1000, 1);
+  /** « Large (1 : 1) — 14.3 × 14.3 km » in the current language. */
+  const sizeText = (size: number, format: number, landscape: boolean) => {
+    const w = mapTiles(size, format, landscape);
+    return t("size.label", { size: tk(`size.${MAP_SIZES[size].id}`), format: MAP_FORMATS[format].label, w: km(w.tilesX * TILE_M), h: km(w.tilesY * TILE_M) });
+  };
 
   const SCALES = [1, 2, 3, 4, 5, 6, 8];
 
@@ -99,368 +123,293 @@
     return Number.isFinite(n) ? n : fallback;
   }
 
-  function toggleLink(key: string): void {
-    const picks = { ...importer.settings.linkPicks };
-    if (picks[key] === false) delete picks[key];
-    else picks[key] = false;
-    importer.settings.linkPicks = picks;
-    importer.save();
-  }
-
-  const SOURCES: { id: ReliefSource; label: string }[] = [
-    { id: "auto", label: "Auto (IGN en France, sinon Copernicus)" },
-    { id: "ign", label: "IGN RGE ALTI (France)" },
-    { id: "copernicus", label: "Copernicus GLO-30 (monde)" },
-  ];
-  const TABS: { id: PanelTab; label: string }[] = [
-    { id: "data", label: "1. Zone et données" },
-    { id: "transform", label: "2. Transformation" },
-    { id: "export", label: "3. Export" },
-  ];
+  const SOURCES: ReliefSource[] = ["auto", "ign", "copernicus"];
   const STEP_ICONS = { wait: "○", run: "◔", done: "●", skip: "–", fail: "✕" };
-  const ORIGIN_SHORT = { osm: "réel", landcover: "sol", chain: "chaîne" };
-  const km = (m: number) => `${(m / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} km`;
   const save = () => importer.save();
+  const pct = () => `${Math.round(importer.progress * 100)} %`;
+  /** A step's label in the current language (its French label when there is no key for it). */
+  const stepLabel = (kind: "data" | "export" | "game", st: { id: string; label: string }) => {
+    const key = `step.${kind}.${st.id}`;
+    const l = tk(key);
+    return l === key ? st.label : l;
+  };
 </script>
+
+{#snippet progress()}
+  {#if importer.running}
+    <progress max="1" value={importer.progress}></progress>
+    <p class="step">{importer.step}</p>
+  {:else if importer.error}
+    <p class="error">{importer.error} <button class="link" onclick={() => (panelTab = "log")}>{t("status.seeLog")}</button></p>
+  {/if}
+{/snippet}
 
 <main>
   <aside>
     <header>
-      <h1>ImportCity</h1>
+      <div class="title">
+        <h1>Real<span class="accent">Map</span></h1>
+        {#if updates.badge}
+          <button class="update-badge" title={t("updates.title")} onclick={showUpdates}>⬆ {t("updates.badge", { version: updates.available!.version })}</button>
+        {/if}
+        <label class="lang" title={t("app.language")}>
+          <select value={i18n.locale} onchange={(e) => i18n.set(e.currentTarget.value as Locale)}>
+            {#each Object.entries(LOCALES) as [id, dict] (id)}<option value={id}>{dict["lang.name"]}</option>{/each}
+          </select>
+        </label>
+      </div>
       <nav class="tabs">
-        {#each TABS as t (t.id)}
-          <button class:active={panelTab === t.id} onclick={() => (panelTab = t.id)}>
-            {t.label}{t.id === "transform" && importer.stale ? " •" : ""}
+        {#each TABS as tab (tab.id)}
+          <button class:active={panelTab === tab.id} class:log={tab.id === "log"} onclick={() => (panelTab = tab.id)}>
+            {t(tab.label)}{tab.id === "advanced" && importer.stale ? " •" : ""}{#if tab.id === "log" && errors}<span class="badge" title={t("tabs.errors", { n: errors })}>{errors}</span>{/if}
           </button>
         {/each}
       </nav>
-      {#if importer.running}
-        <progress max="1" value={importer.progress}></progress>
-        <p class="step">{importer.step}</p>
-      {/if}
     </header>
 
+    {#if panelTab === "log"}
+      <LogPanel />
+    {:else}
     <div class="body">
       {#if panelTab === "data"}
-        <fieldset>
-          <legend>Carte du jeu</legend>
+        <Section id="data.map" title={t("data.map")} open>
           <div class="row">
-            <label>Taille
+            <label>{t("data.size")}
               <select value={s.area.size} onchange={(e) => setArea({ size: +e.currentTarget.value })}>
                 {#each availableSizes(importer.experimentalMaps) as i (i)}
-                  <option value={i}>{MAP_SIZES[i].label}{MAP_SIZES[i].experimental ? " (expérimental)" : ""}</option>
+                  <option value={i}>{tk(`size.${MAP_SIZES[i].id}`)}{MAP_SIZES[i].experimental ? ` ${t("data.experimental")}` : ""}</option>
                 {/each}
               </select>
             </label>
-            <label>Format
+            <label>{t("data.format")}
               <select value={s.area.format} onchange={(e) => setArea({ format: +e.currentTarget.value })}>
                 {#each availableFormats(importer.experimentalMaps) as i (i)}
-                  <option value={i}>{MAP_FORMATS[i].label}{MAP_FORMATS[i].experimental ? " (expérimental)" : ""}</option>
+                  <option value={i}>{MAP_FORMATS[i].label}{MAP_FORMATS[i].experimental ? ` ${t("data.experimental")}` : ""}</option>
                 {/each}
               </select>
             </label>
           </div>
           {#if s.area.format > 0}
-            <label class="check"><input type="checkbox" checked={s.area.landscape} onchange={(e) => setArea({ landscape: e.currentTarget.checked })} /> Côté long est–ouest</label>
+            <label class="check"><input type="checkbox" checked={s.area.landscape} onchange={(e) => setArea({ landscape: e.currentTarget.checked })} /> {t("data.landscape")}</label>
           {/if}
-          <label title="1 m dans le jeu = … m réels">Échelle
+          <label title={t("data.scaleTitle")}>{t("data.scale")}
             <div class="row tight">
               <select value={SCALES.includes(s.area.scale) ? s.area.scale : 0} onchange={(e) => +e.currentTarget.value && setArea({ scale: +e.currentTarget.value })}>
-                {#each SCALES as k (k)}<option value={k}>1:{k}{k === 1 ? " (réelle)" : ""}</option>{/each}
-                <option value={0}>Autre…</option>
+                {#each SCALES as k (k)}<option value={k}>1:{k}{k === 1 ? ` ${t("data.scaleReal")}` : ""}</option>{/each}
+                <option value={0}>{t("data.scaleOther")}</option>
               </select>
               <input type="number" min="0.25" step="0.25" value={s.area.scale} onchange={(e) => setArea({ scale: Math.max(0.25, num(e.currentTarget.value, 1)) })} />
             </div>
           </label>
-          <p class="facts">{mapSizeLabel(s.area.size, s.area.format, s.area.landscape)} · {formatKm(f.widthM * f.scale)} × {formatKm(f.heightM * f.scale)} km réels · {Math.round(realKm2).toLocaleString("fr-FR")} km²</p>
-        </fieldset>
+          <p class="facts">{t("data.facts", { size: sizeText(s.area.size, s.area.format, s.area.landscape), w: km(f.widthM * f.scale), h: km(f.heightM * f.scale), km2: fmtNum(Math.round(realKm2)) })}</p>
+          <p class="hint">{t("data.ctrlHint")}</p>
+        </Section>
 
-        <fieldset>
-          <legend>Sources</legend>
-          <label>Relief
+        <Section id="data.sources" title={t("data.sources")} open>
+          <label>{t("data.relief")}
             <select bind:value={importer.settings.source} onchange={save}>
-              {#each SOURCES as so (so.id)}<option value={so.id}>{so.label}</option>{/each}
+              {#each SOURCES as so (so)}<option value={so}>{tk(`data.source.${so}`)}</option>{/each}
             </select>
           </label>
-          <label class="check" title="Forêts, cultures, roches et marais d'après ESA WorldCover"><input type="checkbox" bind:checked={importer.settings.useCover} onchange={save} /> Occupation du sol (WorldCover)</label>
-          <button class="secondary wide" disabled={!!importer.running} onclick={() => importer.fetchData()}>
-            {importer.running === "data" ? `Récupération… ${Math.round(importer.progress * 100)} %` : importer.dataSummary && !importer.dataStale ? "Données à jour" : "Récupérer les données"}
-          </button>
+          <label class="check" title={t("data.coverTitle")}><input type="checkbox" bind:checked={importer.settings.useCover} onchange={save} /> {t("data.cover")}</label>
           {#if importer.dataSteps.length}
             <ul class="steps" class:stale={importer.dataStale}>
               {#each importer.dataSteps as st (st.id)}
-                <li class={st.state}><span class="ico">{STEP_ICONS[st.state]}</span>{st.label}{#if st.detail}<span class="detail"> · {st.detail}</span>{/if}</li>
+                <li class={st.state}><span class="ico">{STEP_ICONS[st.state]}</span>{stepLabel("data", st)}{#if st.detail}<span class="detail"> · {st.detail}</span>{/if}</li>
               {/each}
             </ul>
           {/if}
-        </fieldset>
-      {:else if panelTab === "transform"}
-        <div class="row tight update">
-          <label class="check"><input type="checkbox" bind:checked={autoPreview} /> Recalcul auto</label>
-          <button class="secondary" disabled={!!importer.running} onclick={() => importer.runPreview()}>
-            {importer.running === "preview" ? `Calcul… ${Math.round(importer.progress * 100)} %` : "Mettre à jour"}
-          </button>
-        </div>
-
-        <fieldset>
-          <legend>Relief</legend>
+        </Section>
+      {:else if panelTab === "advanced"}
+        <Section id="transform.relief" title={t("advanced.relief")} open>
           <div class="row">
-            <label title="Hauteurs du jeu = hauteurs réelles × ce facteur (vide = 1/√échelle)">Échelle verticale
+            <label title={t("advanced.verticalScaleTitle")}>{t("advanced.verticalScale")}
               <input type="number" step="0.05" min="0.05" placeholder={defaultVerticalScale(f.scale).toFixed(2)}
                 value={s.area.verticalScale ?? ""}
                 onchange={(e) => setArea({ verticalScale: e.currentTarget.value === "" ? null : Math.max(0.05, num(e.currentTarget.value, 1)) })} />
             </label>
-            <label title="Altitude réelle qui devient le niveau de l'eau du jeu (vide = auto)">Niveau de l'eau (m)
-              <input type="number" step="1" placeholder="auto"
+            <label title={t("advanced.waterLevelTitle")}>{t("advanced.waterLevel")}
+              <input type="number" step="1" placeholder={t("advanced.auto")}
                 value={s.terrain.refHeight ?? ""}
                 onchange={(e) => { importer.settings.terrain.refHeight = e.currentTarget.value === "" ? null : num(e.currentTarget.value, 0); save(); }} />
             </label>
           </div>
           <div class="row">
-            <label title="Efface les bosses (arbres, bruit) ; 0 = relief brut">Lissage (m) <input type="number" step="4" min="0" bind:value={importer.settings.terrain.smoothM} onchange={save} /></label>
-            <label title="Mètres retirés aux forêts mesurées par Copernicus (dessus des arbres)">Aplanir forêts (m) <input type="number" step="1" min="0" bind:value={importer.settings.terrain.canopyM} onchange={save} /></label>
+            <label title={t("advanced.smoothTitle")}>{t("advanced.smooth")} <input type="number" step="4" min="0" bind:value={importer.settings.terrain.smoothM} onchange={save} /></label>
+            <label title={t("advanced.canopyTitle")}>{t("advanced.canopy")} <input type="number" step="1" min="0" bind:value={importer.settings.terrain.canopyM} onchange={save} /></label>
           </div>
-        </fieldset>
+        </Section>
 
-        <fieldset>
-          <legend>Eau</legend>
+        <Section id="transform.water" title={t("advanced.water")} open>
           <div class="row">
-            <label title="Partout, sources et raccords compris (rivières du jeu : 110–165 m)">Largeur min. rivières (m) <input type="number" step="8" min="0" bind:value={importer.settings.terrain.riverMinWidth} onchange={save} /></label>
-            <label title="Profondeur du lit (rivières du jeu : ~8,5 m)">Profondeur rivières (m) <input type="number" min="1" bind:value={importer.settings.terrain.riverDepth} onchange={save} /></label>
+            <label title={t("advanced.riverWidthTitle")}>{t("advanced.riverWidth")} <input type="number" step="8" min="0" bind:value={importer.settings.terrain.riverMinWidth} onchange={save} /></label>
+            <label title={t("advanced.riverDepthTitle")}>{t("advanced.riverDepth")} <input type="number" min="1" bind:value={importer.settings.terrain.riverDepth} onchange={save} /></label>
           </div>
           <div class="row">
-            <label title="Une rivière à moins de cette distance d'une autre eau y est reliée par un chenal">Raccord eaux proches (m) <input type="number" step="8" min="0" bind:value={importer.settings.terrain.waterJoinM} onchange={save} /></label>
-            <label title="Plans d'eau plus petits comblés, sauf sur une rivière">Étangs min. (ha) <input type="number" step="0.5" min="0" bind:value={importer.settings.terrain.minLakeHa} onchange={save} /></label>
+            <label title={t("advanced.coastDepthTitle")}>{t("advanced.coastDepth")} <input type="number" min="1" bind:value={importer.settings.terrain.coastDepth} onchange={save} /></label>
+            <label title={t("advanced.minPondTitle")}>{t("advanced.minPond")} <input type="number" step="0.5" min="0" bind:value={importer.settings.terrain.minLakeHa} onchange={save} /></label>
           </div>
-          <label class="check"><input type="checkbox" bind:checked={importer.settings.terrain.wetlandLakes} onchange={save} /> Marais → lacs</label>
+          <label title={t("advanced.waterJoinTitle")}>{t("advanced.waterJoin")} <input type="number" step="8" min="0" bind:value={importer.settings.terrain.waterJoinM} onchange={save} /></label>
+          <label class="check"><input type="checkbox" bind:checked={importer.settings.terrain.wetlandLakes} onchange={save} /> {t("advanced.marshLakes")}</label>
           {#if s.terrain.wetlandLakes}
             <div class="row">
-              <label>Surface min. (ha) <input type="number" step="1" min="0" bind:value={importer.settings.terrain.wetlandMinHa} onchange={save} /></label>
-              <label>Profondeur (m) <input type="number" step="1" min="1" bind:value={importer.settings.terrain.marshDepth} onchange={save} /></label>
+              <label>{t("advanced.marshArea")} <input type="number" step="1" min="0" bind:value={importer.settings.terrain.wetlandMinHa} onchange={save} /></label>
+              <label>{t("advanced.marshDepth")} <input type="number" step="1" min="1" bind:value={importer.settings.terrain.marshDepth} onchange={save} /></label>
             </div>
           {/if}
           <details>
-            <summary>Réseau, berges et profondeurs</summary>
-            <label class="check" title="Chaque rivière finit dans l'eau ou au bord de la carte"><input type="checkbox" bind:checked={importer.settings.terrain.repairRivers} onchange={save} /> Réparer le réseau</label>
+            <summary>{t("advanced.network")}</summary>
+            <label class="check" title={t("advanced.repairTitle")}><input type="checkbox" bind:checked={importer.settings.terrain.repairRivers} onchange={save} /> {t("advanced.repair")}</label>
             <div class="row">
-              <label title="Extrémités reliées en ligne droite à l'eau proche">Raccord extrémités (m) <input type="number" step="25" min="0" bind:value={importer.settings.terrain.riverJoinM} onchange={save} /></label>
-              <label title="Les sources s'élargissent sur cette longueur">Biseau sources (m) <input type="number" step="100" min="0" bind:value={importer.settings.terrain.sourceTaperM} onchange={save} /></label>
+              <label title={t("advanced.endJoinTitle")}>{t("advanced.endJoin")} <input type="number" step="25" min="0" bind:value={importer.settings.terrain.riverJoinM} onchange={save} /></label>
+              <label title={t("advanced.taperTitle")}>{t("advanced.taper")} <input type="number" step="100" min="0" bind:value={importer.settings.terrain.sourceTaperM} onchange={save} /></label>
             </div>
             <div class="row">
-              <label title="Pente de la vallée creusée autour d'une rivière haute">Pente vallées <input type="number" step="0.02" min="0.02" bind:value={importer.settings.terrain.valleySlope} onchange={save} /></label>
-              <label>Pente berges rivières <input type="number" step="0.05" min="0.02" bind:value={importer.settings.terrain.riverBankSlope} onchange={save} /></label>
+              <label title={t("advanced.valleySlopeTitle")}>{t("advanced.valleySlope")} <input type="number" step="0.02" min="0.02" bind:value={importer.settings.terrain.valleySlope} onchange={save} /></label>
+              <label>{t("advanced.riverBank")} <input type="number" step="0.05" min="0.02" bind:value={importer.settings.terrain.riverBankSlope} onchange={save} /></label>
             </div>
             <div class="row">
-              <label>Pente berges mer, lacs <input type="number" step="0.05" min="0.05" bind:value={importer.settings.terrain.bankSlope} onchange={save} /></label>
-              <label>Largeur berges (m) <input type="number" step="50" min="0" bind:value={importer.settings.terrain.bankWidthM} onchange={save} /></label>
+              <label>{t("advanced.seaBank")} <input type="number" step="0.05" min="0.05" bind:value={importer.settings.terrain.bankSlope} onchange={save} /></label>
+              <label>{t("advanced.bankWidth")} <input type="number" step="50" min="0" bind:value={importer.settings.terrain.bankWidthM} onchange={save} /></label>
             </div>
             <div class="row">
-              <label>Profondeur lacs (m) <input type="number" min="1" bind:value={importer.settings.terrain.lakeDepth} onchange={save} /></label>
-              <label title="Mètres de profondeur gagnés par mètre depuis le rivage">Approfondissement <input type="number" step="0.05" min="0.05" bind:value={importer.settings.terrain.underwaterSlope} onchange={save} /></label>
+              <label>{t("advanced.lakeDepth")} <input type="number" min="1" bind:value={importer.settings.terrain.lakeDepth} onchange={save} /></label>
+              <label title={t("advanced.underwaterTitle")}>{t("advanced.underwater")} <input type="number" step="0.05" min="0.05" bind:value={importer.settings.terrain.underwaterSlope} onchange={save} /></label>
             </div>
             <div class="row">
-              <label>Mer sans données (m) <input type="number" min="1" bind:value={importer.settings.terrain.seaDepth} onchange={save} /></label>
-              <label>Mer max. (m) <input type="number" min="1" bind:value={importer.settings.terrain.seaMaxDepth} onchange={save} /></label>
+              <label>{t("advanced.seaDepth")} <input type="number" min="1" bind:value={importer.settings.terrain.seaDepth} onchange={save} /></label>
+              <label>{t("advanced.seaMax")} <input type="number" min="1" bind:value={importer.settings.terrain.seaMaxDepth} onchange={save} /></label>
             </div>
-            <label title="Un lac sans rivière plus haut que ça au-dessus du niveau de l'eau reste en terre">Creusement max. lacs (m) <input type="number" min="0" bind:value={importer.settings.terrain.maxCarve} onchange={save} /></label>
-            <button class="small" disabled={!!importer.running} onclick={() => importer.writeRiverTest()}>Carte de test des rivières</button>
+            <label title={t("advanced.maxCarveTitle")}>{t("advanced.maxCarve")} <input type="number" min="0" bind:value={importer.settings.terrain.maxCarve} onchange={save} /></label>
+            <button class="small" disabled={!!importer.running} onclick={() => importer.writeRiverTest()}>{t("advanced.riverTest")}</button>
           </details>
-        </fieldset>
+        </Section>
 
-        <fieldset>
-          <legend>Biomes</legend>
+        <Section id="transform.towns" title={t("advanced.towns")}>
+          <div class="row">
+            <label>{t("advanced.minPop")} <input type="number" step="500" min="0" bind:value={importer.settings.places.minPopulation} onchange={save} /></label>
+            <label title={t("advanced.autoCountTitle", { n: townLimit })}>{t("advanced.autoCount")} <input type="number" step="1" min="0" bind:value={importer.settings.towns.maxTowns} onchange={save} /></label>
+          </div>
+          <label class="check"><input type="checkbox" bind:checked={importer.settings.places.includeUnknown} onchange={save} /> {t("advanced.unknownPop")}</label>
+          {#if placedTowns > townLimit}<p class="warn">{t("advanced.tooMany", { n: townLimit })}</p>{/if}
+          <div class="row">
+            <label title={t("advanced.refCapacityTitle")}>{t("advanced.refCapacity")} <input type="number" step="25" min="10" bind:value={importer.settings.towns.refCapacity} onchange={save} /></label>
+            <label title={t("advanced.contrastTitle")}>{t("advanced.contrast")} <input type="number" step="0.05" min="0" max="1" bind:value={importer.settings.towns.sizeExponent} onchange={save} /></label>
+          </div>
+          <label>{t("advanced.townSpacing")} <input type="number" step="100" min="0" bind:value={importer.settings.towns.minSpacingM} onchange={save} /></label>
           <details>
-            <summary>Correspondance avec les biomes du jeu</summary>
-            {#each COVER_LABELS as label, i (label)}
-              <label class="inline">{label}
-                <select value={s.biomes.cover[i]} onchange={(e) => { importer.settings.biomes.cover[i] = +e.currentTarget.value; save(); }}>
-                  {#each [0, 1, 2, 3, 4] as b (b)}<option value={b}>Biome {b}</option>{/each}
-                </select>
-              </label>
-            {/each}
-            <button class="small" disabled={!!importer.running} onclick={() => importer.writeBiomeTest()}>Carte de test des biomes</button>
-          </details>
-        </fieldset>
-
-        <fieldset>
-          <legend>Villes</legend>
-          <div class="row">
-            <label title="Capacité en jeu d'une ville de 10 000 habitants (partie normale : 240–820)">Taille 10 000 hab. <input type="number" step="25" min="10" bind:value={importer.settings.towns.refCapacity} onchange={save} /></label>
-            <label title="1 = proportionnel à la population, 0 = toutes pareilles">Contraste tailles <input type="number" step="0.05" min="0" max="1" bind:value={importer.settings.towns.sizeExponent} onchange={save} /></label>
-          </div>
-          <label>Écart min. entre villes (m) <input type="number" step="100" min="0" bind:value={importer.settings.towns.minSpacingM} onchange={save} /></label>
-          <details>
-            <summary>Emplacement</summary>
+            <summary>{t("advanced.placement")}</summary>
             <div class="row">
-              <label>Distance mer / lacs (m) <input type="number" step="50" min="0" bind:value={importer.settings.towns.waterClearanceM} onchange={save} /></label>
-              <label>Distance rivières (m) <input type="number" step="25" min="0" bind:value={importer.settings.towns.riverClearanceM} onchange={save} /></label>
+              <label>{t("advanced.seaDistance")} <input type="number" step="50" min="0" bind:value={importer.settings.towns.waterClearanceM} onchange={save} /></label>
+              <label>{t("advanced.riverDistance")} <input type="number" step="25" min="0" bind:value={importer.settings.towns.riverClearanceM} onchange={save} /></label>
             </div>
             <div class="row">
-              <label>Marge au bord (m) <input type="number" step="100" min="0" bind:value={importer.settings.towns.edgeMarginM} onchange={save} /></label>
-              <label>Déplacement max. (m) <input type="number" step="500" min="0" bind:value={importer.settings.towns.maxShiftM} onchange={save} /></label>
+              <label>{t("advanced.edgeMargin")} <input type="number" step="100" min="0" bind:value={importer.settings.towns.edgeMarginM} onchange={save} /></label>
+              <label>{t("advanced.maxShift")} <input type="number" step="500" min="0" bind:value={importer.settings.towns.maxShiftM} onchange={save} /></label>
             </div>
           </details>
-        </fieldset>
+        </Section>
 
-        <fieldset>
-          <legend>Industries</legend>
+        <Section id="transform.industries" title={t("advanced.industries")}>
           <div class="row">
-            <label>Écart entre industries (m) <input type="number" step="100" min="0" bind:value={importer.settings.industries.minSpacingM} onchange={save} /></label>
-            <label>Distance aux villes (m) <input type="number" step="100" min="0" bind:value={importer.settings.industries.townClearanceM} onchange={save} /></label>
-          </div>
-          <div class="row">
-            <label>Marge au bord (m) <input type="number" step="100" min="0" bind:value={importer.settings.industries.edgeMarginM} onchange={save} /></label>
-            <label>Déplacement max. (m) <input type="number" step="500" min="0" bind:value={importer.settings.industries.maxShiftM} onchange={save} /></label>
-          </div>
-        </fieldset>
-      {:else}
-        <fieldset>
-          <legend>Villes {pv ? `· ${placedTowns} placées` : ""}</legend>
-          <div class="row">
-            <label>Population min. <input type="number" step="500" min="0" bind:value={importer.settings.places.minPopulation} onchange={save} /></label>
-            <label title={`Le jeu met jusqu'à ~${townLimit} villes sur une carte de cette taille (indicatif)`}>Nombre auto <input type="number" step="1" min="0" bind:value={importer.settings.towns.maxTowns} onchange={save} /></label>
-          </div>
-          <label class="check"><input type="checkbox" bind:checked={importer.settings.places.includeUnknown} onchange={save} /> Population inconnue estimée</label>
-          {#if placedTowns > townLimit}<p class="warn">Plus que les ~{townLimit} villes du jeu pour cette taille.</p>{/if}
-          <svelte:boundary onerror={(e) => importer.report(e, "Liste des villes")}>
-            {#if pv}
-              <div class="add">
-                <input type="search" placeholder="Ajouter une ville…" bind:value={townQuery}
-                  onfocus={() => (townFocus = true)}
-                  onblur={() => setTimeout(() => (townFocus = false), 150)}
-                  onkeydown={(e) => { if (e.key === "Enter" && suggestions[0]) addTown(suggestions[0].key); }} />
-                {#if townFocus && suggestions.length}
-                  <ul class="suggest">
-                    {#each suggestions as c (c.key)}
-                      <li><button onmousedown={() => addTown(c.key)}>{c.name} <span class="pop">{c.estimated ? "≈ " : ""}{c.rank.toLocaleString("fr-FR")}</span></button></li>
-                    {/each}
-                  </ul>
-                {/if}
-                <button class="small" disabled={!!importer.running} onclick={() => importer.resetPicks("auto")} title="Rendre toutes les villes au choix par population">Tout auto</button>
-                <button class="small" disabled={!!importer.running} onclick={() => importer.resetPicks("none")}>Aucune</button>
-              </div>
-              <ul class="towns">
-                {#each listedTowns as c (c.key)}
-                  <li class={c.status} title={townTitle(c)}>
-                    <input type="checkbox" checked={c.status !== "off"} disabled={!!importer.running} onchange={() => importer.toggleTown(c.key)} />
-                    <span class="name">{c.name}</span>
-                    <span class="pop">{c.estimated ? "≈ " : ""}{c.rank.toLocaleString("fr-FR")}</span>
-                    <span class="state">
-                      {c.status === "placed" ? c.capacity : c.status === "off" ? "" : "non placée"}
-                      {#if c.pick !== null}<button class="link" title="Rendre au choix automatique" onclick={() => importer.setPick(c.key, null)}>auto</button>{/if}
-                    </span>
-                  </li>
-                {/each}
-              </ul>
-            {/if}
-            {#snippet failed(error, reset)}
-              <p class="error">Liste des villes : {errorText(error)} <button class="link" onclick={reset}>réessayer</button></p>
-            {/snippet}
-          </svelte:boundary>
-        </fieldset>
-
-        <fieldset>
-          <legend>Industries {pv ? `· ${(pv.industries ?? []).length} placées` : ""}</legend>
-          <div class="row">
-            <label title="Même économie que le climat de la carte dans l'éditeur">Économie
+            <label title={t("advanced.economyTitle")}>{t("advanced.economy")}
               <select bind:value={importer.settings.industries.economy} onchange={save}>
-                {#each Object.entries(ECONOMY_LABELS) as [id, label] (id)}<option value={id}>{label}</option>{/each}
+                {#each Object.keys(ECONOMY_LABELS) as id (id)}<option value={id}>{tk(`economy.${id}`)}</option>{/each}
               </select>
             </label>
-            <label>Densité du jeu
+            <label>{t("advanced.density")}
               <select bind:value={importer.settings.industries.density} onchange={save}>
-                {#each DENSITY_LABELS as label, i (label)}<option value={i}>{label}</option>{/each}
+                {#each DENSITIES as i (i)}<option value={i}>{tk(`density.${i}`)}</option>{/each}
               </select>
             </label>
           </div>
-          <label title={`0 = nombre du jeu pour cette densité (${defaultIndustryCount(f, s.industries.density)})`}>Nombre (0 = jeu : {defaultIndustryCount(f, s.industries.density)}) <input type="number" step="1" min="0" bind:value={importer.settings.industries.maxIndustries} onchange={save} /></label>
-          <svelte:boundary onerror={(e) => importer.report(e, "Liste des industries")}>
-            {#if pv}
-              {@const inds = pv.industryCandidates ?? []}
-              <div class="row tight towns-head">
-                <span></span>
-                <button class="small" disabled={!!importer.running} onclick={() => importer.resetIndustryPicks()}>Tout auto</button>
-              </div>
-              <ul class="towns">
-                {#each inds as c (c.key)}
-                  <li class={c.status} title={industryTitle(c)}>
-                    <input type="checkbox" checked={c.status !== "off"} disabled={!!importer.running} onchange={() => importer.toggleIndustry(c.key)} />
-                    <i class="sq" style:background={industryColor(c.tag)}></i>
-                    <span class="name">{c.name}{#if c.missing}<span class="warn"> · il manque : {c.missing.join(", ")}</span>{/if}</span>
-                    <span class="pop" title="Présence réelle (sites OSM, occupation du sol)">{ORIGIN_SHORT[c.origin]} {c.relevance ? c.relevance.toLocaleString("fr-FR") : ""}</span>
-                    <span class="state">
-                      {c.status === "placed" || c.status === "off" ? "" : "non placée"}
-                      {#if c.pick !== null}<button class="link" title="Rendre au choix automatique" onclick={() => importer.setIndustryPick(c.key, null)}>auto</button>{/if}
-                    </span>
-                  </li>
-                {/each}
-              </ul>
-            {/if}
-            {#snippet failed(error, reset)}
-              <p class="error">Liste des industries : {errorText(error)} <button class="link" onclick={reset}>réessayer</button></p>
-            {/snippet}
-          </svelte:boundary>
-        </fieldset>
+          <label title={t("advanced.countTitle", { n: defaultIndustryCount(f, s.industries.density) })}>{t("advanced.count", { n: defaultIndustryCount(f, s.industries.density) })} <input type="number" step="1" min="0" bind:value={importer.settings.industries.maxIndustries} onchange={save} /></label>
+          <div class="row">
+            <label>{t("advanced.industrySpacing")} <input type="number" step="100" min="0" bind:value={importer.settings.industries.minSpacingM} onchange={save} /></label>
+            <label>{t("advanced.townClearance")} <input type="number" step="100" min="0" bind:value={importer.settings.industries.townClearanceM} onchange={save} /></label>
+          </div>
+          <div class="row">
+            <label>{t("advanced.edgeMargin")} <input type="number" step="100" min="0" bind:value={importer.settings.industries.edgeMarginM} onchange={save} /></label>
+            <label>{t("advanced.maxShift")} <input type="number" step="500" min="0" bind:value={importer.settings.industries.maxShiftM} onchange={save} /></label>
+          </div>
+        </Section>
 
+        <Section id="transform.roads" title={t("advanced.roads")}>
+          {#if !s.roadsFrozen}<p class="hint">{t("roads.auto")}</p>{/if}
+          <ResetRoads />
+        </Section>
+
+        <Section id="transform.rail" title={t("advanced.rail")}>
+          <div class="row">
+            <label title={t("advanced.minRadiusTitle")}>{t("advanced.minRadius")} <input type="number" step="50" min="55" bind:value={importer.settings.rail.minRadiusM} onchange={save} /></label>
+            <label title={t("advanced.maxGradeTitle")}>{t("advanced.maxGrade")}
+              <input type="number" step="0.5" min="0.5" max="8" value={Math.round(s.rail.maxGrade * 1000) / 10}
+                onchange={(e) => { importer.settings.rail.maxGrade = Math.min(0.085, Math.max(0.005, num(e.currentTarget.value, 2.5) / 100)); save(); }} />
+            </label>
+          </div>
+          <div class="row">
+            <label title={t("advanced.railClearanceTitle")}>{t("advanced.railClearance")} <input type="number" step="50" min="0" bind:value={importer.settings.rail.townClearanceM} onchange={save} /></label>
+            <label title={t("advanced.corridorTitle")}>{t("advanced.corridor")} <input type="number" step="100" min="0" max="2000" bind:value={importer.settings.rail.corridorM} onchange={save} /></label>
+          </div>
+        </Section>
+      {:else}
         {#if pv}
-          {@const net = pv.network}
-          <fieldset>
-            <legend>Routes et rail</legend>
-            <ul class="towns">
-              {#each net.links as l (l.key)}
-                <li class={s.linkPicks[l.key] === false ? "off" : "placed"} title={l.real ? "Le long des routes réelles" : "Pas de route réelle : ligne directe"}>
-                  <input type="checkbox" checked={s.linkPicks[l.key] !== false} disabled={!!importer.running} onchange={() => toggleLink(l.key)} />
-                  <span class="name">{l.a} – {l.b}</span>
-                  <span class="pop">{l.kind === "industry" ? "industrie" : "ville"} · {km(l.lengthM)}</span>
-                </li>
-              {/each}
-              {#each net.rail as r (r.key)}
-                <li class={s.linkPicks[r.key] === false ? "off" : "rail"}>
-                  <input type="checkbox" checked={s.linkPicks[r.key] !== false} disabled={!!importer.running} onchange={() => toggleLink(r.key)} />
-                  <span class="name">Voie ferrée principale</span>
-                  <span class="pop">{km(r.pts.length * 250)}</span>
-                </li>
-              {/each}
-            </ul>
-          </fieldset>
+          <div class="summary">
+            <span>{t("export.summary", { towns: placedTowns, industries: (pv.industries ?? []).length, links: pv.network.links.filter((l) => s.linkPicks[l.key] !== false).length, rails: pv.network.rail.length })}</span>
+            <button class="secondary" onclick={() => (listsOpen = true)}>{t("export.showLists")}</button>
+          </div>
+          <p class="hint">{t("export.mapHint")}</p>
         {/if}
 
-        <fieldset>
-          <legend>Jeu</legend>
-          <label>Nom de la carte <input bind:value={importer.settings.name} onchange={save} /></label>
-          <label>Dossier userdata de TF3
+        <Section id="export.game" title={t("export.game")} open>
+          <label>{t("export.mapName")} <input bind:value={importer.settings.name} onchange={save} /></label>
+          <label>{t("export.userdata")}
             <input bind:value={importer.settings.userdata} onchange={() => { save(); importer.readGameSettings(); }} placeholder="…\3493540\local" />
           </label>
-        </fieldset>
+        </Section>
 
-        <div class="actions">
-          <button class="go" disabled={!!importer.running} onclick={() => importer.run()}>
-            {importer.running === "full" ? `Génération… ${Math.round(importer.progress * 100)} %` : "Générer la carte"}
-          </button>
-        </div>
-
-        {#if importer.result}
-          {@const r = importer.result}
-          <div class="result">
-            <h2>Dans le Map Editor</h2>
-            <ol>
-              <li>Nouvelle carte <b>{r.sizeLabel}</b>.</li>
-              <li>Import Heightmap → <b>{r.name}</b> : Minimum <b>{r.stats.minM}</b>, Maximum <b>{r.stats.maxM}</b>, Water Level <b>0</b>.</li>
-              <li>Biomes → <b>{r.name}_biomes</b>.</li>
-              <li>Towns / Industries → Import → <b>{r.name}</b>.</li>
-              <li>Mod <b>importcity</b> : tailles, noms, routes et rail.</li>
-            </ol>
-          </div>
+        <p class="facts">{t("export.inGame", { size: sizeText(s.area.size, s.area.format, s.area.landscape) })}</p>
+        {#if importer.exportSteps.length || importer.gameSteps.length}
+          <ul class="steps">
+            {#each [...importer.exportSteps.map((e) => ({ ...e, label: stepLabel("export", e) })), ...importer.gameSteps.map((g) => ({ ...g, id: `game:${g.id}`, label: t("export.gameStep", { label: stepLabel("game", g) }) }))] as st (st.id)}
+              <li class={st.state}><span class="ico">{STEP_ICONS[st.state]}</span>{st.label}{#if st.detail}<span class="detail"> · {st.detail}</span>{/if}</li>
+            {/each}
+          </ul>
         {/if}
+        <Section id="export.updates" title={t("updates.title")}>
+          <UpdatesPanel />
+        </Section>
       {/if}
-      <p class="credits">IGN RGE ALTI® · Copernicus DEM © DLR / Airbus, ESA · © ESA WorldCover 2021 (CC BY 4.0) · © contributeurs OpenStreetMap (ODbL)</p>
+      <p class="credits">{t("credits")}</p>
     </div>
 
-    <LogPanel />
+    <footer>
+      {#if panelTab === "data"}
+        {#if dataOk && resultOk && !importer.running}
+          <p class="ready">{t("data.ready")}</p>
+        {/if}
+        <button class="action" class:ok={dataOk} disabled={!!importer.running} onclick={() => importer.fetchData()}>
+          {importer.running === "data" ? t("data.fetching", { pct: pct() }) : dataOk ? t("data.upToDate") : t("data.fetch")}
+        </button>
+      {:else if panelTab === "advanced"}
+        <div class="row tight update">
+          <label class="check"><input type="checkbox" bind:checked={autoPreview} /> {t("advanced.autoUpdate")}</label>
+          <button class="action" class:ok={resultOk} disabled={!!importer.running} onclick={() => importer.runPreview()}>
+            {importer.running === "preview" ? t("advanced.updating", { pct: pct() }) : resultOk ? t("advanced.upToDate") : t("advanced.update")}
+          </button>
+        </div>
+      {:else}
+        <button class="action" class:ok={importer.exported} disabled={!!importer.running} onclick={() => importer.run()}>
+          {importer.running === "full" ? t("export.generating", { pct: pct() }) : importer.exported ? t("export.generated") : t("export.generate")}
+        </button>
+      {/if}
+      {@render progress()}
+    </footer>
+    {/if}
   </aside>
 
   <section class="map-pane">
-    <svelte:boundary onerror={(e) => importer.report(e, "Carte")}>
+    <svelte:boundary onerror={(e) => importer.report(e, t("map.game"))}>
       <AreaMap
         bind:this={mapRef}
         frame={f}
@@ -470,23 +419,32 @@
         {opacity}
         {hideOff}
         linkPicks={s.linkPicks}
+        {industryTypes}
         onPick={(lon, lat) => setArea({ lon, lat })}
         onToggleTown={(k) => importer.toggleTown(k)}
         onToggleIndustry={(k) => importer.toggleIndustry(k)}
+        onAddIndustry={(tag, lon, lat) => importer.addIndustry(tag, lon, lat)}
+        onAddRoad={(a, b) => { const na = townName(a); const nb = townName(b); if (na && nb) importer.addRoad(na, nb); }}
+        onAddRail={(from, to) => importer.addRail(from, to)}
+        onLink={(key) => importer.removeOrRestoreLink(key)}
       />
       {#snippet failed(error, reset)}
-        <div class="crashed"><p>La carte a planté : {errorText(error)}</p><button onclick={reset}>Réessayer</button></div>
+        <div class="crashed"><p>{t("map.crashed", { error: errorText(error) })}</p><button onclick={reset}>{t("map.retry")}</button></div>
       {/snippet}
     </svelte:boundary>
+    {#if listsOpen}
+      <ListsPanel onFocus={(kind, key) => { mapView = "game"; mapRef?.focus(kind, key, 460); }} onClose={() => (listsOpen = false)} />
+    {/if}
     <div class="map-tools">
-      <button onclick={() => mapRef?.fit()}>Recadrer</button>
+      <button class:active={listsOpen} onclick={() => (listsOpen = !listsOpen)}>{t("map.lists")}</button>
+      <button onclick={() => mapRef?.fit()}>{t("map.fit")}</button>
       <span class="seg">
-        <button class:active={mapView === "real"} disabled={!importer.realLayer} onclick={() => (mapView = "real")}>Données réelles</button>
-        <button class:active={mapView === "game"} onclick={() => (mapView = "game")}>Résultat jeu</button>
+        <button class:active={mapView === "real"} disabled={!importer.realLayer} onclick={() => (mapView = "real")}>{t("map.real")}</button>
+        <button class:active={mapView === "game"} onclick={() => (mapView = "game")}>{t("map.game")}</button>
       </span>
       {#if pv && mapView === "game"}
-        <label class="inline">Opacité <input type="range" min="0" max="1" step="0.05" bind:value={opacity} /></label>
-        <label class="check"><input type="checkbox" bind:checked={hideOff} /> Masquer les lieux non retenus</label>
+        <label class="inline">{t("map.opacity")} <input type="range" min="0" max="1" step="0.05" bind:value={opacity} /></label>
+        <label class="check"><input type="checkbox" bind:checked={hideOff} /> {t("map.hideOff")}</label>
       {/if}
     </div>
   </section>
@@ -517,13 +475,64 @@
     padding: 10px 14px 0;
     border-bottom: 1px solid #d5d9de;
   }
-  header progress {
-    margin-top: 6px;
-  }
   .step {
-    margin: 2px 0 6px;
+    margin: 2px 0 0;
     font-size: 12px;
     color: #5b6670;
+  }
+  footer {
+    padding: 8px 14px 10px;
+    border-top: 1px solid #d5d9de;
+    background: #fafbfc;
+  }
+  footer progress {
+    margin-top: 6px;
+  }
+  footer .error {
+    margin: 6px 0 0;
+    font-size: 12px;
+  }
+  .ready {
+    margin: 0 0 6px;
+    font-size: 12px;
+    color: #1f7a39;
+  }
+  /* The step's action: orange while something is left to do, green once done and up to date. */
+  .action {
+    width: 100%;
+    padding: 9px 10px;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    background: #FD9401;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .action.ok {
+    background: #2e9d4a;
+  }
+  footer .update .action {
+    flex: 2;
+  }
+  .hint {
+    font-size: 12px;
+    color: #5b6670;
+    margin: 6px 0 2px;
+  }
+  .tabs button.log {
+    flex: 0.7;
+  }
+  .badge {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 0 5px;
+    border-radius: 8px;
+    background: #b00020;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
   }
   .body {
     flex: 1;
@@ -550,7 +559,7 @@
   .tabs button.active {
     background: #fff;
     border-color: #d5d9de;
-    color: #e4572e;
+    color: #FD9401;
     font-weight: 600;
   }
   .map-pane {
@@ -575,22 +584,37 @@
     padding: 4px 8px;
     border-radius: 6px;
   }
+  .update-badge {
+    margin-left: 8px;
+    margin-right: auto;
+    padding: 2px 8px;
+    border: 1px solid #2e9d4a;
+    border-radius: 10px;
+    background: #e8f5ec;
+    color: #1f7a39;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  h1 .accent {
+    color: #FD9401;
+  }
+  /* The installed Century Gothic (a Microsoft font, not shipped with the app); close geometric fonts otherwise. */
   h1 {
     margin: 0;
     font-size: 20px;
+    font-family: "Century Gothic", "URW Gothic", "TeX Gyre Adventor", "Avant Garde", sans-serif;
+    font-weight: 700;
   }
-  h2 {
-    font-size: 14px;
-    margin: 0 0 6px;
+  .title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
-  fieldset {
-    border: 1px solid #d5d9de;
-    border-radius: 6px;
-    margin: 10px 0;
-    padding: 8px 10px;
-  }
-  legend {
-    font-weight: 600;
+  .lang select {
+    font-size: 12px;
+    padding: 2px 4px;
   }
   label {
     display: flex;
@@ -614,8 +638,13 @@
     display: flex;
     gap: 10px;
   }
+  /* Side by side, inputs level even when one label wraps. */
   .row > label {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
   }
   .row.tight {
     gap: 6px;
@@ -668,7 +697,7 @@
     color: #6b747c;
   }
   .steps .run {
-    color: #e4572e;
+    color: #FD9401;
   }
   .steps .done .ico {
     color: #2e9d4a;
@@ -680,27 +709,10 @@
   .steps .skip {
     color: #8a949d;
   }
-  .actions {
-    display: flex;
-    gap: 8px;
-  }
-  .actions button {
-    flex: 1;
-    padding: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  .go {
-    background: #e4572e;
-    color: #fff;
-    border: none;
-  }
   .secondary {
     background: #fff;
-    color: #e4572e;
-    border: 2px solid #e4572e;
+    color: #FD9401;
+    border: 2px solid #FD9401;
     border-radius: 6px;
     padding: 6px 10px;
     font-weight: 600;
@@ -719,120 +731,9 @@
   .error {
     color: #b00020;
   }
-  .result {
-    margin-top: 10px;
-    padding: 8px 10px;
-    border-radius: 6px;
-    background: #eef7ee;
-    border: 1px solid #b8dcb8;
-  }
-  .result ol {
-    padding-left: 18px;
-    margin: 0;
-  }
   .credits {
     font-size: 10px;
     color: #8a949d;
-  }
-  .add {
-    position: relative;
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    margin-top: 6px;
-  }
-  .add input {
-    flex: 1;
-  }
-  .add button.small {
-    margin-top: 0;
-    flex: none;
-  }
-  .suggest {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 5;
-    max-height: 220px;
-    overflow-y: auto;
-    margin: 2px 0 0;
-    padding: 0;
-    list-style: none;
-    background: #fff;
-    border: 1px solid #c3c9d0;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    font-size: 12px;
-  }
-  .suggest button {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    border: none;
-    background: none;
-    padding: 4px 8px;
-    cursor: pointer;
-    font: inherit;
-    text-align: left;
-  }
-  .suggest button:hover {
-    background: #f1f5fb;
-  }
-  .towns-head {
-    margin-top: 8px;
-    align-items: center;
-  }
-  .towns-head button.small {
-    margin-top: 0;
-    flex: none;
-  }
-  .towns {
-    list-style: none;
-    margin: 4px 0 0;
-    padding: 0;
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #d5d9de;
-    border-radius: 4px;
-    font-size: 12px;
-  }
-  .towns li {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 2px 6px;
-    border-left: 4px solid #e8912d;
-  }
-  .towns li.placed {
-    border-left-color: #2e9d4a;
-  }
-  .towns li.rail {
-    border-left-color: #1d2329;
-  }
-  .towns li.dropped,
-  .towns li.limit {
-    border-left-color: #8c949c;
-    color: #6b747c;
-  }
-  .towns li.off {
-    color: #6b747c;
-  }
-  .towns .name {
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .towns .pop,
-  .towns .state,
-  .suggest .pop {
-    color: #6b747c;
-    font-variant-numeric: tabular-nums;
-  }
-  button.wide {
-    width: 100%;
-    margin-top: 6px;
   }
   .seg {
     display: inline-flex;
@@ -849,24 +750,24 @@
     margin-left: -1px;
   }
   .seg button.active {
-    background: #e4572e;
+    background: #FD9401;
     color: #fff;
-    border-color: #e4572e;
+    border-color: #FD9401;
   }
-  .towns i.sq {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    transform: rotate(45deg);
-    flex: none;
+  .summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px 0;
+    font-size: 12px;
+    color: #5b6670;
   }
-  button.link {
-    border: none;
-    background: none;
-    padding: 0 2px;
-    color: #2a6fdb;
-    cursor: pointer;
-    font-size: 11px;
-    text-decoration: underline;
+  .summary span {
+    flex: 1;
+  }
+  .map-tools > button.active {
+    background: #FD9401;
+    color: #fff;
+    border-color: #FD9401;
   }
 </style>

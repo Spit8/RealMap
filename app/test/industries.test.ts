@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { frameProjection, makeFrame, type Area } from "../src/lib/core/area";
 import { cellToWorld, previewGrid, worldToCell } from "../src/lib/core/grid";
 import {
-  classifySite, DEFAULT_INDUSTRIES, defaultIndustryCount, footprintM, industryName, INDUSTRIES, ECONOMIES, industriesData, overpassIndustryQuery, parseIndustrySites, planIndustries,
+  classifySite, DEFAULT_INDUSTRIES, defaultIndustryCount, footprintM, industryName, INDUSTRIES, ECONOMIES, industriesData, industryNoteData, overpassIndustryQuery, parseIndustrySites, planIndustries,
   type IndustrySite,
 } from "../src/lib/core/industries";
 import { WC_CROP, WC_TREE } from "../src/lib/core/landcover";
@@ -66,6 +66,19 @@ describe("industry plan", () => {
   };
   const codes = (code: number) => new Uint8Array(n).fill(code);
 
+  it("places an industry added by hand near its point, first", () => {
+    const [lon, lat] = frameProjection(f).toLonLat(2000, -1500);
+    const key = `user:brewery|${lon.toFixed(4)},${lat.toFixed(4)}`;
+    const plan = planIndustries(f, g, ground(false), codes(WC_CROP), [], [], {}, { ...DEFAULT_INDUSTRIES, maxIndustries: 3 }, [], [], [{ key, tag: "brewery", lon, lat }]);
+    const m = plan.industries.find((x) => x.key === key);
+    expect(m?.origin).toBe("user");
+    expect(Math.hypot(m!.x - 2000, m!.y + 1500)).toBeLessThan(600);
+    expect(plan.candidates.find((c) => c.key === key)?.status).toBe("placed");
+    // An industry the economy excludes is ignored.
+    const no = planIndustries(f, g, ground(false), codes(WC_CROP), [], [], {}, DEFAULT_INDUSTRIES, [], [], [{ key: "user:tire_factory|0,0", tag: "tire_factory", lon, lat }]);
+    expect(no.industries.some((x) => x.tag === "tire_factory")).toBe(false);
+  });
+
   it("keeps a real steel mill and adds its coal and iron mines (chain completion)", () => {
     const plan = planIndustries(f, g, ground(false), codes(WC_TREE), [site("steel_mill", 0, 0)], [], {}, { ...DEFAULT_INDUSTRIES, maxIndustries: 6 });
     const tags = plan.industries.map((m) => m.tag);
@@ -104,6 +117,9 @@ describe("industry plan", () => {
     expect(off.candidates.find((c) => c.key === key)!.status).toBe("off");
     const data = industriesData([{ key, tag: "brewery", label: "Brasserie", name: "Brasserie", x: 12.34, y: -5, onWater: false, origin: "osm" }]);
     expect(data[0]).toEqual({ position: { x: 12.3, y: -5 }, angle: 0, onWater: false, fileName: "::/industries/brewery/brewery.con", tag: "brewery" });
+    // The note for the mod, which builds and names them (FACT-024).
+    const note = industryNoteData([{ key, tag: "brewery", label: "Brasserie", name: "Brasserie Georges", x: 12.34, y: -5, onWater: false, origin: "osm" }]);
+    expect(note[0]).toEqual({ tag: "brewery", x: 12.3, y: -5, angle: 0, onWater: false, fileName: "::/industries/brewery/brewery.con", name: "Brasserie Georges" });
   });
 
   it("uses the game's count for the density (FACT-021) and keeps whole chains", () => {
@@ -130,7 +146,7 @@ describe("industry plan", () => {
     const off = planIndustries(f, g, ground(false), codes(WC_CROP), sites, [], { [coal.key]: false }, opts);
     expect(off.industries.length).toBe(base.industries.length - 1);
     expect(off.candidates.find((c) => c.key === coal.key)!.status).toBe("off");
-    expect(off.candidates.find((c) => c.tag === "steel_mill")!.missing).toEqual([INDUSTRIES.coal_mine.label]);
+    expect(off.candidates.find((c) => c.tag === "steel_mill")!.missing).toEqual(["coal_mine"]);
     const extra = base.candidates.find((c) => c.status === "off")!;
     const on = planIndustries(f, g, ground(false), codes(WC_CROP), sites, [], { [extra.key]: true }, opts);
     expect(on.industries.length).toBe(base.industries.length + 1);
@@ -155,6 +171,15 @@ describe("industry plan", () => {
     expect(industryName("Scierie", "Le Havre")).toBe("Scierie du Havre");
     expect(industryName("Brasserie", "Les Avenières")).toBe("Brasserie des Avenières");
     expect(industryName("Ferme", "Lens")).toBe("Ferme de Lens");
+    // Other languages: their pattern and the game's industry name for the tag.
+    const en = { pattern: "{town} {industry}", labels: { saw_mill: "Saw Mill" } };
+    expect(industryName("Scierie", "Lyon", en, "saw_mill")).toBe("Lyon Saw Mill");
+    expect(industryName("Scierie", "Lyon", { pattern: "{industry} di {town}", labels: { saw_mill: "Segheria" } }, "saw_mill")).toBe("Segheria di Lyon");
+    const enPlan = planIndustries(
+      f, g, ground(false), codes(WC_CROP), [], [{ x: 3000, y: 0, name: "Bron" }], {}, { ...DEFAULT_INDUSTRIES, maxIndustries: 4 }, [], [], [],
+      { pattern: "{town} {industry}", labels: { farm: "Crop Farm" } },
+    );
+    expect(enPlan.industries.find((m) => m.tag === "farm")?.name).toBe("Bron Crop Farm");
     const named = { ...site("brewery", 0, 0), name: "Brasserie Georges" };
     const plan = planIndustries(f, g, ground(false), codes(WC_CROP), [named], [{ x: 3000, y: 0, name: "Bron" }], {}, { ...DEFAULT_INDUSTRIES, maxIndustries: 4 });
     expect(plan.industries.find((m) => m.tag === "brewery")!.name).toBe("Brasserie Georges");

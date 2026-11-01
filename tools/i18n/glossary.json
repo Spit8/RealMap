@@ -1,0 +1,971 @@
+{
+  "app": "User-interface text of RealMap, a desktop app that turns a real-world area (relief from elevation data, rivers, lakes and sea, towns, industrial sites, roads and railways from OpenStreetMap) into a custom map for the city-building / transport video game Transport Fever 3. The user picks the area on a map, the app fetches the real data, computes the game map (heights, water, towns with their sizes, industries, road links, a buildable railway line), shows the result on the map, then writes the files and its in-game mod builds everything in the game's Map Editor.",
+  "keep": [
+    "RealMap",
+    "importcity",
+    "Transport Fever 3",
+    "TF3",
+    "OpenStreetMap",
+    "OSM",
+    "IGN",
+    "RGE ALTI",
+    "Copernicus",
+    "GLO-30",
+    "ESA",
+    "WorldCover",
+    "EMODnet",
+    "ETOPO",
+    "userdata",
+    "Ctrl",
+    "Esc",
+    "km",
+    "km²",
+    "ha"
+  ],
+  "style": {
+    "de": {
+      "register": "Address the user informally with 'du' (as the game does). Swiss orthography as in the game: write 'ss', never 'ß'.",
+      "button": "Commands (buttons, menu items, and labels or tooltips naming an action): infinitive form, as the game does ('Speichern', 'Diese Konfiguration löschen'). A status that something is in progress: 'Wird …'.",
+      "evidence": {
+        "register": [
+          "Mit dem Linienmanager kannst du sämtliche Linien verwalten.",
+          "Wenn du dich bereits gut auskennst, kannst du das Tutorial jederzeit beenden.",
+          "Benutze den Güterfilter im Fahrzeugladen, um nach dem Gütertyp zu suchen, den du brauchst."
+        ],
+        "button": [
+          "Speichern",
+          "Löschen",
+          "Umbenennen"
+        ]
+      }
+    },
+    "it": {
+      "register": "Address the user informally with 'tu' (as the game does). 'mod' is feminine: 'la mod'.",
+      "button": "Commands (buttons, menu items, and labels or tooltips naming an action): imperative 2nd person singular, as the game does ('Salva', 'Elimina questa configurazione').",
+      "evidence": {
+        "register": [
+          "Il gestore linea ti consente di gestire tutte le linee.",
+          "Se senti di aver acquisito la sicurezza necessaria, puoi concludere il tutorial in qualsiasi momento.",
+          "Usa il filtro carico nel negozio veicoli per isolare il tipo di carico che ti interessa."
+        ],
+        "button": [
+          "Salva",
+          "Elimina",
+          "Rinomina"
+        ]
+      }
+    },
+    "es": {
+      "register": "Address the user informally with 'tú' (as the game does). 'mod' is masculine: 'el mod'.",
+      "button": "Commands (buttons, menu items, and labels or tooltips naming an action): infinitive form, as the game does ('Guardar', 'Eliminar esta configuración').",
+      "evidence": {
+        "register": [
+          "El gestor de líneas te permite administrar todas las líneas.",
+          "Puedes terminar el tutorial en cualquier momento si consideras que ya sabes todo lo que necesitas.",
+          "Usa el filtro de cargamento de la tienda de vehículos para filtrar según el tipo de cargamento que te interese."
+        ],
+        "button": [
+          "Guardar",
+          "Eliminar",
+          "Renombrar"
+        ]
+      }
+    },
+    "zh": {
+      "register": "Simplified Chinese only (zh-Hans). Address the user with '你' (as the game does).",
+      "button": "Commands (buttons, menu items, and labels or tooltips naming an action): short verb phrase, as the game does ('保存', '删除此配置').",
+      "evidence": {
+        "register": [
+          "你可以使用线路管理器管理所有线路。",
+          "如果你已经掌握基本操作，可以随时结束教程。",
+          "使用载具商店中的货品筛选器，按所需货品类型进行筛选。"
+        ],
+        "button": [
+          "保存",
+          "删除",
+          "重命名"
+        ]
+      }
+    }
+  },
+  "terms": [
+    {
+      "en": "town",
+      "forms": [
+        "towns"
+      ],
+      "source": "game: Town / Towns",
+      "fr": [
+        "ville",
+        "villes"
+      ],
+      "de": [
+        "Stadt",
+        "Städte"
+      ],
+      "it": [
+        "cittadina",
+        "cittadine"
+      ],
+      "es": [
+        "localidad",
+        "localidades"
+      ],
+      "zh": "城镇"
+    },
+    {
+      "en": "industry",
+      "forms": [
+        "industries"
+      ],
+      "source": "game: Industry / Industries",
+      "fr": [
+        "industrie",
+        "industries"
+      ],
+      "de": [
+        "Industrie",
+        "Industrien"
+      ],
+      "it": [
+        "industria",
+        "industrie"
+      ],
+      "es": [
+        "industria",
+        "industrias"
+      ],
+      "zh": "产业"
+    },
+    {
+      "en": "road",
+      "forms": [
+        "roads"
+      ],
+      "source": "game: Road / Roads",
+      "fr": [
+        "route",
+        "routes"
+      ],
+      "de": [
+        "Strasse",
+        "Strassen"
+      ],
+      "it": [
+        "strada",
+        "strade"
+      ],
+      "es": [
+        "carretera",
+        "carreteras"
+      ],
+      "zh": "道路"
+    },
+    {
+      "en": "bridge",
+      "forms": [
+        "bridges"
+      ],
+      "source": "game: Bridge / Bridges",
+      "fr": [
+        "pont",
+        "ponts"
+      ],
+      "de": [
+        "Brücke",
+        "Brücken"
+      ],
+      "it": [
+        "ponte",
+        "ponti"
+      ],
+      "es": [
+        "puente",
+        "puentes"
+      ],
+      "zh": "桥梁"
+    },
+    {
+      "en": "tunnel",
+      "forms": [
+        "tunnels"
+      ],
+      "source": "game: Tunnel / Tunnels",
+      "fr": [
+        "tunnel",
+        "tunnels"
+      ],
+      "de": "Tunnel",
+      "it": "tunnel",
+      "es": [
+        "túnel",
+        "túneles"
+      ],
+      "zh": "隧道"
+    },
+    {
+      "en": "Map Editor",
+      "forms": [],
+      "source": "game: Map Editor",
+      "fr": "éditeur de cartes",
+      "de": "Karten-Editor",
+      "it": "editor di mappe",
+      "es": "editor de mapas",
+      "zh": "地图编辑工具"
+    },
+    {
+      "en": "heightmap",
+      "forms": [],
+      "source": "game: Heightmap",
+      "fr": "carte de relief",
+      "de": "Heightmap",
+      "it": "mappa altimetrica",
+      "es": "mapa de elevación",
+      "zh": "高度图"
+    },
+    {
+      "en": "biomes",
+      "forms": [],
+      "source": "game: Biomes",
+      "fr": "biomes",
+      "de": "Biome",
+      "it": "biomi",
+      "es": "biomas",
+      "zh": "生物群系"
+    },
+    {
+      "en": "terrain",
+      "forms": [],
+      "source": "game: Terrain",
+      "fr": "terrain",
+      "de": "Gelände",
+      "it": "terreno",
+      "es": "terreno",
+      "zh": "地形"
+    },
+    {
+      "en": "economy",
+      "forms": [],
+      "source": "game: Economy",
+      "fr": "économie",
+      "de": "Wirtschaft",
+      "it": "economia",
+      "es": "economía",
+      "zh": "经济"
+    },
+    {
+      "en": "climate",
+      "forms": [],
+      "source": "game: Climate",
+      "fr": "climat",
+      "de": "Klima",
+      "it": "clima",
+      "es": "clima",
+      "zh": "生成器"
+    },
+    {
+      "en": "capacity",
+      "forms": [],
+      "source": "game: Capacity",
+      "fr": "capacité",
+      "de": "Kapazität",
+      "it": "capacità",
+      "es": "capacidad",
+      "zh": "容量"
+    },
+    {
+      "en": "demand",
+      "forms": [
+        "demands"
+      ],
+      "source": "game: Demand",
+      "fr": "demande",
+      "de": "Nachfrage",
+      "it": "domanda",
+      "es": "demanda",
+      "zh": "需求"
+    },
+    {
+      "en": "water level",
+      "forms": [],
+      "source": "game: Water Level",
+      "fr": "niveau d’eau",
+      "de": "Wasserhöhe",
+      "it": "livello dell'acqua",
+      "es": "nivel del agua",
+      "zh": "水位"
+    },
+    {
+      "en": "population",
+      "forms": [],
+      "source": "game: Population",
+      "fr": "population",
+      "de": "Bevölkerung",
+      "it": "popolazione",
+      "es": "población",
+      "zh": "人口"
+    },
+    {
+      "en": "mod",
+      "forms": [
+        "mods"
+      ],
+      "source": "game: Mods",
+      "fr": [
+        "mod",
+        "mods"
+      ],
+      "note": "de: game gives the plural only; es: game gives the plural only",
+      "de": [
+        "Mod",
+        "Mods"
+      ],
+      "it": "mod",
+      "es": [
+        "mod",
+        "mods"
+      ],
+      "zh": "模组"
+    },
+    {
+      "en": "temperate",
+      "forms": [],
+      "source": "game: Temperate",
+      "fr": "tempéré",
+      "de": "Gemässigt",
+      "it": "temperato",
+      "es": "templado",
+      "zh": "温带"
+    },
+    {
+      "en": "dry",
+      "forms": [],
+      "source": "game: Dry",
+      "fr": "aride",
+      "de": "Trocken",
+      "it": "secco",
+      "es": "árido",
+      "zh": "干燥"
+    },
+    {
+      "en": "tropical",
+      "forms": [],
+      "source": "game: Tropical",
+      "fr": "tropical",
+      "de": "Tropisch",
+      "it": "tropicale",
+      "es": "tropical",
+      "zh": "热带"
+    },
+    {
+      "en": "subarctic",
+      "forms": [],
+      "source": "game: Subarctic",
+      "fr": "subarctique",
+      "de": "Subarktisch",
+      "it": "subartico",
+      "es": "subártico",
+      "zh": "亚寒带植被"
+    },
+    {
+      "en": "beverages",
+      "forms": [],
+      "source": "game: Beverages",
+      "fr": "boissons",
+      "de": "Getränke",
+      "it": "bevande",
+      "es": "bebidas",
+      "zh": "饮料"
+    },
+    {
+      "en": "books",
+      "forms": [],
+      "source": "game: Books",
+      "fr": "livres",
+      "de": "Bücher",
+      "it": "libri",
+      "es": "libros",
+      "zh": "书籍"
+    },
+    {
+      "en": "clothes",
+      "forms": [],
+      "source": "game: Clothes",
+      "fr": "vêtements",
+      "de": "Kleidung",
+      "it": "indumenti",
+      "es": "ropa",
+      "zh": "衣物"
+    },
+    {
+      "en": "fish",
+      "forms": [],
+      "source": "game: Fish",
+      "fr": "poisson",
+      "de": "Fisch",
+      "it": "pesce",
+      "es": "pescado",
+      "zh": "鱼"
+    },
+    {
+      "en": "meat",
+      "forms": [],
+      "source": "game: Meat",
+      "fr": "viande",
+      "de": "Fleisch",
+      "it": "carne",
+      "es": "carne",
+      "zh": "肉类"
+    },
+    {
+      "en": "vegetables",
+      "forms": [],
+      "source": "game: Vegetables",
+      "fr": "légumes",
+      "de": "Gemüse",
+      "it": "verdure",
+      "es": "vegetales",
+      "zh": "蔬菜"
+    },
+    {
+      "en": "bricks",
+      "forms": [],
+      "source": "game: Bricks",
+      "fr": "briques",
+      "de": "Ziegel",
+      "it": "mattoni",
+      "es": "ladrillos",
+      "zh": "砖石"
+    },
+    {
+      "en": "cement",
+      "forms": [],
+      "source": "game: Cement",
+      "fr": "ciment",
+      "de": "Zement",
+      "it": "cemento",
+      "es": "cemento",
+      "zh": "水泥"
+    },
+    {
+      "en": "fuel",
+      "forms": [],
+      "source": "game: Fuel",
+      "fr": "carburant",
+      "de": "Treibstoff",
+      "it": "carburante",
+      "es": "combustible",
+      "zh": "燃料"
+    },
+    {
+      "en": "furniture",
+      "forms": [],
+      "source": "game: Furniture",
+      "fr": "meubles",
+      "de": "Möbel",
+      "it": "mobili",
+      "es": "muebles",
+      "zh": "家具"
+    },
+    {
+      "en": "machines",
+      "forms": [],
+      "source": "game: Machines",
+      "fr": "machines",
+      "de": "Maschinen",
+      "it": "macchinari",
+      "es": "máquinas",
+      "zh": "机器"
+    },
+    {
+      "en": "planks",
+      "forms": [],
+      "source": "game: Planks",
+      "fr": "planches",
+      "de": "Bretter",
+      "it": "assi",
+      "es": "tablones",
+      "zh": "厚木板"
+    },
+    {
+      "en": "tools",
+      "forms": [],
+      "source": "game: Tools",
+      "fr": "outils",
+      "de": "Werkzeuge",
+      "it": "strumenti",
+      "es": "herramientas",
+      "zh": "工具"
+    },
+    {
+      "en": "vehicles",
+      "forms": [],
+      "source": "game: Vehicles",
+      "fr": "véhicules",
+      "de": "Fahrzeuge",
+      "it": "veicoli",
+      "es": "vehículos",
+      "zh": "载具"
+    },
+    {
+      "en": "Crop Farm",
+      "forms": [],
+      "source": "game: INDUSTRIES_FARM_NAME",
+      "fr": "Exploitation agricole",
+      "de": "Bauernhof",
+      "it": "Azienda agricola",
+      "es": "Granja de cultivos",
+      "zh": "作物农场"
+    },
+    {
+      "en": "Livestock Farm",
+      "forms": [],
+      "source": "game: INDUSTRIES_LIVESTOCK_FARM_NAME",
+      "fr": "Ferme d’élevage",
+      "de": "Viehzuchtbetrieb",
+      "it": "Allevamento di bestiame",
+      "es": "Granja de ganado",
+      "zh": "牲畜养殖场"
+    },
+    {
+      "en": "Cotton Farm",
+      "forms": [],
+      "source": "game: INDUSTRIES_COTTON_FARM_NAME",
+      "fr": "Ferme de coton",
+      "de": "Baumwollplantage",
+      "it": "Piantagione di cotone",
+      "es": "Granja de algodón",
+      "zh": "棉花农场"
+    },
+    {
+      "en": "Rubber Farm",
+      "forms": [],
+      "source": "game: INDUSTRIES_RUBBER_FARM_NAME",
+      "fr": "Plantation d’hévéas",
+      "de": "Gummiplantage",
+      "it": "Piantagione di gomma",
+      "es": "Granja de caucho",
+      "zh": "橡胶农场"
+    },
+    {
+      "en": "Logging Camp",
+      "forms": [],
+      "source": "game: INDUSTRIES_FOREST_NAME",
+      "fr": "Camp de bûcherons",
+      "de": "Holzfällerlager",
+      "it": "Campo di disboscamento",
+      "es": "Campamento maderero",
+      "zh": "伐木营地"
+    },
+    {
+      "en": "Quarry",
+      "forms": [],
+      "source": "game: INDUSTRIES_QUARRY_NAME",
+      "fr": "Carrière",
+      "de": "Steinbruch",
+      "it": "Cava",
+      "es": "Cantera",
+      "zh": "采石场"
+    },
+    {
+      "en": "Clay Pit",
+      "forms": [],
+      "source": "game: INDUSTRIES_CLAY_PIT_NAME",
+      "fr": "Carrière d’argile",
+      "de": "Lehmgrube",
+      "it": "Cava di argilla",
+      "es": "Cantera de arcilla",
+      "zh": "粘土矿坑"
+    },
+    {
+      "en": "Sand Pit",
+      "forms": [],
+      "source": "game: INDUSTRIES_SAND_PIT_NAME",
+      "fr": "Carrière de sable",
+      "de": "Sandgrube",
+      "it": "Cava di sabbia",
+      "es": "Cantera de arena",
+      "zh": "沙坑"
+    },
+    {
+      "en": "Sand Dredger",
+      "forms": [],
+      "source": "game: INDUSTRIES_SAND_EXCAVATOR_NAME",
+      "fr": "Drague à sable",
+      "de": "Sandbaggerschiff",
+      "it": "Dragatore di sabbia",
+      "es": "Draga de arena",
+      "zh": "挖砂船"
+    },
+    {
+      "en": "Coal Mine",
+      "forms": [],
+      "source": "game: INDUSTRIES_COAL_MINE_NAME",
+      "fr": "Mine de charbon",
+      "de": "Kohlebergwerk",
+      "it": "Miniera di carbone",
+      "es": "Mina de carbón",
+      "zh": "煤矿"
+    },
+    {
+      "en": "Iron Ore Mine",
+      "forms": [],
+      "source": "game: INDUSTRIES_IRON_ORE_MINE_NAME",
+      "fr": "Mine de fer",
+      "de": "Eisenerzbergwerk",
+      "it": "Miniera di ferro",
+      "es": "Mina de mineral de hierro",
+      "zh": "铁矿场"
+    },
+    {
+      "en": "Oil Well",
+      "forms": [],
+      "source": "game: INDUSTRIES_OIL_WELL_NAME",
+      "fr": "Site pétrolier",
+      "de": "Ölquelle",
+      "it": "Pozzo petrolifero",
+      "es": "Pozo petrolífero",
+      "zh": "油井"
+    },
+    {
+      "en": "Oil Platform",
+      "forms": [],
+      "source": "game: INDUSTRIES_OIL_PLATFORM_NAME",
+      "fr": "Plateforme pétrolière",
+      "de": "Ölplattform",
+      "it": "Piattaforma petrolifera",
+      "es": "Plataforma petrolífera",
+      "zh": "采油平台"
+    },
+    {
+      "en": "Fishing Grounds",
+      "forms": [],
+      "source": "game: INDUSTRIES_FISHING_GROUNDS_NAME",
+      "fr": "Zone de pêche",
+      "de": "Fischzucht",
+      "it": "Area di pesca",
+      "es": "Caladeros",
+      "zh": "渔场"
+    },
+    {
+      "en": "Oil Refinery",
+      "forms": [],
+      "source": "game: INDUSTRIES_OIL_REFINERY_NAME",
+      "fr": "Raffinerie de pétrole",
+      "de": "Ölraffinerie",
+      "it": "Raffineria di petrolio",
+      "es": "Refinería de petróleo",
+      "zh": "炼油厂"
+    },
+    {
+      "en": "Chemical Plant",
+      "forms": [],
+      "source": "game: INDUSTRIES_CHEMICAL_PLANT_NAME",
+      "fr": "Usine chimique",
+      "de": "Chemiefabrik",
+      "it": "Impianto chimico",
+      "es": "Planta química",
+      "zh": "化工厂"
+    },
+    {
+      "en": "Steel Mill",
+      "forms": [],
+      "source": "game: INDUSTRIES_STEEL_MILL_NAME",
+      "fr": "Acierie",
+      "de": "Stahlwerk",
+      "it": "Acciaieria",
+      "es": "Acería",
+      "zh": "铁厂"
+    },
+    {
+      "en": "Saw Mill",
+      "forms": [],
+      "source": "game: INDUSTRIES_SAW_MILL_NAME",
+      "fr": "Scierie",
+      "de": "Sägewerk",
+      "it": "Segheria",
+      "es": "Aserradero",
+      "zh": "锯木厂"
+    },
+    {
+      "en": "Brewery",
+      "forms": [],
+      "source": "game: INDUSTRIES_BREWERY_NAME",
+      "fr": "Brasserie",
+      "de": "Brauerei",
+      "it": "Birrificio",
+      "es": "Cervecería",
+      "zh": "啤酒厂"
+    },
+    {
+      "en": "Brickworks",
+      "forms": [],
+      "source": "game: INDUSTRIES_BRICKS_WORKS_NAME",
+      "fr": "Briqueterie",
+      "de": "Ziegelei",
+      "it": "Mattonificio",
+      "es": "Ladrillera",
+      "zh": "砖厂"
+    },
+    {
+      "en": "Glassworks",
+      "forms": [],
+      "source": "game: INDUSTRIES_GLASS_WORKS_NAME",
+      "fr": "Verrerie",
+      "de": "Glashütte",
+      "it": "Vetreria",
+      "es": "Fábrica de vidrio",
+      "zh": "玻璃厂"
+    },
+    {
+      "en": "Canning Factory",
+      "forms": [],
+      "source": "game: INDUSTRIES_FOOD_FACTORY_NAME",
+      "fr": "Conserverie",
+      "de": "Konservenfabrik",
+      "it": "Fabbrica di conserve",
+      "es": "Fábrica de conservas",
+      "zh": "罐头工厂"
+    },
+    {
+      "en": "Weaving Mill",
+      "forms": [],
+      "source": "game: INDUSTRIES_WEAVING_MILL_NAME",
+      "fr": "Tisseranderie",
+      "de": "Weberei",
+      "it": "Fabbrica di filati",
+      "es": "Tejeduría",
+      "zh": "织布厂"
+    },
+    {
+      "en": "Textile Factory",
+      "forms": [],
+      "source": "game: INDUSTRIES_TEXTILE_FACTORY_NAME",
+      "fr": "Usine textile",
+      "de": "Textilfabrik",
+      "it": "Fabbrica tessile",
+      "es": "Fábrica textil",
+      "zh": "纺织厂"
+    },
+    {
+      "en": "Furniture Factory",
+      "forms": [],
+      "source": "game: INDUSTRIES_FURNITURE_FACTORY_NAME",
+      "fr": "Usine de meubles",
+      "de": "Möbelfabrik",
+      "it": "Fabbrica di mobili",
+      "es": "Fábrica de muebles",
+      "zh": "家具厂"
+    },
+    {
+      "en": "Machine Factory",
+      "forms": [],
+      "source": "game: INDUSTRIES_MACHINE_FACTORY_NAME",
+      "fr": "Usine de machines",
+      "de": "Maschinenfabrik",
+      "it": "Fabbrica meccanica",
+      "es": "Fábrica de maquinaria",
+      "zh": "机器制造厂"
+    },
+    {
+      "en": "Tools Factory",
+      "forms": [],
+      "source": "game: INDUSTRIES_TOOL_FACTORY_NAME",
+      "fr": "Usine d’outils",
+      "de": "Werkzeugfabrik",
+      "it": "Fabbrica di strumenti",
+      "es": "Fábrica de herramientas",
+      "zh": "工具厂"
+    },
+    {
+      "en": "Vehicle Factory",
+      "forms": [],
+      "source": "game: INDUSTRIES_VEHICLE_FACTORY_NAME",
+      "fr": "Usine de véhicules",
+      "de": "Fahrzeugfabrik",
+      "it": "Fabbrica di veicoli",
+      "es": "Fábrica de vehículos",
+      "zh": "汽车厂"
+    },
+    {
+      "en": "Cement Plant",
+      "forms": [],
+      "source": "game: INDUSTRIES_CEMENT_PLANT_NAME",
+      "fr": "Cimenterie",
+      "de": "Zementwerk",
+      "it": "Cementificio",
+      "es": "Planta de hormigón",
+      "zh": "水泥厂"
+    },
+    {
+      "en": "Paper Mill",
+      "forms": [],
+      "source": "game: INDUSTRIES_PAPER_MILL_NAME",
+      "fr": "Papeterie",
+      "de": "Papierfabrik",
+      "it": "Cartiera",
+      "es": "Fábrica de papel",
+      "zh": "造纸厂"
+    },
+    {
+      "en": "Printing Factory",
+      "forms": [],
+      "source": "game: INDUSTRIES_PRINTING_PRESS_NAME",
+      "fr": "Imprimerie",
+      "de": "Druckerei",
+      "it": "Stamperia industriale",
+      "es": "Imprenta",
+      "zh": "印刷厂"
+    },
+    {
+      "en": "Tire Factory",
+      "forms": [],
+      "source": "game: INDUSTRIES_TIRE_FACTORY_NAME",
+      "fr": "Usine de pneus",
+      "de": "Reifenfabrik",
+      "it": "Fabbrica di pneumatici",
+      "es": "Fábrica de neumáticos",
+      "zh": "轮胎厂"
+    },
+    {
+      "en": "tinned food",
+      "forms": [],
+      "fr": "conserves",
+      "note": "game msgid not found under this name: to review"
+    },
+    {
+      "en": "relief",
+      "forms": [],
+      "fr": "relief",
+      "de": "Relief",
+      "it": "rilievo",
+      "es": "relieve",
+      "zh": "地形",
+      "note": "app term: to review"
+    },
+    {
+      "en": "land cover",
+      "forms": [],
+      "fr": "occupation du sol",
+      "de": "Bodenbedeckung",
+      "it": "copertura del suolo",
+      "es": "cobertura del suelo",
+      "zh": "土地覆盖",
+      "note": "app term: to review"
+    },
+    {
+      "en": "area",
+      "forms": [
+        "areas"
+      ],
+      "fr": "zone",
+      "de": "Gebiet",
+      "it": "zona",
+      "es": "zona",
+      "zh": "区域",
+      "note": "the real-world area turned into the game map; app term: to review"
+    },
+    {
+      "en": "railway line",
+      "forms": [
+        "railway lines"
+      ],
+      "fr": "voie ferrée",
+      "de": [
+        "Bahnstrecke",
+        "Bahnstrecken"
+      ],
+      "it": [
+        "linea ferroviaria",
+        "linee ferroviarie"
+      ],
+      "es": [
+        "línea de ferrocarril",
+        "líneas de ferrocarril"
+      ],
+      "zh": "铁路线",
+      "note": "a railway track to build, not a transport line; app term: to review"
+    },
+    {
+      "en": "railway",
+      "forms": [],
+      "fr": "voie ferrée",
+      "de": "Bahnstrecke",
+      "it": "ferrovia",
+      "es": "ferrocarril",
+      "zh": "铁路",
+      "note": "the railway (track) as a whole, singular; reviewed by hand"
+    },
+    {
+      "en": "road link",
+      "forms": [
+        "road links"
+      ],
+      "fr": "liaison routière",
+      "de": [
+        "Straßenverbindung",
+        "Straßenverbindungen"
+      ],
+      "it": [
+        "collegamento stradale",
+        "collegamenti stradali"
+      ],
+      "es": [
+        "enlace por carretera",
+        "enlaces por carretera"
+      ],
+      "zh": "公路连接",
+      "note": "app term: to review"
+    },
+    {
+      "en": "bank",
+      "forms": [
+        "banks"
+      ],
+      "fr": "berge",
+      "de": [
+        "Ufer"
+      ],
+      "it": [
+        "sponda",
+        "sponde"
+      ],
+      "es": [
+        "orilla",
+        "orillas"
+      ],
+      "zh": "河岸",
+      "note": "river or lake bank (not a financial bank); app term: to review"
+    },
+    {
+      "en": "sea floor",
+      "forms": [],
+      "fr": "fonds marins",
+      "de": "Meeresboden",
+      "it": "fondale marino",
+      "es": "fondo marino",
+      "zh": "海底",
+      "note": "app term: to review"
+    },
+    {
+      "en": "legend",
+      "forms": [],
+      "fr": "légende",
+      "de": "Legende",
+      "it": "legenda",
+      "es": "leyenda",
+      "zh": "图例",
+      "note": "app term: to review"
+    },
+    {
+      "en": "log",
+      "forms": [],
+      "fr": "journal",
+      "de": "Protokoll",
+      "it": "registro",
+      "es": "registro",
+      "zh": "日志",
+      "note": "the app's message log (tab name); app term: to review"
+    }
+  ]
+}

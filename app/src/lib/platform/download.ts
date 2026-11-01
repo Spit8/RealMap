@@ -15,18 +15,24 @@ import {
 } from "../core/landcover";
 import { parseOverpassStatus, type Bbox, type OverpassStatus } from "../core/osm";
 import { ensureDir, fileExists, fileStat, joinPath, readBytes, readText, writeBytes, writeText } from "./fsx";
+import { t } from "../i18n/index.svelte";
 
 /**
  * Public Overpass servers, tried in turn (FACT-012): the main instance, then VK Maps (up to date,
  * no per-user slots). kumi.systems and private.coffee timed out or served stale data: not used.
  */
 const OVERPASS = [
-  { name: "overpass-api.de", base: "https://overpass-api.de/api" },
-  { name: "VK Maps", base: "https://maps.mail.ru/osm/tools/overpass/api" },
+  { name: "overpass-api.de", base: "https://overpass-api.de/api", slots: true },
+  // No per-user slots (`Rate limit: 0`): its /status says nothing useful and can take 20 s.
+  { name: "VK Maps", base: "https://maps.mail.ru/osm/tools/overpass/api", slots: false },
 ];
+/** `/status` answers within this (s) or is ignored: a hung status page must not hold a query. */
+const STATUS_TIMEOUT_S = 5;
+/** Requests at once: overpass-api.de gives 2 slots per user (FACT-012). */
+const OVERPASS_PARALLEL = 2;
 
 /** overpass-api.de answers 406 to requests without an identifying User-Agent (FACT-008). */
-export const USER_AGENT = "ImportCity/0.4 (Transport Fever 3 map importer)";
+export const USER_AGENT = "RealMap/0.9 (Transport Fever 3 map importer)";
 
 const overpassCache = new Map<string, unknown>();
 /** Answers older than this are fetched again. */
@@ -38,8 +44,26 @@ const MAX_SLOT_WAIT_S = 60;
 
 export type OverpassWait = (seconds: number, reason: string) => void;
 
-/** One Overpass request at a time: a second one would only compete for the same 2 slots. */
-let overpassQueue: Promise<unknown> = Promise.resolve();
+/** Where an answer came from, for the steps and the technical journal. */
+export interface OverpassOrigin {
+  /** "cache" (same or larger area, `ageMs` old) or the server's name. */
+  source: string;
+  ageMs: number;
+  ms: number;
+  bytes: number;
+}
+
+/** At most OVERPASS_PARALLEL requests at once (the others wait for a free place). */
+let overpassRunning = 0;
+const overpassWaiting: (() => void)[] = [];
+async function overpassPlace(): Promise<() => void> {
+  if (overpassRunning >= OVERPASS_PARALLEL) await new Promise<void>((r) => overpassWaiting.push(r));
+  overpassRunning++;
+  return () => {
+    overpassRunning--;
+    overpassWaiting.shift()?.();
+  };
+}
 
 async function sleep(seconds: number, reason: string, onWait?: OverpassWait): Promise<void> {
   for (let s = Math.ceil(seconds); s > 0; s--) {
@@ -50,7 +74,7 @@ async function sleep(seconds: number, reason: string, onWait?: OverpassWait): Pr
 
 async function overpassStatus(base: string): Promise<OverpassStatus | null> {
   try {
-    const res = await fetch(`${base}/status`, { headers: { "User-Agent": USER_AGENT } });
+    const res = await fetch(`${base}/status`, { headers: { "User-Agent": USER_AGENT }, signal: AbortSignal.timeout(STATUS_TIMEOUT_S * 1000) });
     if (!res.ok) return null;
     const st = parseOverpassStatus(await res.text());
     return st.slots > 0 ? st : null;
@@ -62,40 +86,98 @@ async function overpassStatus(base: string): Promise<OverpassStatus | null> {
 /**
  * Overpass query with a disk cache, following the servers' rules (FACT-012): wait for a slot
  * announced by `/api/status` before sending; on a 429 (rate limit) or 502/504 (server full) move
- * on to the next server, and pause 30 s then 60 s between rounds over all of them.
+ * on to the next server, and pause 30 s then 60 s between rounds over all of them. Two requests run
+ * at once (the two slots). With `bbox` (the one written in the query), an answer cached for the
+ * same query over a larger area is reused: the parsers keep only what lies in the map.
  */
-export function overpass<T>(query: string, onWait?: OverpassWait): Promise<T> {
-  const run = overpassQueue.then(() => overpassNow<T>(query, onWait));
-  overpassQueue = run.catch(() => undefined);
-  return run;
+export async function overpass<T>(query: string, onWait?: OverpassWait, bbox?: Bbox, onOrigin?: (o: OverpassOrigin) => void): Promise<T> {
+  const t0 = Date.now();
+  const cached = await overpassCached<T>(query, bbox);
+  if (cached) {
+    onOrigin?.({ source: "cache", ageMs: cached.ageMs, ms: Date.now() - t0, bytes: cached.bytes });
+    return cached.json;
+  }
+  const release = await overpassPlace();
+  try {
+    const got = await overpassNow<T>(query, onWait);
+    if (bbox) await rememberArea(query, bbox, got.file);
+    onOrigin?.({ source: got.server, ageMs: 0, ms: Date.now() - t0, bytes: got.bytes });
+    return got.json;
+  } finally {
+    release();
+  }
 }
 
-async function overpassNow<T>(query: string, onWait?: OverpassWait): Promise<T> {
-  if (overpassCache.has(query)) return overpassCache.get(query) as T;
-  const file = joinPath(await cacheDir("overpass"), `${hashKey(query)}.json`);
-  const st = await fileStat(file);
-  if (st && Date.now() - st.mtimeMs < OVERPASS_CACHE_MS) {
-    const text = await readText(file);
-    if (text) {
-      const json = JSON.parse(text) as T;
-      overpassCache.set(query, json);
-      return json;
-    }
+/** `[out:json][timeout:…][maxsize:…];` and the bbox taken out: what the answer depends on. */
+function queryTemplate(query: string, b: Bbox): string {
+  return query.replace(/\[timeout:\d+\]\[maxsize:\d+\]/, "").split(`${b.south},${b.west},${b.north},${b.east}`).join("{bbox}");
+}
+
+interface AreaEntry {
+  template: string;
+  bbox: Bbox;
+  file: string;
+}
+
+async function areaIndexFile(): Promise<string> {
+  return joinPath(await cacheDir("overpass"), "areas.json");
+}
+
+async function readAreaIndex(): Promise<AreaEntry[]> {
+  try {
+    const text = await readText(await areaIndexFile());
+    return text ? (JSON.parse(text) as AreaEntry[]) : [];
+  } catch {
+    return [];
   }
+}
+
+async function rememberArea(query: string, bbox: Bbox, file: string): Promise<void> {
+  const template = queryTemplate(query, bbox);
+  const list = (await readAreaIndex()).filter((e) => e.file !== file);
+  list.push({ template, bbox, file });
+  await writeText(await areaIndexFile(), JSON.stringify(list.slice(-200)));
+}
+
+const contains = (o: Bbox, i: Bbox) => o.west <= i.west && o.south <= i.south && o.east >= i.east && o.north >= i.north;
+
+/** The cached answer of this query, or of the same query over an area containing `bbox`. */
+async function overpassCached<T>(query: string, bbox?: Bbox): Promise<{ json: T; ageMs: number; bytes: number } | null> {
+  if (overpassCache.has(query)) return { json: overpassCache.get(query) as T, ageMs: 0, bytes: 0 };
+  const files = [joinPath(await cacheDir("overpass"), `${hashKey(query)}.json`)];
+  if (bbox) {
+    const template = queryTemplate(query, bbox);
+    for (const e of await readAreaIndex()) if (e.template === template && contains(e.bbox, bbox)) files.push(e.file);
+  }
+  for (const file of files) {
+    const st = await fileStat(file);
+    if (!st || Date.now() - st.mtimeMs >= OVERPASS_CACHE_MS) continue;
+    const text = await readText(file);
+    if (!text) continue;
+    const json = JSON.parse(text) as T;
+    overpassCache.set(query, json);
+    return { json, ageMs: Date.now() - st.mtimeMs, bytes: text.length };
+  }
+  return null;
+}
+
+async function overpassNow<T>(query: string, onWait?: OverpassWait): Promise<{ json: T; server: string; file: string; bytes: number }> {
+  const file = joinPath(await cacheDir("overpass"), `${hashKey(query)}.json`);
   // The server stops the query after its declared [timeout]; give the answer some time on top.
   const timeoutMs = (+(query.match(/\[timeout:(\d+)\]/)?.[1] ?? 180) + 60) * 1000;
   const failures: string[] = [];
+  let refused = false;
   for (let round = 0; round <= ROUND_WAIT_S.length; round++) {
     for (const srv of OVERPASS) {
-      const status = await overpassStatus(srv.base);
+      const status = srv.slots ? await overpassStatus(srv.base) : null;
       if (status && status.free === 0 && status.waitS) {
         if (status.waitS > MAX_SLOT_WAIT_S) {
-          failures.push(`${srv.name} : pas de créneau avant ${status.waitS} s`);
+          failures.push(t("net.noSlot", { server: srv.name, s: status.waitS }));
           continue;
         }
-        await sleep(status.waitS + 1, `${srv.name}, attente d'un créneau`, onWait);
+        await sleep(status.waitS + 1, t("net.waitSlot", { server: srv.name }), onWait);
       }
-      onWait?.(0, `requête envoyée à ${srv.name}`);
+      onWait?.(0, t("net.sent", { server: srv.name }));
       try {
         const res = await fetch(`${srv.base}/interpreter`, {
           method: "POST",
@@ -112,22 +194,22 @@ async function overpassNow<T>(query: string, onWait?: OverpassWait): Promise<T> 
           const json = JSON.parse(text) as T;
           overpassCache.set(query, json);
           await writeText(file, text);
-          return json;
+          return { json, server: srv.name, file, bytes: text.length };
         }
         // 400 (query), 406 (User-Agent)…: the other server would refuse it too.
-        if (res.status !== 429 && res.status < 500) throw new Error(`OpenStreetMap a refusé la requête (HTTP ${res.status}).`);
-        failures.push(`${srv.name} : ${res.status === 429 ? "limite de débit" : `saturé (HTTP ${res.status})`}`);
+        if (res.status !== 429 && res.status < 500) {
+          refused = true;
+          throw new Error(t("net.refused", { status: res.status }));
+        }
+        failures.push(res.status === 429 ? t("net.rateLimit", { server: srv.name }) : t("net.busy", { server: srv.name, status: res.status }));
       } catch (e) {
-        if (e instanceof Error && e.message.startsWith("OpenStreetMap")) throw e;
-        failures.push(`${srv.name} : pas de réponse`);
+        if (refused) throw e;
+        failures.push(t("net.noAnswer", { server: srv.name }));
       }
     }
-    if (round < ROUND_WAIT_S.length) await sleep(ROUND_WAIT_S[round], "serveurs saturés", onWait);
+    if (round < ROUND_WAIT_S.length) await sleep(ROUND_WAIT_S[round], t("net.serversBusy"), onWait);
   }
-  throw new Error(
-    `OpenStreetMap indisponible (${failures.slice(-OVERPASS.length).join(" ; ")}). ` +
-      "Réessaie dans quelques minutes : les données déjà reçues restent en cache.",
-  );
+  throw new Error(t("net.osmDown", { failures: failures.slice(-OVERPASS.length).join(" ; ") }));
 }
 
 async function cacheDir(sub: string): Promise<string> {
@@ -277,7 +359,7 @@ export async function loadBathymetry(b: Bbox): Promise<{ rasters: DemRaster[]; s
     const r = parseEtopoJson(JSON.parse(new TextDecoder().decode(bytes)));
     if (r) return { rasters: [r], source: "NOAA ETOPO 1′" };
   }
-  return { rasters: [], source: "aucune (profondeur par défaut)" };
+  return { rasters: [], source: t("net.noBathy") };
 }
 
 /** Short stable key for a cached request. */

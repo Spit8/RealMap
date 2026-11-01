@@ -13,7 +13,8 @@ import { cellToWorld, worldToCell, type Grid } from "./grid";
 import { WC_CROP, WC_GRASS, WC_TREE } from "./landcover";
 import type { Bbox } from "./osm";
 import { overpassLimits } from "./osm";
-import { distanceTo } from "./raster";
+import { msg, type Msg } from "./msg";
+import { distanceTo, strokePolyline } from "./raster";
 import { WATER_LAKE, WATER_SEA } from "./terrain";
 import { nearestValidCell, slopeAt } from "./towns";
 
@@ -213,7 +214,15 @@ export const DEFAULT_INDUSTRIES: IndustriesOptions = {
 /** Manual choices by candidate key: true = always, false = never. */
 export type IndustryPicks = Record<string, boolean>;
 
-export type IndustryOrigin = "osm" | "landcover" | "chain";
+export type IndustryOrigin = "osm" | "landcover" | "chain" | "user";
+
+/** An industry added by hand on the map (right click), `key` = `user:<tag>|<lon>,<lat>`. */
+export interface CustomIndustry {
+  key: string;
+  tag: string;
+  lon: number;
+  lat: number;
+}
 export type IndustryStatus = "placed" | "dropped" | "limit" | "off";
 
 export interface IndustryCandidate {
@@ -225,14 +234,14 @@ export interface IndustryCandidate {
   /** OSM position (osm) or the centre of the land-cover block. */
   lon: number;
   lat: number;
-  /** Why it is there: OSM tags, land cover share, or the chain it completes. */
-  why: string;
+  /** Why it is there: OSM tags (text), land cover share, the chain it completes, added by hand. */
+  why: Msg | string;
   pick: boolean | null;
   status: IndustryStatus;
-  reason?: string;
+  reason?: Msg;
   /** How present this industry is in reality (OSM sites, land cover): the list is sorted by it. */
   relevance: number;
-  /** For a placed factory: the suppliers of its chain that are not on the map. */
+  /** For a placed factory: the suppliers of its chain that are not on the map (industry tags). */
   missing?: string[];
 }
 
@@ -273,7 +282,7 @@ interface Pick0 {
   x: number;
   y: number;
   score: number;
-  why: string;
+  why: Msg | string;
   /** The real site's name (OSM). */
   name?: string;
 }
@@ -293,8 +302,22 @@ const FOOTPRINT_M: Record<string, number> = {
 };
 export const footprintM = (tag: string): number => FOOTPRINT_M[tag] ?? 180;
 
-/** « Ferme de Bron », « Carrière d'Écully », « Scierie du Havre », « Brasserie des Avenières ». */
-export function industryName(label: string, town: string): string {
+/**
+ * Names of the generated industries in the app's language (they become the in-game names): the
+ * industry names and a pattern with `{industry}` and `{town}` ("{town} {industry}" in English).
+ * Without it, French: « Ferme de Bron ».
+ */
+export interface IndustryNaming {
+  pattern: string;
+  labels: Record<string, string>;
+}
+
+/**
+ * « Ferme de Bron », « Carrière d'Écully », « Scierie du Havre », « Brasserie des Avenières »; with
+ * `naming`, its pattern and industry name for the tag.
+ */
+export function industryName(label: string, town: string, naming?: IndustryNaming, tag?: string): string {
+  if (naming) return naming.pattern.replaceAll("{industry}", (tag && naming.labels[tag]) || label).replaceAll("{town}", town);
   const le = /^(Les?)\s+(.+)$/.exec(town);
   if (le) return `${label} ${le[1] === "Le" ? "du" : "des"} ${le[2]}`;
   return /^[aeiouyhâàéèêëîïôöûüœ]/i.test(town) ? `${label} d'${town}` : `${label} de ${town}`;
@@ -314,6 +337,12 @@ export function planIndustries(
   picks: IndustryPicks,
   o: IndustriesOptions,
   places: { x: number; y: number; name: string }[] = [],
+  /** Railway alignments (game m points): industries keep their footprint off the track. */
+  railways: [number, number][][] = [],
+  /** Added by hand: placed first, near their point; removed by deleting them, not by a pick. */
+  custom: CustomIndustry[] = [],
+  /** Names in the app's language (French rules without it). */
+  naming?: IndustryNaming,
 ): { industries: MapIndustry[]; candidates: IndustryCandidate[] } {
   const eco = ECONOMIES[o.economy] ?? ECONOMIES.temperate;
   const allowed = (tag: string) => tag in INDUSTRIES && !eco.exclude.includes(tag);
@@ -333,6 +362,13 @@ export function planIndustries(
   }
   const landDist = distanceTo(Uint8Array.from(wet, (w) => 1 - w), g.nx, g.ny); // in water: distance to land
   const waterDist = distanceTo(wet, g.nx, g.ny);
+  // Distance to the railway, from its centre line drawn on the grid.
+  let railDist: Float32Array | null = null;
+  if (railways.length) {
+    const line = new Uint8Array(n);
+    for (const pts of railways) strokePolyline(line, g.nx, g.ny, pts.map(([x, y]) => worldToCell(f, g, x, y)), 0.5, 1);
+    railDist = distanceTo(line, g.nx, g.ny);
+  }
   // Water industries need open water far enough from the shore (as checked at placement).
   for (let i = 0; i < n && !anyOpen; i++) if (open[i] && landDist[i] * g.step >= 300) anyOpen = true;
   /** A water industry that cannot sit on water becomes its land counterpart (economy fallbacks). */
@@ -388,15 +424,15 @@ export function planIndustries(
       const [lon, lat] = p.toLonLat(x, y);
       const add = (tag: string, share: number, min: number, what: string) => {
         if (share >= min && allowed(tag)) {
-          blocks.push({ key: key4(tag, lon, lat), tag, origin: "landcover", x, y, score: share, why: `${Math.round(share * 100)} % ${what}` });
+          blocks.push({ key: key4(tag, lon, lat), tag, origin: "landcover", x, y, score: share, why: msg(what, { pct: Math.round(share * 100) }) });
         }
       };
       if (land > total * 0.5) {
-        add("farm", crop / land, 0.5, "de cultures");
-        add("livestock_farm", grass / land, 0.4, "de prairies");
-        add("forest", tree / land, 0.6, "de forêt");
-        add("cotton_farm", crop / land, 0.6, "de cultures");
-      } else if (sea > total * 0.6) add("fishing_grounds", sea / total, 0.6, "de mer");
+        add("farm", crop / land, 0.5, "why.crops");
+        add("livestock_farm", grass / land, 0.4, "why.grass");
+        add("forest", tree / land, 0.6, "why.forest");
+        add("cotton_farm", crop / land, 0.6, "why.crops");
+      } else if (sea > total * 0.6) add("fishing_grounds", sea / total, 0.6, "why.sea");
     }
   }
   blocks.sort((a, b) => b.score - a.score);
@@ -481,7 +517,7 @@ export function planIndustries(
     if (!c) continue;
     if (c.origin === "chain") {
       const need = users(tag);
-      c.why = need.length ? `fournit : ${need.map((t) => INDUSTRIES[t].label).join(", ")}` : "complète une chaîne de production";
+      c.why = need.length ? msg("why.supplies", { list: msg("@industries", { tags: need.join(",") }) }) : msg("why.chain");
     }
     chosen.push(c);
   }
@@ -496,6 +532,13 @@ export function planIndustries(
     if ((perTag[b.tag] = (perTag[b.tag] ?? 0) + 1) <= 2) offered.push(b);
   }
   for (const c of offered) if (picks[c.key] === true && !chosen.some((x) => x.key === c.key)) chosen.push(c);
+  const added: Pick0[] = custom
+    .filter((c) => allowed(c.tag))
+    .map((c) => {
+      const [x, y] = p.toWorld(c.lon, c.lat);
+      return { key: c.key, tag: c.tag, origin: "user" as const, x, y, score: Infinity, why: msg("origin.user") };
+    });
+  chosen.unshift(...added);
 
   // 4. Placement.
   /** The real name, else « <industry> de <nearest town> » (placed towns first, then any place). */
@@ -511,10 +554,11 @@ export function planIndustries(
         best = t;
       }
     }
-    return best?.name ? industryName(INDUSTRIES[c.tag].label, best.name) : INDUSTRIES[c.tag].label;
+    const label = naming?.labels[c.tag] ?? INDUSTRIES[c.tag].label;
+    return best?.name ? industryName(INDUSTRIES[c.tag].label, best.name, naming, c.tag) : label;
   };
   const placed: MapIndustry[] = [];
-  const lost = new Map<string, string>();
+  const lost = new Map<string, Msg>();
   for (const c of chosen) {
     const water = !!INDUSTRIES[c.tag].water;
     const radius = footprintM(c.tag);
@@ -528,6 +572,7 @@ export function planIndustries(
       } else {
         // The whole footprint off water (rivers included) and on gentle ground.
         if (ground.water[i] || waterDist[i] * g.step < radius + 30) return false;
+        if (railDist && railDist[i] * g.step < radius + 50) return false;
         for (const [dx, dy] of RING) {
           const c2 = Math.round(cc + (dx * radius * 0.7) / g.step);
           const r2 = Math.round(rr + (dy * radius * 0.7) / g.step);
@@ -541,7 +586,7 @@ export function planIndustries(
     const [c0, r0] = worldToCell(f, g, c.x, c.y).map(Math.round);
     const found = okCell(c0, r0) ? [c0, r0] : nearestValidCell(c0, r0, Math.ceil(o.maxShiftM / g.step), okCell);
     if (!found) {
-      lost.set(c.key, water ? "pas d'eau libre assez loin du rivage" : "pas de terrain libre (villes, eau, pente) à proximité");
+      lost.set(c.key, msg(water ? "why.noOpenWater" : "why.noFreeLand"));
       continue;
     }
     const [x, y] = cellToWorld(f, g, found[0], found[1]);
@@ -565,7 +610,7 @@ export function planIndustries(
     const status: IndustryStatus = placedKeys.has(c.key) ? "placed" : lost.has(c.key) ? "dropped" : chosenKeys.has(c.key) ? "limit" : "off";
     const missing =
       status === "placed" && !INDUSTRIES[c.tag].primary
-        ? (smallestChain(c.tag) ?? []).filter((t) => !placedTags.has(t)).map((t) => INDUSTRIES[t].label)
+        ? (smallestChain(c.tag) ?? []).filter((t) => !placedTags.has(t))
         : [];
     return {
       key: c.key,
@@ -589,9 +634,24 @@ export function planIndustries(
 }
 
 /** `industries` of `<UD>/towns_industries/<name>.lua` (FACT-002). */
-/** `industries` of the note `<UD>/importcity/<name>.lua`: names for the mod to apply (FACT-024). */
-export function industryNamesData(list: MapIndustry[]): { tag: string; x: number; y: number; name: string }[] {
-  return list.map((m) => ({ tag: m.tag, x: Math.round(m.x * 10) / 10, y: Math.round(m.y * 10) / 10, name: m.name }));
+/**
+ * `industries` of the note `<UD>/importcity/<name>.lua`. The game's town-connection command links
+ * every industry that exists (FACT-024), so the industries are not in the towns_industries import:
+ * the importcity mod builds them after the roads between towns, gives them their name, and links
+ * only those of `industryLinks`.
+ */
+export function industryNoteData(list: MapIndustry[]): {
+  tag: string; x: number; y: number; angle: number; onWater: boolean; fileName: string; name: string;
+}[] {
+  return list.map((m) => ({
+    tag: m.tag,
+    x: Math.round(m.x * 10) / 10,
+    y: Math.round(m.y * 10) / 10,
+    angle: 0,
+    onWater: m.onWater,
+    fileName: industryFile(m.tag),
+    name: m.name,
+  }));
 }
 
 export function industriesData(list: MapIndustry[]): { position: { x: number; y: number }; angle: number; onWater: boolean; fileName: string; tag: string }[] {

@@ -10,6 +10,7 @@ import { Point } from "ol/geom";
 import { Circle as CircleStyle, Fill, RegularShape, Stroke, Style, Text } from "ol/style";
 import { INDUSTRIES, type IndustryCandidate } from "$lib/core/industries";
 import type { CandidateStatus, MapTown, TownCandidate } from "$lib/core/towns";
+import { fmtNum, t as tr, tk, tm } from "$lib/i18n/index.svelte";
 
 /** A marker's sheet: a title and a few lines. */
 export interface MarkerDetails {
@@ -17,7 +18,9 @@ export interface MarkerDetails {
   lines: string[];
 }
 
-const ORIGIN_LABELS = { osm: "site réel (OpenStreetMap)", landcover: "occupation du sol", chain: "chaîne de production" };
+/** Translated name of an industry type, a cargo. */
+export const industryLabel = (tag: string) => tk(`industry.${tag}`);
+export const cargoLabel = (cargo: string) => tk(`cargo.${cargo}`);
 
 /** Industry square colours: primary (fields, mines, forests), factory, on water. */
 export const INDUSTRY_COLORS = { primary: "#a0702a", factory: "#7b4bb5", water: "#1f6fa8" };
@@ -59,29 +62,32 @@ export function industryFeature(c: IndustryCandidate, coord: number[]): Feature 
 }
 
 function industryState(c: IndustryCandidate): string {
-  const what = c.status === "placed" ? "placée" : c.status === "off" ? "non retenue" : `non placée : ${c.reason ?? "pas de place"}`;
-  return `${what}${c.pick !== null ? " (choix manuel)" : ""}`;
+  const what =
+    c.status === "placed" ? tr("sheet.industryPlaced")
+    : c.status === "off" ? tr("sheet.industryOff")
+    : tr("sheet.industryDropped", { reason: c.reason ? tm(c.reason) : tr("sheet.noRoom") });
+  return `${what}${c.pick !== null ? ` ${tr("sheet.manual")}` : ""}`;
 }
 
 /** Hover text of an industry marker. */
 export function industryTitle(c: IndustryCandidate): string {
-  return `${c.name} (${c.label}) · ${industryState(c)}${c.missing ? ` · il manque : ${c.missing.join(", ")}` : ""}`;
+  return `${c.name} (${industryLabel(c.tag)}) · ${industryState(c)}${c.missing ? ` · ${tr("sheet.missingShort", { list: c.missing.map(industryLabel).join(", ") })}` : ""}`;
 }
 
 export function industryDetails(c: IndustryCandidate): MarkerDetails {
   const lines = [
-    `Origine : ${ORIGIN_LABELS[c.origin]}`,
-    ...(c.why ? [`Pourquoi : ${c.why}`] : []),
-    `Présence réelle : ${c.relevance ? c.relevance.toLocaleString("fr-FR") : "aucune"}`,
-    `État : ${industryState(c)}`,
+    tr("sheet.origin", { origin: tk(`origin.${c.origin}`) }),
+    ...(c.why ? [tr("sheet.why", { why: tm(c.why) })] : []),
+    tr("sheet.relevance", { n: c.relevance ? fmtNum(c.relevance, 1) : tr("sheet.relevanceNone") }),
+    tr("sheet.state", { state: industryState(c) }),
   ];
-  if (c.missing) lines.push(`Il manque à sa chaîne : ${c.missing.join(", ")}`);
-  return { title: c.name, lines: [`Type : ${c.label}`, ...lines] };
+  if (c.missing) lines.push(tr("sheet.missing", { list: c.missing.map(industryLabel).join(", ") }));
+  return { title: c.name, lines: [tr("sheet.type", { type: industryLabel(c.tag) }), ...lines] };
 }
 
 export const TOWN_COLORS: Record<CandidateStatus, string> = {
   placed: "#2e9d4a",
-  off: "#e8912d",
+  off: "#FD9401",
   dropped: "#8c949c",
   limit: "#8c949c",
 };
@@ -122,28 +128,45 @@ export function townFeature(c: TownCandidate, coord: number[]): Feature {
 
 function townState(c: TownCandidate): string {
   const what =
-    c.status === "placed" ? `ville, capacité ${c.capacity}`
-    : c.status === "off" ? "non retenue"
-    : `retenue mais non placée : ${c.reason ?? "pas de place"}`;
-  return `${what}${c.pick !== null ? " (choix manuel)" : ""}`;
+    c.status === "placed" ? tr("sheet.townPlaced", { n: c.capacity ?? 0 })
+    : c.status === "off" ? tr("sheet.townOff")
+    : tr("sheet.townDropped", { reason: c.reason ? tm(c.reason) : tr("sheet.noRoom") });
+  return `${what}${c.pick !== null ? ` ${tr("sheet.manual")}` : ""}`;
 }
 
-const pop = (c: TownCandidate) => `${c.estimated ? "≈ " : ""}${c.rank.toLocaleString("fr-FR")} hab.`;
+const pop = (c: TownCandidate) => `${c.estimated ? "≈ " : ""}${tr("sheet.inhabitants", { n: fmtNum(c.rank) })}`;
 
 /** Hover text of a town marker. */
 export function townTitle(c: TownCandidate): string {
   return `${c.name} · ${pop(c)} · ${townState(c)}`;
 }
 
-const PLACE_LABELS: Record<string, string> = { city: "ville", town: "petite ville", village: "village" };
-
 /** `t`: the placed town, when it is one. */
 export function townDetails(c: TownCandidate, t?: MapTown): MarkerDetails {
-  const lines = [`Population : ${pop(c)}${c.estimated ? " (estimée d'après le type de lieu)" : ""}`];
-  if (t) lines.push(`OpenStreetMap : ${PLACE_LABELS[t.place] ?? t.place}`);
-  lines.push(`État : ${townState(c)}`);
-  if (t && t.shift > 1) lines.push(`Déplacée de ${Math.round(t.shift)} m : ${t.moveReason ?? "terrain non constructible"}`);
+  const lines = [tr("sheet.population", { pop: pop(c) }) + (c.estimated ? ` ${tr("sheet.estimated")}` : "")];
+  if (t) lines.push(tr("sheet.osmPlace", { kind: tk(`place.${t.place}`) }));
+  lines.push(tr("sheet.state", { state: townState(c) }));
+  if (t && t.shift > 1) lines.push(tr("sheet.moved", { m: Math.round(t.shift), reason: t.moveReason ? tm(t.moveReason) : tr("sheet.movedDefault") }));
+  if (t?.shares) {
+    const pct = (v: number) => `${Math.round(v * 100)} %`;
+    lines.push(
+      tr("sheet.districts", {
+        res: pct(t.shares.res),
+        com: pct(t.shares.com),
+        ind: pct(t.shares.ind),
+        how: tr(t.shares.real ? "sheet.districtsReal" : "sheet.districtsDefault"),
+      }),
+    );
+  }
+  if (t?.needs) lines.push(tr("sheet.needs", { needs: needsText(t.needs) }));
   return { title: c.name, lines };
+}
+
+/** « commercial: vegetables · industrial: planks » (or the game's own draw). */
+export function needsText(n: { com: string[]; ind: string[] }): string {
+  const list = (l: string[]) => l.map(cargoLabel).join(", ");
+  const parts = [n.com.length ? tr("sheet.needsCom", { list: list(n.com) }) : "", n.ind.length ? tr("sheet.needsInd", { list: list(n.ind) }) : ""];
+  return parts.filter(Boolean).join(" · ") || tr("sheet.needsGame");
 }
 
 /** How many of the places not chosen stay listed and drawn (the most populous ones). */

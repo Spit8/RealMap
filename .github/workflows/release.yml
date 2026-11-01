@@ -1,0 +1,158 @@
+name: Release
+
+# Push a tag vX.Y.Z (after `node tools/bump-version.mjs X.Y.Z` + commit): the installers for
+# Windows, Linux and macOS, the Windows portable zip and the mod zip are built into a DRAFT
+# release, published by hand.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build (vX.Y.Z)"
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  check:
+    name: Version check
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Tag matches the app version
+        run: node tools/bump-version.mjs "${TAG#v}" --check
+
+  installers:
+    name: Installers (${{ matrix.name }})
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            args: ""
+          - name: Linux
+            os: ubuntu-22.04
+            args: ""
+          - name: macOS (universal)
+            os: macos-latest
+            args: "--target universal-apple-darwin"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: app/src-tauri -> target
+
+      - name: Install
+        working-directory: app
+        run: npm ci
+
+      - name: Tests
+        working-directory: app
+        run: npm test
+
+      # Updater: the installers are signed with the minisign key of the repository secrets (public
+      # half in tauri.conf.json), and latest.json (read by the apps once the release is published)
+      # is attached to the release, pointing Windows to the NSIS setup.
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: app
+          tagName: ${{ env.TAG }}
+          releaseName: "RealMap ${{ env.TAG }}"
+          releaseDraft: true
+          prerelease: false
+          updaterJsonPreferNsis: true
+          args: ${{ matrix.args }}
+          releaseBody: |
+            ## Installation
+
+            **Application** — download the installer for your system below:
+            - Windows: `RealMap_*_x64-setup.exe` (or the `.msi`)
+            - Linux: `.AppImage` (portable) or `.deb`
+            - macOS: `.dmg` (Apple Silicon and Intel)
+
+            **Mod** — subscribe to *RealMap* in the game's Mod Hub, or download `realmap-mod-*.zip`,
+            extract it and copy the `importcity` folder into the `mods` folder of the game's data folder
+            (`<Steam>/userdata/<SteamID>/3493540/local/mods/`). See the README for details.
+
+            **Windows portable** — `RealMap_*_x64-portable.zip`: extract it anywhere and run
+            `RealMap.exe`, no installation. It needs the WebView2 runtime (built into Windows 11 and
+            most Windows 10); if the app does not start, run the included `MicrosoftEdgeWebview2Setup.exe`.
+            The Windows installers set WebView2 up by themselves when it is missing.
+
+            **Updates** — the app checks this page by itself and, once installed with an installer
+            (or as an AppImage), updates itself from the Export tab. The portable zip and the `.deb`
+            only get a notice with a link here.
+
+            The installers are not signed yet: Windows SmartScreen ("More info" → "Run anyway") and
+            macOS Gatekeeper (right click → Open) will ask for a confirmation the first time.
+
+      # The executable tauri-action just compiled, zipped alone: runs without installation.
+      - name: Windows portable
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = $env:TAG.TrimStart('v')
+          ./tools/pack-portable.ps1 -Version $version -OutDir .
+          gh release upload $env:TAG "RealMap_${version}_x64-portable.zip" --clobber
+
+  mod:
+    name: Mod package
+    needs: installers
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Build the mod zip
+        run: node tools/pack-mod.mjs
+      - name: Attach it to the draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$TAG" dist/realmap-mod-*.zip --clobber
+      # docs/release-notes/<tag>.md, when present, gives the draft its title (first line
+      # "title: …") and its text; otherwise the generic text set by tauri-action stays.
+      - name: Release title and notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          notes="docs/release-notes/$TAG.md"
+          if [ -f "$notes" ]; then
+            title="$(sed -n '1s/^title: //p' "$notes")"
+            sed '1{/^title: /d}' "$notes" | sed '1{/^$/d}' > /tmp/notes.md
+            gh release edit "$TAG" --title "${title:-RealMap $TAG}" --notes-file /tmp/notes.md
+          fi

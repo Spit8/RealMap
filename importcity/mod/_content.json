@@ -1,0 +1,14 @@
+{
+    "archives": null,
+    "files": [
+        "gui/icons/realmap.tga",
+        "gui/icons/realmap@2x.tga",
+        "gui/importcity_auto.lua",
+        "gui/importcity_build.lua",
+        "gui/importcity_i18n.lua",
+        "gui/main_gui.css.lua",
+        "gui/main_gui.handlers.lua",
+        "gui/main_gui.script.lua",
+        "gui/main_gui_button.res.lua"
+    ]
+}

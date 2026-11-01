@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { decode } from "fast-png";
 import { frameBBox, frameProjection, makeFrame, utmZone, type Area } from "../src/lib/core/area";
 import {
-  biomeByte, biomeImage, biomeTestPattern, DEFAULT_BIOMES, COVER_FOREST, COVER_OPEN, COVER_ROCK, COVER_SCRUB,
+  biomeByte, biomeImage, DEFAULT_BIOMES, COVER_FOREST, COVER_OPEN, COVER_ROCK, COVER_SCRUB,
   riverTestPattern,
 } from "../src/lib/core/biomes";
 import { copernicusTileName, copernicusTilesFor, sampleDem, sampleDemBox, type DemRaster } from "../src/lib/core/dem";
@@ -355,7 +355,8 @@ describe("terrain", () => {
   const g = previewGrid(f, 50);
   const n = g.nx * g.ny;
   // No smoothing here, so the slope caps can be checked exactly.
-  const opts = { ...DEFAULT_TERRAIN, verticalScale: 0.5, smoothM: 0 };
+  // No coast floor here, so the sea depths can be checked against seaDepth / the sea floor.
+  const opts = { ...DEFAULT_TERRAIN, verticalScale: 0.5, smoothM: 0, coastDepth: 0 };
 
   it("sea from the edges, land never below landMin", () => {
     // West third at −2 m (sea), the rest rising from 1 to 21 m.
@@ -390,7 +391,7 @@ describe("terrain", () => {
     expect(far.game[mid + 5]).toBeLessThan((1000 - 160) * opts.verticalScale);
     // Water deepens from 0.5 m at the shore (no wall) to the river depth in the middle.
     expect(t.game[mid - 4]).toBeLessThanOrEqual(-0.5);
-    expect(t.game[mid - 4]).toBeGreaterThan(-2.5);
+    expect(t.game[mid - 4]).toBeGreaterThan(-0.4 * opts.riverDepth);
     for (let c = mid - 3; c <= mid; c++) expect(t.game[c]).toBeLessThanOrEqual(t.game[c - 1]);
     expect(t.game[mid]).toBeCloseTo(-opts.riverDepth, 4);
     // Next to the river: low, smoothed across the waterline; further: the gentle river bank slope;
@@ -419,6 +420,12 @@ describe("terrain", () => {
     // Without data: the default depth.
     expect(composeTerrain(real, g, new Uint8Array(n), opts).game[20 * g.nx]).toBeCloseTo(-opts.seaDepth, 4);
     for (let c = 1; c < half; c++) expect(at(c)).toBeGreaterThanOrEqual(at(c - 1) - 1e-4);
+    // A coast floor: shallow sea-floor data (−4 m real) still gives coastDepth off the shore ramp.
+    const shallow = new Float32Array(n).fill(NaN);
+    for (let r = 0; r < g.ny; r++) for (let c = 0; c < half; c++) shallow[r * g.nx + c] = -4;
+    const coast = composeTerrain(real, g, new Uint8Array(n), { ...opts, coastDepth: 20 }, shallow);
+    expect(coast.game[20 * g.nx]).toBeCloseTo(-20, 4);
+    expect(coast.game[20 * g.nx + half - 1]).toBeCloseTo(-0.5, 4);
   });
 
   it("keeps a river high above the water level, in one piece, in a gentle valley", () => {
@@ -566,13 +573,6 @@ describe("biomes and preview", () => {
     expect(width).toBe(16);
   });
 
-  it("test pattern: five stripes west → east", () => {
-    const { biomes, heights } = biomeTestPattern(100, 2);
-    expect(biomes[0]).toBe(0);
-    expect(biomes[99]).toBe(255);
-    expect(heights[99]).toBeCloseTo(25);
-  });
-
   it("renders water blue and land opaque", () => {
     const t = { game: Float32Array.from([-5, 10, 10, 10]), water: Uint8Array.from([WATER_SEA, 0, 0, 0]), refHeight: 0, minM: -5, maxM: 10, waterShare: 0.25, maxSlope: 0 };
     const img = renderPreview(t, new Uint8Array(4), { nx: 2, ny: 2, step: 4 });
@@ -612,14 +612,17 @@ describe("towns", () => {
   });
 
   it("turns population into a game capacity (FACT-016)", () => {
-    expect(targetCapacity(10_000, DEFAULT_TOWNS)).toBe(300);
-    expect(targetCapacity(2_000, DEFAULT_TOWNS)).toBe(134);
-    expect(targetCapacity(100_000, DEFAULT_TOWNS)).toBe(949);
-    expect(targetCapacity(513_275, DEFAULT_TOWNS)).toBe(2149);
-    expect(targetCapacity(5_000_000, DEFAULT_TOWNS)).toBe(DEFAULT_TOWNS.maxCapacity);
-    expect(targetCapacity(10, DEFAULT_TOWNS)).toBe(DEFAULT_TOWNS.minCapacity);
-    expect(targetCapacity(100_000, { ...DEFAULT_TOWNS, sizeExponent: 1 })).toBe(DEFAULT_TOWNS.maxCapacity);
-    expect(targetCapacity(100_000, { ...DEFAULT_TOWNS, sizeExponent: 0 })).toBe(300);
+    // With the old reference (300 for 10 000), the numbers checked in game.
+    const T300 = { ...DEFAULT_TOWNS, refCapacity: 300 };
+    expect(DEFAULT_TOWNS.refCapacity).toBe(100);
+    expect(targetCapacity(10_000, T300)).toBe(300);
+    expect(targetCapacity(2_000, T300)).toBe(134);
+    expect(targetCapacity(100_000, T300)).toBe(949);
+    expect(targetCapacity(513_275, T300)).toBe(2149);
+    expect(targetCapacity(5_000_000, T300)).toBe(DEFAULT_TOWNS.maxCapacity);
+    expect(targetCapacity(10, T300)).toBe(DEFAULT_TOWNS.minCapacity);
+    expect(targetCapacity(100_000, { ...T300, sizeExponent: 1 })).toBe(DEFAULT_TOWNS.maxCapacity);
+    expect(targetCapacity(100_000, { ...T300, sizeExponent: 0 })).toBe(300);
   });
 
   it("builds the Overpass query", () => {
@@ -688,7 +691,7 @@ describe("towns", () => {
     const { towns, dropped } = placeTowns(f, g, terrain(), [deep, a, b], { ...opts, maxShiftM: 800 });
     expect(towns.map((t) => t.name)).toEqual(["A"]);
     expect(dropped.map((d) => d.name)).toEqual(["Large", "B"]);
-    expect(dropped[1].reason).toContain("A");
+    expect(dropped[1].reason).toEqual({ key: "why.nearTown", params: { town: "A" } });
   });
 
   it("writes town positions in game metres, size factors 1 and the target capacities", () => {
@@ -698,7 +701,7 @@ describe("towns", () => {
     expect(data.towns[0].position.y).toBeCloseTo(500, 0);
     expect(data.towns[0].sizeFactors).toEqual([1, 1, 1]);
     const sizes = parseUserdata(toUserdata({ towns: townSizesData(towns) })) as { towns: { name: string; capacity: number }[] };
-    expect(sizes.towns[0]).toMatchObject({ name: "Lyon", capacity: 2149 });
+    expect(sizes.towns[0]).toMatchObject({ name: "Lyon", capacity: targetCapacity(513_275, opts) });
   });
 
   it("adds and removes towns without swapping others in, and reports every place", () => {

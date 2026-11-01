@@ -1,0 +1,3502 @@
+[
+  {
+    "id": "app:app.language",
+    "text": "Language",
+    "ref": "Langue",
+    "context": "App header: the language picker.",
+    "kind": "label"
+  },
+  {
+    "id": "app:tabs.data",
+    "text": "1. Area and data",
+    "ref": "1. Zone et données",
+    "context": "Tabs of the left panel: the three steps of the app (area and data, advanced options, export to the game) and the log.",
+    "kind": "button"
+  },
+  {
+    "id": "app:tabs.advanced",
+    "text": "2. Advanced options",
+    "ref": "2. Options avancées",
+    "context": "Tabs of the left panel: the three steps of the app (area and data, advanced options, export to the game) and the log.",
+    "kind": "button"
+  },
+  {
+    "id": "app:tabs.export",
+    "text": "3. Export",
+    "ref": "3. Export",
+    "context": "Tabs of the left panel: the three steps of the app (area and data, advanced options, export to the game) and the log.",
+    "kind": "button"
+  },
+  {
+    "id": "app:tabs.log",
+    "text": "Log",
+    "ref": "Journal",
+    "context": "Tabs of the left panel: the three steps of the app (area and data, advanced options, export to the game) and the log.",
+    "kind": "button"
+  },
+  {
+    "id": "app:tabs.errors",
+    "text": "{n} error(s) in the log",
+    "ref": "{n} erreur(s) dans le journal",
+    "context": "Tabs of the left panel: the three steps of the app (area and data, advanced options, export to the game) and the log.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.map",
+    "text": "Game map",
+    "ref": "Carte du jeu",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "title"
+  },
+  {
+    "id": "app:data.size",
+    "text": "Size",
+    "ref": "Taille",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.format",
+    "text": "Format",
+    "ref": "Format",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.experimental",
+    "text": "(experimental)",
+    "ref": "(expérimental)",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.landscape",
+    "text": "Long side east–west",
+    "ref": "Côté long est–ouest",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.scale",
+    "text": "Scale",
+    "ref": "Échelle",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.scaleTitle",
+    "text": "1 m in the game = … real metres",
+    "ref": "1 m dans le jeu = … m réels",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:data.scaleReal",
+    "text": "(real)",
+    "ref": "(réelle)",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.scaleOther",
+    "text": "Other…",
+    "ref": "Autre…",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.facts",
+    "text": "{size} · {w} × {h} km in reality · {km2} km²",
+    "ref": "{size} · {w} × {h} km réels · {km2} km²",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.ctrlHint",
+    "text": "Ctrl + click on the map: move the area there.",
+    "ref": "Ctrl + clic sur la carte : déplacer la zone ici.",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:data.sources",
+    "text": "Sources",
+    "ref": "Sources",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "title"
+  },
+  {
+    "id": "app:data.relief",
+    "text": "Relief",
+    "ref": "Relief",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.source.auto",
+    "text": "Auto (IGN in France, Copernicus elsewhere)",
+    "ref": "Auto (IGN en France, sinon Copernicus)",
+    "context": "Tab 1 › Sources: where the relief (elevation) comes from.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.source.ign",
+    "text": "IGN RGE ALTI (France)",
+    "ref": "IGN RGE ALTI (France)",
+    "context": "Tab 1 › Sources: where the relief (elevation) comes from.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.source.copernicus",
+    "text": "Copernicus GLO-30 (world)",
+    "ref": "Copernicus GLO-30 (monde)",
+    "context": "Tab 1 › Sources: where the relief (elevation) comes from.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.cover",
+    "text": "Land cover (WorldCover)",
+    "ref": "Occupation du sol (WorldCover)",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.coverTitle",
+    "text": "Forests, fields, rock and marshes from ESA WorldCover",
+    "ref": "Forêts, cultures, roches et marais d'après ESA WorldCover",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:data.ready",
+    "text": "Result ready: you can export it as it is (tab 3) or adjust the advanced options.",
+    "ref": "Résultat prêt : vous pouvez exporter directement (onglet 3) ou ajuster les options avancées.",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:data.fetch",
+    "text": "Get the data",
+    "ref": "Récupérer les données",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "button"
+  },
+  {
+    "id": "app:data.fetching",
+    "text": "Getting the data… {pct}",
+    "ref": "Récupération… {pct}",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.upToDate",
+    "text": "Data up to date",
+    "ref": "Données à jour",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.relief",
+    "text": "Relief",
+    "ref": "Relief",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "title"
+  },
+  {
+    "id": "app:advanced.verticalScale",
+    "text": "Vertical scale",
+    "ref": "Échelle verticale",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.verticalScaleTitle",
+    "text": "Game heights = real heights × this factor (empty = 1/√scale)",
+    "ref": "Hauteurs du jeu = hauteurs réelles × ce facteur (vide = 1/√échelle)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.waterLevel",
+    "text": "Water level (m)",
+    "ref": "Niveau de l'eau (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.waterLevelTitle",
+    "text": "Real altitude that becomes the game's water level (empty = auto)",
+    "ref": "Altitude réelle qui devient le niveau de l'eau du jeu (vide = auto)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.auto",
+    "text": "auto",
+    "ref": "auto",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.smooth",
+    "text": "Smoothing (m)",
+    "ref": "Lissage (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.smoothTitle",
+    "text": "Removes bumps (trees, noise); 0 = raw relief",
+    "ref": "Efface les bosses (arbres, bruit) ; 0 = relief brut",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.canopy",
+    "text": "Flatten forests (m)",
+    "ref": "Aplanir forêts (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.canopyTitle",
+    "text": "Metres taken off forests measured by Copernicus (tree tops)",
+    "ref": "Mètres retirés aux forêts mesurées par Copernicus (dessus des arbres)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.water",
+    "text": "Water",
+    "ref": "Eau",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "title"
+  },
+  {
+    "id": "app:advanced.riverWidth",
+    "text": "Min. river width (m)",
+    "ref": "Largeur min. rivières (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:advanced.riverWidthTitle",
+    "text": "Everywhere, sources and joins included (the game's rivers: 110–165 m)",
+    "ref": "Partout, sources et raccords compris (rivières du jeu : 110–165 m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.riverDepth",
+    "text": "River depth (m)",
+    "ref": "Profondeur rivières (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.riverDepthTitle",
+    "text": "Depth of the riverbed (the game's rivers: about 8.5 m)",
+    "ref": "Profondeur du lit (rivières du jeu : ~8,5 m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.coastDepth",
+    "text": "Coast depth (m)",
+    "ref": "Profondeur côtes (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.coastDepthTitle",
+    "text": "Shallowest sea past the shore slope; the real sea floor only makes it deeper",
+    "ref": "Profondeur minimale de la mer après la pente du rivage ; les fonds marins réels ne font qu'approfondir",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.minPond",
+    "text": "Min. pond (ha)",
+    "ref": "Étangs min. (ha)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:advanced.minPondTitle",
+    "text": "Smaller bodies of water are filled in, except on a river",
+    "ref": "Plans d'eau plus petits comblés, sauf sur une rivière",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.waterJoin",
+    "text": "Join nearby water (m)",
+    "ref": "Raccord eaux proches (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.waterJoinTitle",
+    "text": "A river closer than this to other water is joined to it by a channel",
+    "ref": "Une rivière à moins de cette distance d'une autre eau y est reliée par un chenal",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.marshLakes",
+    "text": "Marshes → lakes",
+    "ref": "Marais → lacs",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.marshArea",
+    "text": "Min. area (ha)",
+    "ref": "Surface min. (ha)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:advanced.marshDepth",
+    "text": "Depth (m)",
+    "ref": "Profondeur (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.network",
+    "text": "Network, banks and depths",
+    "ref": "Réseau, berges et profondeurs",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "title"
+  },
+  {
+    "id": "app:advanced.repair",
+    "text": "Repair the network",
+    "ref": "Réparer le réseau",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.repairTitle",
+    "text": "Every river ends in water or at the edge of the map",
+    "ref": "Chaque rivière finit dans l'eau ou au bord de la carte",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.endJoin",
+    "text": "Join river ends (m)",
+    "ref": "Raccord extrémités (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.endJoinTitle",
+    "text": "Ends joined to nearby water in a straight line",
+    "ref": "Extrémités reliées en ligne droite à l'eau proche",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.taper",
+    "text": "Source taper (m)",
+    "ref": "Biseau sources (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.taperTitle",
+    "text": "Sources widen over this length",
+    "ref": "Les sources s'élargissent sur cette longueur",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.valleySlope",
+    "text": "Valley slope",
+    "ref": "Pente vallées",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.valleySlopeTitle",
+    "text": "Slope of the valley dug around a high river",
+    "ref": "Pente de la vallée creusée autour d'une rivière haute",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.riverBank",
+    "text": "River bank slope",
+    "ref": "Pente berges rivières",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.seaBank",
+    "text": "Sea and lake bank slope",
+    "ref": "Pente berges mer, lacs",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.bankWidth",
+    "text": "Bank width (m)",
+    "ref": "Largeur berges (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.lakeDepth",
+    "text": "Lake depth (m)",
+    "ref": "Profondeur lacs (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.underwater",
+    "text": "Deepening",
+    "ref": "Approfondissement",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.underwaterTitle",
+    "text": "Metres of depth gained per metre from the shore",
+    "ref": "Mètres de profondeur gagnés par mètre depuis le rivage",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.seaDepth",
+    "text": "Sea without data (m)",
+    "ref": "Mer sans données (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.seaMax",
+    "text": "Max. sea depth (m)",
+    "ref": "Mer max. (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:advanced.maxCarve",
+    "text": "Max. lake digging (m)",
+    "ref": "Creusement max. lacs (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:advanced.maxCarveTitle",
+    "text": "A lake with no river higher than this above the water level stays land",
+    "ref": "Un lac sans rivière plus haut que ça au-dessus du niveau de l'eau reste en terre",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.riverTest",
+    "text": "River test map",
+    "ref": "Carte de test des rivières",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "button"
+  },
+  {
+    "id": "app:advanced.towns",
+    "text": "Towns",
+    "ref": "Villes",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "title"
+  },
+  {
+    "id": "app:advanced.minPop",
+    "text": "Min. population",
+    "ref": "Population min.",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:advanced.autoCount",
+    "text": "Automatic count",
+    "ref": "Nombre auto",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.autoCountTitle",
+    "text": "The game puts up to about {n} towns on a map of this size (guide)",
+    "ref": "Le jeu met jusqu'à ~{n} villes sur une carte de cette taille (indicatif)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.unknownPop",
+    "text": "Estimate unknown populations",
+    "ref": "Population inconnue estimée",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.tooMany",
+    "text": "More than the game's ~{n} towns for this size.",
+    "ref": "Plus que les ~{n} villes du jeu pour cette taille.",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.refCapacity",
+    "text": "Size at 10,000 inh.",
+    "ref": "Taille 10 000 hab.",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.refCapacityTitle",
+    "text": "In-game capacity of a town of 10,000 inhabitants",
+    "ref": "Capacité en jeu d'une ville de 10 000 habitants",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.contrast",
+    "text": "Size contrast",
+    "ref": "Contraste tailles",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.contrastTitle",
+    "text": "1 = in proportion to the population, 0 = all the same",
+    "ref": "1 = proportionnel à la population, 0 = toutes pareilles",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.townSpacing",
+    "text": "Min. distance between towns (m)",
+    "ref": "Écart min. entre villes (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:advanced.placement",
+    "text": "Placement",
+    "ref": "Emplacement",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "title"
+  },
+  {
+    "id": "app:advanced.seaDistance",
+    "text": "Distance to sea / lakes (m)",
+    "ref": "Distance mer / lacs (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.riverDistance",
+    "text": "Distance to rivers (m)",
+    "ref": "Distance rivières (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.edgeMargin",
+    "text": "Edge margin (m)",
+    "ref": "Marge au bord (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.maxShift",
+    "text": "Max. move (m)",
+    "ref": "Déplacement max. (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:advanced.industries",
+    "text": "Industries",
+    "ref": "Industries",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "title"
+  },
+  {
+    "id": "app:advanced.economy",
+    "text": "Economy",
+    "ref": "Économie",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.economyTitle",
+    "text": "The same economy as the map's climate in the Map Editor",
+    "ref": "Même économie que le climat de la carte dans l'éditeur",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.density",
+    "text": "Game density",
+    "ref": "Densité du jeu",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.count",
+    "text": "Count (0 = game: {n})",
+    "ref": "Nombre (0 = jeu : {n})",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.countTitle",
+    "text": "0 = the game's count for this density ({n})",
+    "ref": "0 = nombre du jeu pour cette densité ({n})",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.industrySpacing",
+    "text": "Distance between industries (m)",
+    "ref": "Écart entre industries (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.townClearance",
+    "text": "Distance to towns (m)",
+    "ref": "Distance aux villes (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.rail",
+    "text": "Railway",
+    "ref": "Voie ferrée",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "title"
+  },
+  {
+    "id": "app:advanced.roads",
+    "text": "Roads",
+    "ref": "Routes",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:roads.auto",
+    "text": "Roads chosen automatically: each town is linked to 1 or 2 others; the game lays the roads and links the industries to them. Right-click the map to add or delete a link.",
+    "ref": "Routes choisies automatiquement : chaque ville est reliée à 1 ou 2 autres ; le jeu trace les routes et y raccorde les industries. Clic droit sur la carte pour ajouter ou supprimer une liaison.",
+    "context": "Roads section of the Advanced options tab: whether the roads between towns are chosen automatically or were changed by hand, and the button (with a confirmation) that goes back to the automatic choice, forgetting the user's changes.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:roads.manual",
+    "text": "Roads changed by hand: no road between towns is added automatically any more.",
+    "ref": "Routes modifiées à la main : plus aucune route n'est ajoutée automatiquement entre les villes.",
+    "context": "Roads section of the Advanced options tab: whether the roads between towns are chosen automatically or were changed by hand, and the button (with a confirmation) that goes back to the automatic choice, forgetting the user's changes.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:roads.reset",
+    "text": "Apply the default settings",
+    "ref": "Appliquer les paramètres par défaut",
+    "context": "Roads section of the Advanced options tab: whether the roads between towns are chosen automatically or were changed by hand, and the button (with a confirmation) that goes back to the automatic choice, forgetting the user's changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:roads.resetTitle",
+    "text": "Go back to the automatic choice of roads between towns",
+    "ref": "Revenir au choix automatique des routes entre les villes",
+    "context": "Roads section of the Advanced options tab: whether the roads between towns are chosen automatically or were changed by hand, and the button (with a confirmation) that goes back to the automatic choice, forgetting the user's changes.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:roads.resetConfirm",
+    "text": "The roads you added, deleted or kept will be lost. Continue?",
+    "ref": "Les routes que tu as ajoutées, supprimées ou gardées seront perdues. Continuer ?",
+    "context": "Roads section of the Advanced options tab: whether the roads between towns are chosen automatically or were changed by hand, and the button (with a confirmation) that goes back to the automatic choice, forgetting the user's changes.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:roads.resetYes",
+    "text": "Yes, back to the default roads",
+    "ref": "Oui, revenir aux routes par défaut",
+    "context": "Roads section of the Advanced options tab: whether the roads between towns are chosen automatically or were changed by hand, and the button (with a confirmation) that goes back to the automatic choice, forgetting the user's changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:roads.resetCancel",
+    "text": "Cancel",
+    "ref": "Annuler",
+    "context": "Roads section of the Advanced options tab: whether the roads between towns are chosen automatically or were changed by hand, and the button (with a confirmation) that goes back to the automatic choice, forgetting the user's changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.minRadius",
+    "text": "Min. radius (m)",
+    "ref": "Rayon min. (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:advanced.minRadiusTitle",
+    "text": "Tightest curve (the game allows 55 m; 300 m ≈ 90 km/h)",
+    "ref": "Courbe la plus serrée (le jeu accepte 55 m ; 300 m ≈ 90 km/h)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.maxGrade",
+    "text": "Max. real gradient (%)",
+    "ref": "Pente max. réelle (%)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:advanced.maxGradeTitle",
+    "text": "Steepest real gradient; steeper in the game when heights are shrunk less than distances (the game allows 8.5%)",
+    "ref": "Pente réelle la plus forte ; plus raide dans le jeu quand les hauteurs sont moins réduites que les distances (le jeu accepte 8,5 %)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.railClearance",
+    "text": "Distance to towns (m)",
+    "ref": "Écart aux villes (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.railClearanceTitle",
+    "text": "Distance kept from a town centre, plus half its capacity",
+    "ref": "Distance gardée au centre d'une ville, plus la moitié de sa capacité",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.corridor",
+    "text": "Distance from the real line (m)",
+    "ref": "Écart à la voie réelle (m)",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.corridorTitle",
+    "text": "How far the line may leave the real one to suit the game's relief: along a bank rather than across the river, on the valley floor rather than on a bridge. 0: the real line.",
+    "ref": "Jusqu'où la voie peut s'écarter du tracé réel pour suivre le relief du jeu : le long d'une berge plutôt qu'en traversant la rivière, en fond de vallée plutôt qu'en pont. 0 : tracé réel.",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:advanced.autoUpdate",
+    "text": "Auto update",
+    "ref": "Recalcul auto",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.update",
+    "text": "Update",
+    "ref": "Mettre à jour",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "button"
+  },
+  {
+    "id": "app:advanced.updating",
+    "text": "Computing… {pct}",
+    "ref": "Calcul… {pct}",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.upToDate",
+    "text": "Result up to date",
+    "ref": "Résultat à jour",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:export.summary",
+    "text": "{towns} towns · {industries} industries · {links} road links · {rails} railway line(s)",
+    "ref": "{towns} villes · {industries} industries · {links} liaisons · {rails} voie(s) ferrée(s)",
+    "context": "Tab 3 › Export: map name, game folder, and the button that writes the files and builds the map in the game's Map Editor.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:export.showLists",
+    "text": "Show the lists",
+    "ref": "Voir les listes",
+    "context": "Tab 3 › Export: map name, game folder, and the button that writes the files and builds the map in the game's Map Editor.",
+    "kind": "button"
+  },
+  {
+    "id": "app:export.mapHint",
+    "text": "Right-click on the map: add an industry, a road or a railway line.",
+    "ref": "Clic droit sur la carte : ajouter une industrie, une route ou une voie ferrée.",
+    "context": "Tab 3 › Export: map name, game folder, and the button that writes the files and builds the map in the game's Map Editor.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:export.game",
+    "text": "Game",
+    "ref": "Jeu",
+    "context": "Tab 3 › Export: map name, game folder, and the button that writes the files and builds the map in the game's Map Editor.",
+    "kind": "title"
+  },
+  {
+    "id": "app:export.mapName",
+    "text": "Map name",
+    "ref": "Nom de la carte",
+    "context": "Tab 3 › Export: map name, game folder, and the button that writes the files and builds the map in the game's Map Editor.",
+    "kind": "label"
+  },
+  {
+    "id": "app:export.userdata",
+    "text": "TF3 userdata folder",
+    "ref": "Dossier userdata de TF3",
+    "context": "Tab 3 › Export: map name, game folder, and the button that writes the files and builds the map in the game's Map Editor.",
+    "kind": "label"
+  },
+  {
+    "id": "app:export.inGame",
+    "text": "In the game: Map Editor, new empty map {size}, RealMap mod enabled.",
+    "ref": "Dans le jeu : éditeur de cartes, nouvelle carte vide {size}, mod RealMap activé.",
+    "context": "Tab 3 › Export: map name, game folder, and the button that writes the files and builds the map in the game's Map Editor.",
+    "kind": "label"
+  },
+  {
+    "id": "app:export.generate",
+    "text": "Generate the map",
+    "ref": "Générer la carte",
+    "context": "Tab 3 › Export: map name, game folder, and the button that writes the files and builds the map in the game's Map Editor.",
+    "kind": "button"
+  },
+  {
+    "id": "app:export.generating",
+    "text": "Generating… {pct}",
+    "ref": "Génération… {pct}",
+    "context": "Tab 3 › Export: map name, game folder, and the button that writes the files and builds the map in the game's Map Editor.",
+    "kind": "label"
+  },
+  {
+    "id": "app:export.generated",
+    "text": "Map generated (up to date)",
+    "ref": "Carte générée (à jour)",
+    "context": "Tab 3 › Export: map name, game folder, and the button that writes the files and builds the map in the game's Map Editor.",
+    "kind": "label"
+  },
+  {
+    "id": "app:export.gameStep",
+    "text": "Game: {label}",
+    "ref": "Jeu : {label}",
+    "context": "Tab 3 › Export: map name, game folder, and the button that writes the files and builds the map in the game's Map Editor.",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.data.ign",
+    "text": "IGN RGE ALTI relief",
+    "ref": "Relief IGN RGE ALTI",
+    "context": "Tab 1: list of the data downloads in progress (one line per source).",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.data.dem",
+    "text": "Copernicus GLO-30 relief",
+    "ref": "Relief Copernicus GLO-30",
+    "context": "Tab 1: list of the data downloads in progress (one line per source).",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.data.cover",
+    "text": "Land cover (ESA WorldCover)",
+    "ref": "Occupation du sol (ESA WorldCover)",
+    "context": "Tab 1: list of the data downloads in progress (one line per source).",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.data.bathy",
+    "text": "Sea floor (EMODnet / ETOPO)",
+    "ref": "Fonds marins (EMODnet / ETOPO)",
+    "context": "Tab 1: list of the data downloads in progress (one line per source).",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.data.osm",
+    "text": "Water and places (OpenStreetMap)",
+    "ref": "Eau et lieux (OpenStreetMap)",
+    "context": "Tab 1: list of the data downloads in progress (one line per source).",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.data.sites",
+    "text": "Industrial sites (OpenStreetMap)",
+    "ref": "Sites industriels (OpenStreetMap)",
+    "context": "Tab 1: list of the data downloads in progress (one line per source).",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.data.roads",
+    "text": "Roads and railways (OpenStreetMap)",
+    "ref": "Routes et voies ferrées (OpenStreetMap)",
+    "context": "Tab 1: list of the data downloads in progress (one line per source).",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.data.land",
+    "text": "Beaches and business areas (OpenStreetMap)",
+    "ref": "Plages et zones d'activité (OpenStreetMap)",
+    "context": "Tab 1: list of the data downloads in progress (one line per source).",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.export.relief",
+    "text": "Full-resolution relief",
+    "ref": "Relief pleine résolution",
+    "context": "Tab 3: list of the export steps done by the app.",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.export.cover",
+    "text": "Full-resolution land cover",
+    "ref": "Occupation du sol pleine résolution",
+    "context": "Tab 3: list of the export steps done by the app.",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.export.compute",
+    "text": "Computing the whole map",
+    "ref": "Calcul de la carte complète",
+    "context": "Tab 3: list of the export steps done by the app.",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.export.files",
+    "text": "Writing the files",
+    "ref": "Écriture des fichiers",
+    "context": "Tab 3: list of the export steps done by the app.",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.game.heightmap",
+    "text": "Relief (heightmap)",
+    "ref": "Relief (heightmap)",
+    "context": "Tab 3: list of the steps the in-game mod runs in the Map Editor (shown after 'Game: ').",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.game.biomes",
+    "text": "Biomes",
+    "ref": "Biomes",
+    "context": "Tab 3: list of the steps the in-game mod runs in the Map Editor (shown after 'Game: ').",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.game.rail",
+    "text": "Railway",
+    "ref": "Voie ferrée",
+    "context": "Tab 3: list of the steps the in-game mod runs in the Map Editor (shown after 'Game: ').",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.game.towns",
+    "text": "Towns and sizes",
+    "ref": "Villes et tailles",
+    "context": "Tab 3: list of the steps the in-game mod runs in the Map Editor (shown after 'Game: ').",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.game.industries",
+    "text": "Industries and names",
+    "ref": "Industries et noms",
+    "context": "Tab 3: list of the steps the in-game mod runs in the Map Editor (shown after 'Game: ').",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.game.roads",
+    "text": "Roads between towns",
+    "ref": "Routes entre villes",
+    "context": "Tab 3: list of the steps the in-game mod runs in the Map Editor (shown after 'Game: ').",
+    "kind": "label"
+  },
+  {
+    "id": "app:status.seeLog",
+    "text": "see the log",
+    "ref": "voir le journal",
+    "context": "Bottom bar of the panel: link next to an error message.",
+    "kind": "label"
+  },
+  {
+    "id": "app:log.lines",
+    "text": "{n} line(s)",
+    "ref": "{n} ligne(s)",
+    "context": "Log tab: messages of the app, with a toggle for technical details.",
+    "kind": "label"
+  },
+  {
+    "id": "app:log.details",
+    "text": "Details",
+    "ref": "Détails",
+    "context": "Log tab: messages of the app, with a toggle for technical details.",
+    "kind": "label"
+  },
+  {
+    "id": "app:log.copy",
+    "text": "Copy",
+    "ref": "Copier",
+    "context": "Log tab: messages of the app, with a toggle for technical details.",
+    "kind": "button"
+  },
+  {
+    "id": "app:log.clear",
+    "text": "Clear",
+    "ref": "Effacer",
+    "context": "Log tab: messages of the app, with a toggle for technical details.",
+    "kind": "button"
+  },
+  {
+    "id": "app:log.empty",
+    "text": "Nothing yet.",
+    "ref": "Rien pour l'instant.",
+    "context": "Log tab: messages of the app, with a toggle for technical details.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.lists",
+    "text": "Lists",
+    "ref": "Listes",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:map.fit",
+    "text": "Fit",
+    "ref": "Recadrer",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:map.real",
+    "text": "Real data",
+    "ref": "Données réelles",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:map.game",
+    "text": "Game result",
+    "ref": "Résultat jeu",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:map.opacity",
+    "text": "Opacity",
+    "ref": "Opacité",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.hideOff",
+    "text": "Hide places left out",
+    "ref": "Masquer les lieux non retenus",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.crashed",
+    "text": "The map crashed: {error}",
+    "ref": "La carte a planté : {error}",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.retry",
+    "text": "Try again",
+    "ref": "Réessayer",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:map.placeHere",
+    "text": "Click: put the area here",
+    "ref": "Clic : placer la zone ici",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.markerTip",
+    "text": "{marker} — click: details · right-click: menu ({action}, link…)",
+    "ref": "{marker} — clic : détails · clic droit : menu ({action}, relier…)",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.add",
+    "text": "add",
+    "ref": "ajouter",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.remove",
+    "text": "remove",
+    "ref": "retirer",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.linkTip",
+    "text": "{name} — right-click: menu",
+    "ref": "{name} — clic droit : menu",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.bridge",
+    "text": "Bridge",
+    "ref": "Pont",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.tunnel",
+    "text": "Tunnel",
+    "ref": "Tunnel",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.road",
+    "text": "Road {a} – {b}",
+    "ref": "Route {a} – {b}",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.railLine",
+    "text": "Railway line",
+    "ref": "Voie ferrée",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.realRail",
+    "text": "Railway",
+    "ref": "Voie ferrée",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.realRoad",
+    "text": "Road",
+    "ref": "Route",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.sea",
+    "text": "Sea · {z}",
+    "ref": "Mer · {z}",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.lake",
+    "text": "Lake · {z}",
+    "ref": "Lac · {z}",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.river",
+    "text": "River · {z}",
+    "ref": "Rivière · {z}",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.ground",
+    "text": "{z} in the game (≈ {real} in reality) · {cover}",
+    "ref": "{z} dans le jeu (≈ {real} réels) · {cover}",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.roadFrom",
+    "text": "Road from {name}: click on the destination town",
+    "ref": "Route depuis {name} : cliquez sur la ville d'arrivée",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.railFrom",
+    "text": "Railway line: click on the destination point or town",
+    "ref": "Voie ferrée : cliquez sur le point ou la ville d'arrivée",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.cancel",
+    "text": "cancel",
+    "ref": "annuler",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:map.escape",
+    "text": "(Esc: cancel)",
+    "ref": "(Échap : annuler)",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.otherTown",
+    "text": "Click on another town (Esc: cancel)",
+    "ref": "Cliquez sur une autre ville (Échap : annuler)",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:menu.addTown",
+    "text": "Add this town",
+    "ref": "Ajouter cette ville",
+    "context": "Right-click menu on the map: add or remove a town or an industry, link two towns by road, draw a railway line, add an industry, delete a road or a railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:menu.removeTown",
+    "text": "Remove this town",
+    "ref": "Retirer cette ville",
+    "context": "Right-click menu on the map: add or remove a town or an industry, link two towns by road, draw a railway line, add an industry, delete a road or a railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:menu.roadTo",
+    "text": "Link by road to…",
+    "ref": "Relier par route à…",
+    "context": "Right-click menu on the map: add or remove a town or an industry, link two towns by road, draw a railway line, add an industry, delete a road or a railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:menu.addIndustryHere",
+    "text": "Add this industry",
+    "ref": "Ajouter cette industrie",
+    "context": "Right-click menu on the map: add or remove a town or an industry, link two towns by road, draw a railway line, add an industry, delete a road or a railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:menu.removeIndustry",
+    "text": "Remove this industry",
+    "ref": "Retirer cette industrie",
+    "context": "Right-click menu on the map: add or remove a town or an industry, link two towns by road, draw a railway line, add an industry, delete a road or a railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:menu.removeRoad",
+    "text": "Delete this road",
+    "ref": "Supprimer cette route",
+    "context": "Right-click menu on the map: add or remove a town or an industry, link two towns by road, draw a railway line, add an industry, delete a road or a railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:menu.restoreRoad",
+    "text": "Restore this road",
+    "ref": "Rétablir cette route",
+    "context": "Right-click menu on the map: add or remove a town or an industry, link two towns by road, draw a railway line, add an industry, delete a road or a railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:menu.removeRail",
+    "text": "Delete this railway line",
+    "ref": "Supprimer cette voie ferrée",
+    "context": "Right-click menu on the map: add or remove a town or an industry, link two towns by road, draw a railway line, add an industry, delete a road or a railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:menu.restoreRail",
+    "text": "Restore this railway line",
+    "ref": "Rétablir cette voie ferrée",
+    "context": "Right-click menu on the map: add or remove a town or an industry, link two towns by road, draw a railway line, add an industry, delete a road or a railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:menu.railFrom",
+    "text": "Railway line from here…",
+    "ref": "Voie ferrée depuis ici…",
+    "context": "Right-click menu on the map: add or remove a town or an industry, link two towns by road, draw a railway line, add an industry, delete a road or a railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:menu.addIndustry",
+    "text": "Add an industry",
+    "ref": "Ajouter une industrie",
+    "context": "Right-click menu on the map: add or remove a town or an industry, link two towns by road, draw a railway line, add an industry, delete a road or a railway line.",
+    "kind": "button"
+  },
+  {
+    "id": "app:menu.needResult",
+    "text": "Compute the result first.",
+    "ref": "Calculez d'abord le résultat.",
+    "context": "Right-click menu on the map: add or remove a town or an industry, link two towns by road, draw a railway line, add an industry, delete a road or a railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.addToMap",
+    "text": "Add to the map",
+    "ref": "Ajouter à la carte",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "button"
+  },
+  {
+    "id": "app:sheet.removeFromMap",
+    "text": "Remove from the map",
+    "ref": "Retirer de la carte",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "button"
+  },
+  {
+    "id": "app:sheet.close",
+    "text": "Close",
+    "ref": "Fermer",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:sheet.population",
+    "text": "Population: {pop}",
+    "ref": "Population : {pop}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.estimated",
+    "text": "(estimated from the kind of place)",
+    "ref": "(estimée d'après le type de lieu)",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.osmPlace",
+    "text": "OpenStreetMap: {kind}",
+    "ref": "OpenStreetMap : {kind}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.state",
+    "text": "State: {state}",
+    "ref": "État : {state}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.moved",
+    "text": "Moved {m} m: {reason}",
+    "ref": "Déplacée de {m} m : {reason}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.movedDefault",
+    "text": "ground not buildable",
+    "ref": "terrain non constructible",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.districts",
+    "text": "Districts: residential {res}, commercial {com}, industrial {ind} {how}",
+    "ref": "Quartiers : habitat {res}, commerce {com}, industrie {ind} {how}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.districtsReal",
+    "text": "(real areas)",
+    "ref": "(zones réelles)",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.districtsDefault",
+    "text": "(default)",
+    "ref": "(par défaut)",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.needs",
+    "text": "Demands: {needs}",
+    "ref": "Besoins : {needs}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.needsCom",
+    "text": "commercial: {list}",
+    "ref": "commerce : {list}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.needsInd",
+    "text": "industrial: {list}",
+    "ref": "industrie : {list}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.needsGame",
+    "text": "chosen by the game",
+    "ref": "tirés par le jeu",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.type",
+    "text": "Type: {type}",
+    "ref": "Type : {type}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.origin",
+    "text": "Origin: {origin}",
+    "ref": "Origine : {origin}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.why",
+    "text": "Why: {why}",
+    "ref": "Pourquoi : {why}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.relevance",
+    "text": "Real presence: {n}",
+    "ref": "Présence réelle : {n}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.relevanceNone",
+    "text": "none",
+    "ref": "aucune",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.missing",
+    "text": "Missing from its chain: {list}",
+    "ref": "Il manque à sa chaîne : {list}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.inhabitants",
+    "text": "{n} inh.",
+    "ref": "{n} hab.",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.townPlaced",
+    "text": "town, capacity {n}",
+    "ref": "ville, capacité {n}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.townOff",
+    "text": "left out",
+    "ref": "non retenue",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.townDropped",
+    "text": "chosen but not placed: {reason}",
+    "ref": "retenue mais non placée : {reason}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.noRoom",
+    "text": "no room",
+    "ref": "pas de place",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.manual",
+    "text": "(chosen by hand)",
+    "ref": "(choix manuel)",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.industryPlaced",
+    "text": "placed",
+    "ref": "placée",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.industryOff",
+    "text": "left out",
+    "ref": "non retenue",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.industryDropped",
+    "text": "not placed: {reason}",
+    "ref": "non placée : {reason}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:sheet.missingShort",
+    "text": "missing: {list}",
+    "ref": "il manque : {list}",
+    "context": "Information card of a town or an industry clicked on the map (one fact per line).",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.towns",
+    "text": "Towns",
+    "ref": "Villes",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "button"
+  },
+  {
+    "id": "app:lists.industries",
+    "text": "Industries",
+    "ref": "Industries",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "button"
+  },
+  {
+    "id": "app:lists.network",
+    "text": "Roads and rail",
+    "ref": "Routes et rail",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "button"
+  },
+  {
+    "id": "app:lists.close",
+    "text": "Close",
+    "ref": "Fermer",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:lists.empty",
+    "text": "Get the data, then compute the result to see the lists.",
+    "ref": "Récupérez les données puis calculez le résultat pour voir les listes.",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.addTown",
+    "text": "Add a town…",
+    "ref": "Ajouter une ville…",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.allAuto",
+    "text": "All automatic",
+    "ref": "Tout auto",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "button"
+  },
+  {
+    "id": "app:lists.allAutoTitle",
+    "text": "Give every town back to the choice by population",
+    "ref": "Rendre toutes les villes au choix par population",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:lists.none",
+    "text": "None",
+    "ref": "Aucune",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "button"
+  },
+  {
+    "id": "app:lists.auto",
+    "text": "auto",
+    "ref": "auto",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.autoTitle",
+    "text": "Give back to the automatic choice",
+    "ref": "Rendre au choix automatique",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:lists.notPlaced",
+    "text": "not placed",
+    "ref": "non placée",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.sharesTitle",
+    "text": "Commercial / industrial (% of the capacity)",
+    "ref": "Commerce / industrie (% de la capacité)",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:lists.industryHint",
+    "text": "Ticked = kept · click on the name = show on the map",
+    "ref": "Coché = retenue · clic sur le nom = sur la carte",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:lists.relevanceTitle",
+    "text": "Real presence (OSM sites, land cover)",
+    "ref": "Présence réelle (sites OSM, occupation du sol)",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:lists.deleteIndustry",
+    "text": "Delete this added industry",
+    "ref": "Supprimer cette industrie ajoutée",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:lists.deleteRoad",
+    "text": "Delete this added road",
+    "ref": "Supprimer cette route ajoutée",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:lists.deleteRail",
+    "text": "Delete this added railway line",
+    "ref": "Supprimer cette voie ajoutée",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:lists.added",
+    "text": "added",
+    "ref": "ajoutée",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.noRoad",
+    "text": "no road",
+    "ref": "sans route",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.realRoad",
+    "text": "Along the real roads",
+    "ref": "Le long des routes réelles",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:lists.directRoad",
+    "text": "No real road: straight line",
+    "ref": "Pas de route réelle : ligne directe",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:lists.railFigures",
+    "text": "{bridges} bridge(s), {tunnels} tunnel(s)",
+    "ref": "{bridges} pont(s), {tunnels} tunnel(s)",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.needs",
+    "text": "Demands: {needs}",
+    "ref": "Besoins : {needs}",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.error",
+    "text": "{what}: {error}",
+    "ref": "{what} : {error}",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.retry",
+    "text": "try again",
+    "ref": "réessayer",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "button"
+  },
+  {
+    "id": "app:legend.show",
+    "text": "Legend",
+    "ref": "Légende",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "button"
+  },
+  {
+    "id": "app:legend.hide",
+    "text": "Hide the legend",
+    "ref": "Masquer la légende",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "button"
+  },
+  {
+    "id": "app:legend.water",
+    "text": "Water (below level 0)",
+    "ref": "Eau (sous le niveau 0)",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "label"
+  },
+  {
+    "id": "app:legend.town",
+    "text": "Town (size by population)",
+    "ref": "Ville (taille selon la population)",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "label"
+  },
+  {
+    "id": "app:legend.off",
+    "text": "Place left out",
+    "ref": "Lieu non retenu",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "label"
+  },
+  {
+    "id": "app:legend.dropped",
+    "text": "Chosen but not placed",
+    "ref": "Retenu mais non placé",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "label"
+  },
+  {
+    "id": "app:legend.moved",
+    "text": "Town moved from its real position",
+    "ref": "Ville déplacée depuis sa position réelle",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "label"
+  },
+  {
+    "id": "app:legend.primary",
+    "text": "Primary industry (fields, mines, forests)",
+    "ref": "Industrie primaire (champs, mines, forêts)",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "label"
+  },
+  {
+    "id": "app:legend.factory",
+    "text": "Factory",
+    "ref": "Usine",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "label"
+  },
+  {
+    "id": "app:legend.onWater",
+    "text": "Industry on water",
+    "ref": "Industrie sur l'eau",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "label"
+  },
+  {
+    "id": "app:legend.road",
+    "text": "Planned road link (the game lays the road)",
+    "ref": "Liaison routière prévue (le jeu trace la route)",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "label"
+  },
+  {
+    "id": "app:legend.rail",
+    "text": "Railway line",
+    "ref": "Voie ferrée",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "label"
+  },
+  {
+    "id": "app:legend.bridge",
+    "text": "Railway bridge",
+    "ref": "Pont ferroviaire",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "label"
+  },
+  {
+    "id": "app:legend.tunnel",
+    "text": "Railway tunnel",
+    "ref": "Tunnel ferroviaire",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "label"
+  },
+  {
+    "id": "app:legend.help",
+    "text": "Ctrl + click: put the area · click: details · right-click: menu (add, remove, link, delete)",
+    "ref": "Ctrl + clic : placer la zone · clic : détails · clic droit : menu (ajouter, retirer, relier, supprimer)",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:size.tiny",
+    "text": "Tiny",
+    "ref": "Minuscule",
+    "context": "Names of the game's map sizes (as in the game's new map dialog), and the size line '<size> (<format>) — <width> × <height> km'.",
+    "kind": "label"
+  },
+  {
+    "id": "app:size.small",
+    "text": "Small",
+    "ref": "Petite",
+    "context": "Names of the game's map sizes (as in the game's new map dialog), and the size line '<size> (<format>) — <width> × <height> km'.",
+    "kind": "label"
+  },
+  {
+    "id": "app:size.medium",
+    "text": "Medium",
+    "ref": "Moyenne",
+    "context": "Names of the game's map sizes (as in the game's new map dialog), and the size line '<size> (<format>) — <width> × <height> km'.",
+    "kind": "label"
+  },
+  {
+    "id": "app:size.large",
+    "text": "Large",
+    "ref": "Grande",
+    "context": "Names of the game's map sizes (as in the game's new map dialog), and the size line '<size> (<format>) — <width> × <height> km'.",
+    "kind": "label"
+  },
+  {
+    "id": "app:size.veryLarge",
+    "text": "Very large",
+    "ref": "Très grande",
+    "context": "Names of the game's map sizes (as in the game's new map dialog), and the size line '<size> (<format>) — <width> × <height> km'.",
+    "kind": "label"
+  },
+  {
+    "id": "app:size.huge",
+    "text": "Huge",
+    "ref": "Énorme",
+    "context": "Names of the game's map sizes (as in the game's new map dialog), and the size line '<size> (<format>) — <width> × <height> km'.",
+    "kind": "label"
+  },
+  {
+    "id": "app:size.megalomaniac",
+    "text": "Megalomaniac",
+    "ref": "Mégalomane",
+    "context": "Names of the game's map sizes (as in the game's new map dialog), and the size line '<size> (<format>) — <width> × <height> km'.",
+    "kind": "label"
+  },
+  {
+    "id": "app:size.gigantomaniac",
+    "text": "Gigantomaniac",
+    "ref": "Gigantomane",
+    "context": "Names of the game's map sizes (as in the game's new map dialog), and the size line '<size> (<format>) — <width> × <height> km'.",
+    "kind": "label"
+  },
+  {
+    "id": "app:size.label",
+    "text": "{size} ({format}) — {w} × {h} km",
+    "ref": "{size} ({format}) — {w} × {h} km",
+    "context": "Names of the game's map sizes (as in the game's new map dialog), and the size line '<size> (<format>) — <width> × <height> km'.",
+    "kind": "label"
+  },
+  {
+    "id": "app:density.0",
+    "text": "Rare",
+    "ref": "Rare",
+    "context": "The game's industry density setting.",
+    "kind": "label"
+  },
+  {
+    "id": "app:density.1",
+    "text": "Sparse",
+    "ref": "Dispersée",
+    "context": "The game's industry density setting.",
+    "kind": "label"
+  },
+  {
+    "id": "app:density.2",
+    "text": "Medium",
+    "ref": "Moyenne",
+    "context": "The game's industry density setting.",
+    "kind": "label"
+  },
+  {
+    "id": "app:density.3",
+    "text": "Dense",
+    "ref": "Dense",
+    "context": "The game's industry density setting.",
+    "kind": "label"
+  },
+  {
+    "id": "app:density.4",
+    "text": "Very dense",
+    "ref": "Très dense",
+    "context": "The game's industry density setting.",
+    "kind": "label"
+  },
+  {
+    "id": "app:economy.temperate",
+    "text": "Temperate",
+    "ref": "Tempéré",
+    "context": "The game's economies (map climates).",
+    "kind": "label"
+  },
+  {
+    "id": "app:economy.dry",
+    "text": "Dry",
+    "ref": "Aride",
+    "context": "The game's economies (map climates).",
+    "kind": "label"
+  },
+  {
+    "id": "app:economy.tropic",
+    "text": "Tropical",
+    "ref": "Tropical",
+    "context": "The game's economies (map climates).",
+    "kind": "label"
+  },
+  {
+    "id": "app:economy.subarctic",
+    "text": "Subarctic",
+    "ref": "Subarctique",
+    "context": "The game's economies (map climates).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cover.0",
+    "text": "Open (fields, meadows, towns)",
+    "ref": "Ouvert (champs, prés, villes)",
+    "context": "Land cover classes shown on the map (open land, forest, scrub, rock).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cover.1",
+    "text": "Forest",
+    "ref": "Forêt",
+    "context": "Land cover classes shown on the map (open land, forest, scrub, rock).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cover.2",
+    "text": "Heath, scrub",
+    "ref": "Landes, broussailles",
+    "context": "Land cover classes shown on the map (open land, forest, scrub, rock).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cover.3",
+    "text": "Rock, scree, glacier",
+    "ref": "Roche, éboulis, glacier",
+    "context": "Land cover classes shown on the map (open land, forest, scrub, rock).",
+    "kind": "label"
+  },
+  {
+    "id": "app:origin.osm",
+    "text": "real site (OpenStreetMap)",
+    "ref": "site réel (OpenStreetMap)",
+    "context": "Information card of an industry: where the industry comes from.",
+    "kind": "label"
+  },
+  {
+    "id": "app:origin.landcover",
+    "text": "land cover",
+    "ref": "occupation du sol",
+    "context": "Information card of an industry: where the industry comes from.",
+    "kind": "label"
+  },
+  {
+    "id": "app:origin.chain",
+    "text": "production chain",
+    "ref": "chaîne de production",
+    "context": "Information card of an industry: where the industry comes from.",
+    "kind": "label"
+  },
+  {
+    "id": "app:origin.user",
+    "text": "added by hand",
+    "ref": "ajoutée à la main",
+    "context": "Information card of an industry: where the industry comes from.",
+    "kind": "label"
+  },
+  {
+    "id": "app:originShort.osm",
+    "text": "real",
+    "ref": "réel",
+    "context": "Lists panel: very short tag of where an industry comes from.",
+    "kind": "label"
+  },
+  {
+    "id": "app:originShort.landcover",
+    "text": "land",
+    "ref": "sol",
+    "context": "Lists panel: very short tag of where an industry comes from.",
+    "kind": "label"
+  },
+  {
+    "id": "app:originShort.chain",
+    "text": "chain",
+    "ref": "chaîne",
+    "context": "Lists panel: very short tag of where an industry comes from.",
+    "kind": "label"
+  },
+  {
+    "id": "app:originShort.user",
+    "text": "added",
+    "ref": "ajoutée",
+    "context": "Lists panel: very short tag of where an industry comes from.",
+    "kind": "label"
+  },
+  {
+    "id": "app:place.city",
+    "text": "city",
+    "ref": "ville",
+    "context": "Kind of place in OpenStreetMap (city, town, village).",
+    "kind": "label"
+  },
+  {
+    "id": "app:place.town",
+    "text": "town",
+    "ref": "petite ville",
+    "context": "Kind of place in OpenStreetMap (city, town, village).",
+    "kind": "label"
+  },
+  {
+    "id": "app:place.village",
+    "text": "village",
+    "ref": "village",
+    "context": "Kind of place in OpenStreetMap (city, town, village).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.farm",
+    "text": "Crop Farm",
+    "ref": "Exploitation agricole",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.livestock_farm",
+    "text": "Livestock Farm",
+    "ref": "Ferme d'élevage",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.cotton_farm",
+    "text": "Cotton Farm",
+    "ref": "Ferme de coton",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.rubber_farm",
+    "text": "Rubber Farm",
+    "ref": "Plantation d'hévéas",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.forest",
+    "text": "Logging Camp",
+    "ref": "Camp de bûcherons",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.quarry",
+    "text": "Quarry",
+    "ref": "Carrière",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.clay_pit",
+    "text": "Clay Pit",
+    "ref": "Carrière d'argile",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.sand_pit",
+    "text": "Sand Pit",
+    "ref": "Carrière de sable",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.sand_excavator",
+    "text": "Sand Dredger",
+    "ref": "Drague à sable",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.coal_mine",
+    "text": "Coal Mine",
+    "ref": "Mine de charbon",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.iron_ore_mine",
+    "text": "Iron Ore Mine",
+    "ref": "Mine de fer",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.oil_well",
+    "text": "Oil Well",
+    "ref": "Site pétrolier",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.oil_platform",
+    "text": "Oil Platform",
+    "ref": "Plateforme pétrolière",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.fishing_grounds",
+    "text": "Fishing Grounds",
+    "ref": "Zone de pêche",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.oil_refinery",
+    "text": "Oil Refinery",
+    "ref": "Raffinerie de pétrole",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.chemical_plant",
+    "text": "Chemical Plant",
+    "ref": "Usine chimique",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.steel_mill",
+    "text": "Steel Mill",
+    "ref": "Aciérie",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.saw_mill",
+    "text": "Saw Mill",
+    "ref": "Scierie",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.brewery",
+    "text": "Brewery",
+    "ref": "Brasserie",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.bricks_works",
+    "text": "Brickworks",
+    "ref": "Briqueterie",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.glass_works",
+    "text": "Glassworks",
+    "ref": "Verrerie",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.food_factory",
+    "text": "Canning Factory",
+    "ref": "Conserverie",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.weaving_mill",
+    "text": "Weaving Mill",
+    "ref": "Tisseranderie",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.textile_factory",
+    "text": "Textile Factory",
+    "ref": "Usine textile",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.furniture_factory",
+    "text": "Furniture Factory",
+    "ref": "Usine de meubles",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.machine_factory",
+    "text": "Machine Factory",
+    "ref": "Usine de machines",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.tool_factory",
+    "text": "Tools Factory",
+    "ref": "Usine d'outils",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.vehicle_factory",
+    "text": "Vehicle Factory",
+    "ref": "Usine de véhicules",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.cement_plant",
+    "text": "Cement Plant",
+    "ref": "Cimenterie",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.paper_mill",
+    "text": "Paper Mill",
+    "ref": "Papeterie",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.printing_press",
+    "text": "Printing Factory",
+    "ref": "Imprimerie",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:industry.tire_factory",
+    "text": "Tire Factory",
+    "ref": "Usine de pneus",
+    "context": "Names of the game's industry types (use the game's official names).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.beverages",
+    "text": "beverages",
+    "ref": "boissons",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.books",
+    "text": "books",
+    "ref": "livres",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.clothes",
+    "text": "clothes",
+    "ref": "vêtements",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.fish",
+    "text": "fish",
+    "ref": "poisson",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.meat",
+    "text": "meat",
+    "ref": "viande",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.tinned_food",
+    "text": "tinned food",
+    "ref": "conserves",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.vegetables",
+    "text": "vegetables",
+    "ref": "légumes",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.bricks",
+    "text": "bricks",
+    "ref": "briques",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.cement",
+    "text": "cement",
+    "ref": "ciment",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.fuel",
+    "text": "fuel",
+    "ref": "carburant",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.furniture",
+    "text": "furniture",
+    "ref": "meubles",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.machines",
+    "text": "machines",
+    "ref": "machines",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.planks",
+    "text": "planks",
+    "ref": "planches",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.tools",
+    "text": "tools",
+    "ref": "outils",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:cargo.vehicles",
+    "text": "vehicles",
+    "ref": "véhicules",
+    "context": "Names of the game's cargo types, in lists after 'commercial:' / 'industrial:' (use the game's official names, lower case).",
+    "kind": "label"
+  },
+  {
+    "id": "app:credits",
+    "text": "IGN RGE ALTI® · Copernicus DEM © DLR / Airbus, ESA · © ESA WorldCover 2021 (CC BY 4.0) · © OpenStreetMap contributors (ODbL)",
+    "ref": "IGN RGE ALTI® · Copernicus DEM © DLR / Airbus, ESA · © ESA WorldCover 2021 (CC BY 4.0) · © contributeurs OpenStreetMap (ODbL)",
+    "context": "Data credits at the bottom of the panel (keep the names and licences).",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:industry.nameOf",
+    "text": "{town} {industry}",
+    "ref": "{industry} de {town}",
+    "context": "Name the app gives a generated industry, which becomes its name in the game: {industry} = the industry type (the game's name), {town} = the nearest town. Use the word order a native speaker would use for a place-named business (English: 'Lyon Saw Mill').",
+    "kind": "label"
+  },
+  {
+    "id": "app:progress.cover",
+    "text": "Land cover",
+    "ref": "Occupation du sol",
+    "context": "Status line under the progress bar while the app computes the game map: the current computation stage.",
+    "kind": "label"
+  },
+  {
+    "id": "app:progress.relief",
+    "text": "Relief and water",
+    "ref": "Relief et eau",
+    "context": "Status line under the progress bar while the app computes the game map: the current computation stage.",
+    "kind": "label"
+  },
+  {
+    "id": "app:progress.biomes",
+    "text": "Biomes",
+    "ref": "Biomes",
+    "context": "Status line under the progress bar while the app computes the game map: the current computation stage.",
+    "kind": "label"
+  },
+  {
+    "id": "app:progress.towns",
+    "text": "Towns",
+    "ref": "Villes",
+    "context": "Status line under the progress bar while the app computes the game map: the current computation stage.",
+    "kind": "label"
+  },
+  {
+    "id": "app:progress.network",
+    "text": "Roads and railway",
+    "ref": "Routes et voie ferrée",
+    "context": "Status line under the progress bar while the app computes the game map: the current computation stage.",
+    "kind": "label"
+  },
+  {
+    "id": "app:progress.industries",
+    "text": "Industries",
+    "ref": "Industries",
+    "context": "Status line under the progress bar while the app computes the game map: the current computation stage.",
+    "kind": "label"
+  },
+  {
+    "id": "app:progress.files",
+    "text": "Files",
+    "ref": "Fichiers",
+    "context": "Status line under the progress bar while the app computes the game map: the current computation stage.",
+    "kind": "label"
+  },
+  {
+    "id": "app:net.noSlot",
+    "text": "{server}: no slot before {s} s",
+    "ref": "{server} : pas de créneau avant {s} s",
+    "context": "Download status of an OpenStreetMap (Overpass) request, shown next to a data step or in an error: {server} is a server name.",
+    "kind": "label"
+  },
+  {
+    "id": "app:net.waitSlot",
+    "text": "{server}, waiting for a slot",
+    "ref": "{server}, attente d'un créneau",
+    "context": "Download status of an OpenStreetMap (Overpass) request, shown next to a data step or in an error: {server} is a server name.",
+    "kind": "label"
+  },
+  {
+    "id": "app:net.sent",
+    "text": "request sent to {server}",
+    "ref": "requête envoyée à {server}",
+    "context": "Download status of an OpenStreetMap (Overpass) request, shown next to a data step or in an error: {server} is a server name.",
+    "kind": "label"
+  },
+  {
+    "id": "app:net.refused",
+    "text": "OpenStreetMap refused the request (HTTP {status}).",
+    "ref": "OpenStreetMap a refusé la requête (HTTP {status}).",
+    "context": "Download status of an OpenStreetMap (Overpass) request, shown next to a data step or in an error: {server} is a server name.",
+    "kind": "label"
+  },
+  {
+    "id": "app:net.rateLimit",
+    "text": "{server}: rate limit",
+    "ref": "{server} : limite de débit",
+    "context": "Download status of an OpenStreetMap (Overpass) request, shown next to a data step or in an error: {server} is a server name.",
+    "kind": "label"
+  },
+  {
+    "id": "app:net.busy",
+    "text": "{server}: overloaded (HTTP {status})",
+    "ref": "{server} : saturé (HTTP {status})",
+    "context": "Download status of an OpenStreetMap (Overpass) request, shown next to a data step or in an error: {server} is a server name.",
+    "kind": "label"
+  },
+  {
+    "id": "app:net.noAnswer",
+    "text": "{server}: no answer",
+    "ref": "{server} : pas de réponse",
+    "context": "Download status of an OpenStreetMap (Overpass) request, shown next to a data step or in an error: {server} is a server name.",
+    "kind": "label"
+  },
+  {
+    "id": "app:net.serversBusy",
+    "text": "servers overloaded",
+    "ref": "serveurs saturés",
+    "context": "Download status of an OpenStreetMap (Overpass) request, shown next to a data step or in an error: {server} is a server name.",
+    "kind": "label"
+  },
+  {
+    "id": "app:net.osmDown",
+    "text": "OpenStreetMap unavailable ({failures}). Try again in a few minutes: the data already received stays in the cache.",
+    "ref": "OpenStreetMap indisponible ({failures}). Réessaie dans quelques minutes : les données déjà reçues restent en cache.",
+    "context": "Download status of an OpenStreetMap (Overpass) request, shown next to a data step or in an error: {server} is a server name.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:net.noBathy",
+    "text": "none (default depth)",
+    "ref": "aucune (profondeur par défaut)",
+    "context": "Download status of an OpenStreetMap (Overpass) request, shown next to a data step or in an error: {server} is a server name.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.offMap",
+    "text": "off the map",
+    "ref": "hors carte",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.inWater",
+    "text": "in the water",
+    "ref": "dans l'eau",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.nearSea",
+    "text": "too close to the sea or a lake",
+    "ref": "trop près de la mer ou d'un lac",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.nearRiver",
+    "text": "too close to a river",
+    "ref": "trop près d'une rivière",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.nearEdge",
+    "text": "too close to the edge",
+    "ref": "trop près du bord",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.slope",
+    "text": "sloping ground",
+    "ref": "terrain en pente",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.noLandNear",
+    "text": "{why}, no buildable ground within {m} m",
+    "ref": "{why}, pas de terrain constructible à moins de {m} m",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.nearTown",
+    "text": "too close to {town}",
+    "ref": "trop près de {town}",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.crops",
+    "text": "{pct} % crops",
+    "ref": "{pct} % de cultures",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.grass",
+    "text": "{pct} % grassland",
+    "ref": "{pct} % de prairies",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.forest",
+    "text": "{pct} % forest",
+    "ref": "{pct} % de forêt",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.sea",
+    "text": "{pct} % sea",
+    "ref": "{pct} % de mer",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.supplies",
+    "text": "supplies: {list}",
+    "ref": "fournit : {list}",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.chain",
+    "text": "completes a production chain",
+    "ref": "complète une chaîne de production",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.noOpenWater",
+    "text": "no open water far enough from the shore",
+    "ref": "pas d'eau libre assez loin du rivage",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:why.noFreeLand",
+    "text": "no free ground nearby (towns, water, slope)",
+    "ref": "pas de terrain libre (villes, eau, pente) à proximité",
+    "context": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.townMoved",
+    "text": "{town} moved by {m} m ({reason})",
+    "ref": "{town} déplacée de {m} m ({reason})",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.townDropped",
+    "text": "{town} left out: {reason}",
+    "ref": "{town} écartée : {reason}",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.ageNow",
+    "text": "less than 1 h ago",
+    "ref": "il y a moins d'1 h",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.ageHours",
+    "text": "{n} h ago",
+    "ref": "il y a {n} h",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.ageDays",
+    "text": "{n} days ago",
+    "ref": "il y a {n} j",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.noMessage",
+    "text": "error without a message",
+    "ref": "erreur sans message",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.unknownError",
+    "text": "unknown error",
+    "ref": "erreur inconnue",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.errorIn",
+    "text": "{where}: {error}",
+    "ref": "{where} : {error}",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.coverWindows",
+    "text": "ESA WorldCover ({n} window(s))",
+    "ref": "ESA WorldCover ({n} fenêtre(s))",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.noCover",
+    "text": "no land cover (biomes from the relief)",
+    "ref": "pas d'occupation du sol (biomes déduits du relief)",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.ignBlocks",
+    "text": "IGN {d}/{n} blocks",
+    "ref": "IGN {d}/{n} blocs",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.blocks",
+    "text": "{d}/{n} blocks",
+    "ref": "{d}/{n} blocs",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.tiles",
+    "text": "{d}/{n} tiles",
+    "ref": "{d}/{n} tuiles",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.tilesDone",
+    "text": "{n} tile(s)",
+    "ref": "{n} tuile(s)",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.windows",
+    "text": "{n} window(s)",
+    "ref": "{n} fenêtre(s)",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.coverFullFailed",
+    "text": "Full-resolution land cover unavailable ({error}): the preview's is used.",
+    "ref": "Occupation du sol pleine résolution indisponible ({error}) : celle de l'aperçu est reprise.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.largeArea",
+    "text": "Area of {km2} km²: the OpenStreetMap requests can be slow.",
+    "ref": "Zone de {km2} km² : les requêtes OpenStreetMap peuvent être lentes.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.queued",
+    "text": "queued",
+    "ref": "en file d'attente",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.retryIn",
+    "text": "{reason}, retrying in {s} s",
+    "ref": "{reason}, nouvel essai dans {s} s",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.fromCache",
+    "text": "cache ({age})",
+    "ref": "cache ({age})",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.fromServer",
+    "text": "{server}, {s} s",
+    "ref": "{server}, {s} s",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.ignNone",
+    "text": "no data here: Copernicus",
+    "ref": "pas de données ici : Copernicus",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.ignNoneWarn",
+    "text": "IGN: no data here, falling back to Copernicus.",
+    "ref": "IGN : pas de données ici, repli sur Copernicus.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.demSkipped",
+    "text": "not needed (IGN covers everything)",
+    "ref": "inutile (IGN complet)",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.coverFailed",
+    "text": "Land cover unavailable ({error}): biomes from the relief.",
+    "ref": "Occupation du sol indisponible ({error}) : biomes déduits du relief.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.waterPlaces",
+    "text": "{water} water features, {places} places",
+    "ref": "{water} eaux, {places} lieux",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.sites",
+    "text": "{n} sites",
+    "ref": "{n} sites",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.sitesFailed",
+    "text": "Industrial sites unavailable ({error}): industries from the land cover.",
+    "ref": "Sites industriels indisponibles ({error}) : industries déduites de l'occupation du sol.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.roadsRails",
+    "text": "{roads} roads, {rails} railways",
+    "ref": "{roads} routes, {rails} voies ferrées",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.roadsFailed",
+    "text": "Roads and railways unavailable ({error}): no link planned.",
+    "ref": "Routes et voies ferrées indisponibles ({error}) : aucune liaison prévue.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.landCounts",
+    "text": "{beaches} beaches, {business} business areas",
+    "ref": "{beaches} plages, {business} zones d'activité",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.landFailed",
+    "text": "Beaches and business areas unavailable ({error}): beaches from the land cover, default districts.",
+    "ref": "Plages et zones d'activité indisponibles ({error}) : plages déduites de l'occupation du sol, quartiers par défaut.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.workerFailed",
+    "text": "the computation failed",
+    "ref": "le calcul a échoué",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.workerFailedAt",
+    "text": "the computation failed in {file}:{line}",
+    "ref": "le calcul a échoué dans {file}:{line}",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.resultTerrain",
+    "text": "Result: water level = {ref} m in reality, heights {min} → {max} m, water {water}, steep slopes {slope}.",
+    "ref": "Résultat : niveau de l'eau = {ref} m réels, hauteurs {min} → {max} m, eau {water}, pentes fortes {slope}.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.resultRiversOne",
+    "text": "a single network",
+    "ref": "un seul réseau",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.resultRiversMany",
+    "text": "{n} separate networks",
+    "ref": "{n} réseaux séparés",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.resultRivers",
+    "text": "Rivers: {networks}, {joined} junctions, {routed} led to the water, {channels} channels, {marsh} marshes turned into lakes, {ponds} ponds filled in, {beach} beach cells without trees.",
+    "ref": "Rivières : {networks}, {joined} jonctions, {routed} tracés jusqu'à l'eau, {channels} chenaux, {marsh} marais en lacs, {ponds} étangs comblés, {beach} cellules de plage sans arbres.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.resultCounts",
+    "text": "{towns} towns, {industries} industries, {links} links between towns, {rails} railway line(s).",
+    "ref": "{towns} villes, {industries} industries, {links} liaisons entre villes, {rails} voie(s) ferrée(s).",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.resultRail",
+    "text": "Railway: {km} km, tightest curve {radius} m, steepest {grade} % in the game, {bridges} bridge(s) (highest {high} m), {tunnels} tunnel(s).",
+    "ref": "Voie ferrée : {km} km, courbe la plus serrée {radius} m, pente max. {grade} % dans le jeu, {bridges} pont(s) (le plus haut {high} m), {tunnels} tunnel(s).",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.dataSummary",
+    "text": "Data: relief {relief}, sea floor {sea}, {cover}, {water} water features, {places} places, {sites} industrial sites, {roads} roads, {rails} railways.",
+    "ref": "Données : relief {relief}, fonds marins {sea}, {cover}, {water} eaux, {places} lieux, {sites} sites industriels, {roads} routes, {rails} voies ferrées.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.noUserdata",
+    "text": "TF3 data folder not found: enter it in the Export tab.",
+    "ref": "Dossier de données de TF3 introuvable : indique-le dans l'onglet Export.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.sizeScale",
+    "text": "{size} · scale 1:{scale}",
+    "ref": "{size} · échelle 1:{scale}",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.relief",
+    "text": "Relief: {source}",
+    "ref": "Relief : {source}",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.points",
+    "text": "{w} × {h} points",
+    "ref": "{w} × {h} points",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.files",
+    "text": "{n} files",
+    "ref": "{n} fichiers",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.written",
+    "text": "Map “{name}” written: {n} files in {dir}.",
+    "ref": "Carte « {name} » écrite : {n} fichiers dans {dir}.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.sent",
+    "text": "Request sent to the game: generating in the Map Editor…",
+    "ref": "Demande envoyée au jeu : génération dans l'éditeur de cartes…",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.generated",
+    "text": "Map “{name}” generated in the game. Save it in the Map Editor.",
+    "ref": "Carte « {name} » générée dans le jeu. Enregistre-la dans l'éditeur.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.game",
+    "text": "Game",
+    "ref": "Jeu",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.gameStep",
+    "text": "Game: {message}",
+    "ref": "Jeu : {message}",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.noAnswer",
+    "text": "The game does not answer. Start Transport Fever 3, open the Map Editor on a new empty map “{size}” with the RealMap mod enabled, then generate again.",
+    "ref": "Le jeu ne répond pas. Lance Transport Fever 3, ouvre l'éditeur de cartes sur une nouvelle carte vide « {size} » avec le mod RealMap activé, puis génère à nouveau.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.stalled",
+    "text": "No news from the game for 5 minutes (generation stuck?).",
+    "ref": "Le jeu ne donne plus de nouvelles depuis 5 minutes (génération bloquée ?).",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.testWritten",
+    "text": "Test map written: {name} ({size}).",
+    "ref": "Carte de test écrite : {name} ({size}).",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.testImport",
+    "text": "Import Heightmap → Minimum {min}, Maximum {max}, Water Level 0.",
+    "ref": "Import Heightmap → Minimum {min}, Maximum {max}, Water Level 0.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.testColumns",
+    "text": "Columns (west → east): channels {list} m wide.",
+    "ref": "Colonnes (ouest → est) : chenaux de {list} m de large.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.testRows",
+    "text": "Rows (north → south): {list} m deep.",
+    "ref": "Bandes (nord → sud) : {list} m de profondeur.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.testLayer",
+    "text": "Show the “Navigable Waters” layer and note the coloured channels.",
+    "ref": "Affiche le calque « Navigable Waters » (eaux navigables) et note les chenaux colorés.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.title",
+    "text": "Updates",
+    "ref": "Mises à jour",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "title"
+  },
+  {
+    "id": "app:updates.badge",
+    "text": "Version {version}",
+    "ref": "Version {version}",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.installed",
+    "text": "Installed version",
+    "ref": "Version installée",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.status",
+    "text": "Status",
+    "ref": "État",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.check",
+    "text": "Check",
+    "ref": "Vérifier",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.checking",
+    "text": "Checking…",
+    "ref": "Vérification…",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.upToDate",
+    "text": "Up to date",
+    "ref": "À jour",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.never",
+    "text": "Not checked yet",
+    "ref": "Pas encore vérifié",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.available",
+    "text": "Version {version} available",
+    "ref": "Version {version} disponible",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.install",
+    "text": "Install and restart",
+    "ref": "Installer et redémarrer",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.download",
+    "text": "Download",
+    "ref": "Télécharger",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.notes",
+    "text": "Release notes",
+    "ref": "Notes de version",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.skip",
+    "text": "Skip this version",
+    "ref": "Ignorer cette version",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.downloading",
+    "text": "Downloading",
+    "ref": "Téléchargement",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.installing",
+    "text": "Installing…",
+    "ref": "Installation…",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.cancel",
+    "text": "Cancel",
+    "ref": "Annuler",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.mb",
+    "text": "{v} MB",
+    "ref": "{v} Mo",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.busy",
+    "text": "A computation or a generation is running: installing closes the app and stops it. Install anyway?",
+    "ref": "Un calcul ou une génération est en cours : l'installation ferme l'application et l'interrompt. Installer quand même ?",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:updates.manual",
+    "text": "This install does not update itself: download the new installer from the release page.",
+    "ref": "Cette installation ne se met pas à jour toute seule : télécharge le nouvel installeur sur la page de la version.",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:updates.manualPortable",
+    "text": "Portable version: download the new zip from the release page and replace RealMap.exe.",
+    "ref": "Version portable : télécharge le nouveau zip sur la page de la version et remplace RealMap.exe.",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:updates.auto",
+    "text": "Check at startup",
+    "ref": "Vérifier au démarrage",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.lastCheck",
+    "text": "Last check: {date}",
+    "ref": "Dernière vérification : {date}",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "label"
+  },
+  {
+    "id": "app:updates.modHint",
+    "text": "The mod is updated separately: through the game's Mod Hub, or with the zip attached to each release.",
+    "ref": "Le mod se met à jour à part : par le Mod Hub du jeu, ou avec le zip joint à chaque version.",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:updates.err.notFound",
+    "text": "No public release found on GitHub (private repository?): cannot check.",
+    "ref": "Aucune version publique trouvée sur GitHub (dépôt privé ?) : vérification impossible.",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "status"
+  },
+  {
+    "id": "app:updates.err.limited",
+    "text": "GitHub is limiting requests: try again in a few minutes.",
+    "ref": "GitHub limite les requêtes : réessaie dans quelques minutes.",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "status"
+  },
+  {
+    "id": "app:updates.err.network",
+    "text": "GitHub unreachable (no connection?)",
+    "ref": "GitHub injoignable (pas de connexion ?)",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "status"
+  },
+  {
+    "id": "app:updates.err.signature",
+    "text": "Invalid update signature: nothing was installed.",
+    "ref": "Signature de la mise à jour invalide : rien n'a été installé.",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "status"
+  },
+  {
+    "id": "app:updates.err.install",
+    "text": "The installation failed.",
+    "ref": "L'installation a échoué.",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "status"
+  },
+  {
+    "id": "app:updates.err.other",
+    "text": "Could not check.",
+    "ref": "Vérification impossible.",
+    "context": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "kind": "status"
+  },
+  {
+    "id": "mod:hint_1",
+    "text": "To generate a map: open a new empty map of the right size in the Map Editor,",
+    "ref": "Pour générer une carte : ouvre une nouvelle carte vide de la bonne taille dans l'éditeur de cartes,",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "sentence"
+  },
+  {
+    "id": "mod:hint_2",
+    "text": "then click “Generate the map” in the RealMap app. Everything is built here, automatically.",
+    "ref": "puis clique sur « Générer la carte » dans l'application RealMap. Tout se construit ici, automatiquement.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "sentence"
+  },
+  {
+    "id": "mod:title",
+    "text": "RealMap: “%s”",
+    "ref": "RealMap : « %s »",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "title"
+  },
+  {
+    "id": "mod:check",
+    "text": "Checking the open map…",
+    "ref": "Vérification de la carte ouverte…",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:err_not_editor",
+    "text": "Open the Map Editor: the map can only be generated in a new empty map of the Map Editor.",
+    "ref": "Ouvre l'éditeur de cartes : la génération ne se fait que dans une nouvelle carte vide de l'éditeur.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "status"
+  },
+  {
+    "id": "mod:err_note_missing",
+    "text": "Map note not found (userdata/importcity/%s.lua).",
+    "ref": "Note de la carte introuvable (userdata/importcity/%s.lua).",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "status"
+  },
+  {
+    "id": "mod:err_map_size",
+    "text": "The open map is %d × %d tiles, %d × %d are needed (%s): create a new map of that size.",
+    "ref": "La carte ouverte fait %d × %d tuiles, il en faut %d × %d (%s) : crée une nouvelle carte de cette taille.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "status"
+  },
+  {
+    "id": "mod:err_map_not_empty",
+    "text": "The open map already has towns or industries: create a new empty map.",
+    "ref": "La carte ouverte contient déjà des villes ou des industries : crée une nouvelle carte vide.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "status"
+  },
+  {
+    "id": "mod:err_heightmap_missing",
+    "text": "Heightmap “%s” not found in userdata/heightmaps.",
+    "ref": "Heightmap « %s » introuvable dans userdata/heightmaps.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "status"
+  },
+  {
+    "id": "mod:err_biomes_missing",
+    "text": "Biomes “%s” not found in userdata/biomes.",
+    "ref": "Biomes « %s » introuvables dans userdata/biomes.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "status"
+  },
+  {
+    "id": "mod:err_no_generator",
+    "text": "No import generator for the climate of this map.",
+    "ref": "Aucun générateur d'import pour le climat de cette carte.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "status"
+  },
+  {
+    "id": "mod:err_towns_missing",
+    "text": "Towns not found (userdata/towns_industries/%s.lua).",
+    "ref": "Villes introuvables (userdata/towns_industries/%s.lua).",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "status"
+  },
+  {
+    "id": "mod:err_terrain_refused",
+    "text": "the game refused to replace the terrain",
+    "ref": "le jeu a refusé de remplacer le terrain",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "status"
+  },
+  {
+    "id": "mod:err_towns_refused",
+    "text": "the game refused to create the towns",
+    "ref": "le jeu a refusé de créer les villes",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "status"
+  },
+  {
+    "id": "mod:warn_economy",
+    "text": "Warning: the map's economy is “%s”, the industries were planned for “%s”.",
+    "ref": "Attention : économie de la carte « %s », industries prévues pour « %s ».",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "sentence"
+  },
+  {
+    "id": "mod:heightmap_importing",
+    "text": "Relief: importing “%s” (%d → %d m)…",
+    "ref": "Relief : import de « %s » (%d → %d m)…",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:heightmap_done",
+    "text": "Relief imported.",
+    "ref": "Relief importé.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:biomes_importing",
+    "text": "Biomes: “%s”…",
+    "ref": "Biomes : « %s »…",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:biomes_done",
+    "text": "Biomes imported.",
+    "ref": "Biomes importés.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:rail_building",
+    "text": "Railway: %d section(s)…",
+    "ref": "Voie ferrée : %d tronçon(s)…",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:rail_done",
+    "text": "Railway: %d / %d section(s)%s%s%s.",
+    "ref": "Voie ferrée : %d / %d tronçon(s)%s%s%s.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:rail_bridges",
+    "text": ", %d as bridges",
+    "ref": ", %d en pont",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:rail_tunnels",
+    "text": ", %d in tunnels",
+    "ref": ", %d en tunnel",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:rail_failed",
+    "text": "; %d refused%s, gaps near %s",
+    "ref": " ; %d refusé(s)%s, coupures vers %s",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:rail_critical",
+    "text": "critical error",
+    "ref": "erreur critique",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:towns_done",
+    "text": "%d town(s) created, %d set to their real size.",
+    "ref": "%d ville(s) créée(s), %d mise(s) à leur taille réelle.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:industries_building",
+    "text": "Industries (%d)…",
+    "ref": "Industries (%d)…",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:industries_done",
+    "text": "Industries built: %d, named: %d%s.",
+    "ref": "%d industrie(s) posée(s), %d nommée(s)%s.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:industries_missing",
+    "text": ", %d impossible",
+    "ref": ", %d impossible(s)",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:roads_building",
+    "text": "Roads: %d link(s) between towns…",
+    "ref": "Routes : %d liaison(s) entre villes…",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:roads_done",
+    "text": "%d road link(s)%s.",
+    "ref": "%d liaison(s) routière(s)%s.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:roads_partly",
+    "text": " (partly refused)",
+    "ref": " (refusées en partie)",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:done",
+    "text": "Map “%s” generated. Save it (Map Editor menu).",
+    "ref": "Carte « %s » générée. Enregistre-la (menu de l'éditeur).",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "sentence"
+  }
+]

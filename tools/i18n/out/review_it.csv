@@ -1,0 +1,569 @@
+﻿id;kind;flags;en;ref;translation;back_translation;override
+app:app.language;label;;Language;Langue;Lingua;Language.;
+app:tabs.data;button;;1. Area and data;1. Zone et données;1. Zona e dati;1. Area and data.;
+app:tabs.advanced;button;;2. Advanced options;2. Options avancées;2. Opzioni avanzate;2. Advanced options.;
+app:tabs.export;button;;3. Export;3. Export;3. Esporta;3. Export.;
+app:tabs.log;button;;Log;Journal;Registro;Register.;
+app:tabs.errors;label;;{n} error(s) in the log;{n} erreur(s) dans le journal;{n} errore/i nel registro;{n} error/s in the register.;
+app:data.map;title;;Game map;Carte du jeu;Mappa di gioco;Game map.;
+app:data.size;label;;Size;Taille;Dimensione;Dimension.;
+app:data.format;label;;Format;Format;Formato;Format.;
+app:data.experimental;label;;(experimental);(expérimental);(sperimentale);(experimental);
+app:data.landscape;label;;Long side east–west;Côté long est–ouest;Lato lungo est-ovest;Long side, east-west.;
+app:data.scale;label;;Scale;Échelle;Scala;Scale.;
+app:data.scaleTitle;tooltip;;1 m in the game = … real metres;1 m dans le jeu = … m réels;1 metro nel gioco = … metri reali;1 meter in the game = … real meters.;
+app:data.scaleReal;label;;(real);(réelle);(reale);(real);
+app:data.scaleOther;label;;Other…;Autre…;Altro…;More...;
+app:data.facts;label;;{size} · {w} × {h} km in reality · {km2} km²;{size} · {w} × {h} km réels · {km2} km²;{size} · {w} × {h} km reali · {km2} km²;{size} · {w} × {h} km, actual · {km2} km²;
+app:data.ctrlHint;sentence;;Ctrl + click on the map: move the area there.;Ctrl + clic sur la carte : déplacer la zone ici.;Ctrl + clic sulla mappa: sposta la zona qui.;Ctrl + click on the map: move the area here.;
+app:data.sources;title;;Sources;Sources;Origini;Origins.;
+app:data.relief;label;;Relief;Relief;Rilievo;Relief.;
+app:data.source.auto;label;;Auto (IGN in France, Copernicus elsewhere);Auto (IGN en France, sinon Copernicus);Automatico (IGN in Francia, altrimenti Copernicus);Automatic (IGN in France, otherwise Copernicus).;
+app:data.source.ign;label;;IGN RGE ALTI (France);IGN RGE ALTI (France);IGN, RGE ALTI (Francia);IGN, RGE ALTI (France);
+app:data.source.copernicus;label;;Copernicus GLO-30 (world);Copernicus GLO-30 (monde);Copernicus GLO-30 (mondo);Copernicus GLO-30 (world).;
+app:data.cover;label;;Land cover (WorldCover);Occupation du sol (WorldCover);Copertura del suolo (WorldCover);Ground cover (WorldCover).;
+app:data.coverTitle;tooltip;;Forests, fields, rock and marshes from ESA WorldCover;Forêts, cultures, roches et marais d'après ESA WorldCover;Foreste, campi, rocce e zone umide basati sui dati di ESA WorldCover;Forests, fields, rocks, and wetlands, based on data from ESA WorldCover.;
+app:data.ready;sentence;;Result ready: you can export it as it is (tab 3) or adjust the advanced options.;Résultat prêt : vous pouvez exporter directement (onglet 3) ou ajuster les options avancées.;Risultato pronto: puoi esportarlo così com'è (scheda 3) oppure modificare le opzioni avanzate.;Ready result: you can export it as it is (page 3) or modify the advanced options.;
+app:data.fetch;button;;Get the data;Récupérer les données;Ottieni i dati;Obtain the data.;
+app:data.fetching;label;;Getting the data… {pct};Récupération… {pct};Recupero dei dati… {pct};Data recovery... {pct};
+app:data.upToDate;label;;Data up to date;Données à jour;Dati aggiornati;Updated data.;
+app:advanced.relief;title;;Relief;Relief;Rilievo;Relief.;
+app:advanced.verticalScale;label;;Vertical scale;Échelle verticale;Scala verticale;Vertical scale.;
+app:advanced.verticalScaleTitle;tooltip;;Game heights = real heights × this factor (empty = 1/√scale);Hauteurs du jeu = hauteurs réelles × ce facteur (vide = 1/√échelle);Altezza del gioco = altezza reale × questo fattore (valore predefinito = 1/√scala);Height of the game = real height × this factor (default value = 1/√scale).;
+app:advanced.waterLevel;label;;Water level (m);Niveau de l'eau (m);Livello dell'acqua (m);Water level (meters).;
+app:advanced.waterLevelTitle;tooltip;;Real altitude that becomes the game's water level (empty = auto);Altitude réelle qui devient le niveau de l'eau du jeu (vide = auto);Altitudine reale che determina il livello dell'acqua nel gioco (vuoto = automatico);Real altitude that determines the water level in the game (empty = automatic).;
+app:advanced.auto;label;;auto;auto;automatico;automatic.;
+app:advanced.smooth;label;;Smoothing (m);Lissage (m);Smussatura (m);Chamfering (m).;
+app:advanced.smoothTitle;tooltip;;"Removes bumps (trees, noise); 0 = raw relief";"Efface les bosses (arbres, bruit) ; 0 = relief brut";"Rimuove le irregolarità (alberi, rumore); 0 = rilievo grezzo";"Removes irregularities (trees, noise); 0 = raw data.";
+app:advanced.canopy;label;;Flatten forests (m);Aplanir forêts (m);Appiattisci le foreste (m);Flatten the forests (m).;
+app:advanced.canopyTitle;tooltip;;Metres taken off forests measured by Copernicus (tree tops);Mètres retirés aux forêts mesurées par Copernicus (dessus des arbres);Metri sottratti alle aree boschive misurate da Copernicus (cime degli alberi);Meters subtracted from the forested areas measured by Copernicus (tops of trees).;
+app:advanced.water;title;;Water;Eau;Acqua;Water.;
+app:advanced.riverWidth;sentence;;Min. river width (m);Largeur min. rivières (m);Larghezza minima dei fiumi (m);Minimum width of rivers (meters).;
+app:advanced.riverWidthTitle;tooltip;;Everywhere, sources and joins included (the game's rivers: 110–165 m);Partout, sources et raccords compris (rivières du jeu : 110–165 m);Ovunque, comprese sorgenti e confluenze (i fiumi del gioco: 110–165 m);Everywhere, including sources and confluences (the rivers of the game: 110–165 meters).;
+app:advanced.riverDepth;label;;River depth (m);Profondeur rivières (m);Profondità dei fiumi (m);Depth of rivers (meters).;
+app:advanced.riverDepthTitle;tooltip;;Depth of the riverbed (the game's rivers: about 8.5 m);Profondeur du lit (rivières du jeu : ~8,5 m);Profondità del letto del fiume (nei fiumi del gioco: circa 8,5 m);Depth of the riverbed (in the rivers of the game: approximately 8.5 meters).;
+app:advanced.coastDepth;label;;Coast depth (m);Profondeur côtes (m);Profondità delle coste (m);Depth of the coasts (meters).;
+app:advanced.coastDepthTitle;tooltip;;"Shallowest sea past the shore slope; the real sea floor only makes it deeper";"Profondeur minimale de la mer après la pente du rivage ; les fonds marins réels ne font qu'approfondir";"Profondità minima del mare oltre la pendenza della costa; il fondale marino reale rende la profondità maggiore";"Minimum depth of the sea beyond the slope of the coast; the actual seabed determines a greater depth.";
+app:advanced.minPond;sentence;;Min. pond (ha);Étangs min. (ha);Superficie minima dei laghi (ha);Minimum surface area of the lakes (hectares).;
+app:advanced.minPondTitle;tooltip;;Smaller bodies of water are filled in, except on a river;Plans d'eau plus petits comblés, sauf sur une rivière;Le acque meno profonde vengono riempite, ad eccezione di un fiume;The shallower waters are filled, with the exception of a river.;
+app:advanced.waterJoin;label;;Join nearby water (m);Raccord eaux proches (m);Collega le acque vicine (m);Connect the nearby waters (m).;
+app:advanced.waterJoinTitle;tooltip;;A river closer than this to other water is joined to it by a channel;Une rivière à moins de cette distance d'une autre eau y est reliée par un chenal;Un fiume che si trova a una distanza inferiore a questa da altre acque è collegato ad esse tramite un canale;A river that is located at a distance less than this from other bodies of water is connected to them through a channel.;
+app:advanced.marshLakes;label;;Marshes → lakes;Marais → lacs;Zone umide → laghi;Wetlands → lakes.;
+app:advanced.marshArea;sentence;term:area->zona;Min. area (ha);Surface min. (ha);Area minima (ha);Minimum area (hectares).;
+app:advanced.marshDepth;label;;Depth (m);Profondeur (m);Profondità (m);Depth (meters);
+app:advanced.network;title;;Network, banks and depths;Réseau, berges et profondeurs;Rete, sponde e profondità;Net, sides, and depth.;
+app:advanced.repair;label;;Repair the network;Réparer le réseau;Riparare la rete;To repair the network.;
+app:advanced.repairTitle;tooltip;;Every river ends in water or at the edge of the map;Chaque rivière finit dans l'eau ou au bord de la carte;Ogni fiume sfocia nell'acqua o sul bordo della mappa;Each river flows into water or onto the edge of the map.;
+app:advanced.endJoin;label;;Join river ends (m);Raccord extrémités (m);Collega le estremità dei fiumi (m);Connect the ends of the rivers (m).;
+app:advanced.endJoinTitle;tooltip;;Ends joined to nearby water in a straight line;Extrémités reliées en ligne droite à l'eau proche;Estremità collegate all'acqua vicina con una linea retta;Ends connected to the water, near by, with a straight line.;
+app:advanced.taper;label;;Source taper (m);Biseau sources (m);Smusso di partenza (m);Starting bevel (m).;
+app:advanced.taperTitle;tooltip;;Sources widen over this length;Les sources s'élargissent sur cette longueur;Le sorgenti si allargano su questa distanza;The sources widen over this distance.;
+app:advanced.valleySlope;label;;Valley slope;Pente vallées;Pendenza delle valli;Slope of the valleys.;
+app:advanced.valleySlopeTitle;tooltip;;Slope of the valley dug around a high river;Pente de la vallée creusée autour d'une rivière haute;Pendenza della valle scavata attorno a un fiume;Slope of the valley excavated around a river.;
+app:advanced.riverBank;label;;River bank slope;Pente berges rivières;Pendenza delle sponde dei fiumi;Slope of the riverbanks.;
+app:advanced.seaBank;label;;Sea and lake bank slope;Pente berges mer, lacs;Pendenza delle sponde di mari e laghi;Slope of the shores of seas and lakes.;
+app:advanced.bankWidth;label;;Bank width (m);Largeur berges (m);Larghezza delle sponde (m);Width of the banks (meters).;
+app:advanced.lakeDepth;label;;Lake depth (m);Profondeur lacs (m);Profondità dei laghi (m);Depth of the lakes (meters).;
+app:advanced.underwater;label;;Deepening;Approfondissement;Approfondimento;In-depth analysis.;
+app:advanced.underwaterTitle;tooltip;;Metres of depth gained per metre from the shore;Mètres de profondeur gagnés par mètre depuis le rivage;Metri di profondità aggiuntivi ogni metro dalla costa;Additional meters of depth for every meter from the coast.;
+app:advanced.seaDepth;label;;Sea without data (m);Mer sans données (m);Mare senza dati (m);Sea without data (m).;
+app:advanced.seaMax;sentence;;Max. sea depth (m);Mer max. (m);Profondità massima del mare (m);Maximum depth of the sea (meters).;
+app:advanced.maxCarve;sentence;;Max. lake digging (m);Creusement max. lacs (m);Profondità massima dei laghi (m);Maximum depth of the lakes (meters).;
+app:advanced.maxCarveTitle;tooltip;;A lake with no river higher than this above the water level stays land;Un lac sans rivière plus haut que ça au-dessus du niveau de l'eau reste en terre;Un lago senza emissari, situato a un'altitudine superiore a questa rispetto al livello dell'acqua, rimarrà terra;A lake without outlets, situated at an altitude higher than the water level, will remain land.;
+app:advanced.riverTest;button;;River test map;Carte de test des rivières;Mappa di test dei fiumi;Map of tests of the rivers.;
+app:advanced.towns;title;;Towns;Villes;Cittadine;Citizens.;
+app:advanced.minPop;sentence;;Min. population;Population min.;Popolazione minima;Minimum population.;
+app:advanced.autoCount;label;;Automatic count;Nombre auto;Conteggio automatico;Automatic counting.;
+app:advanced.autoCountTitle;tooltip;;The game puts up to about {n} towns on a map of this size (guide);Le jeu met jusqu'à ~{n} villes sur une carte de cette taille (indicatif);Il gioco può includere fino a circa {n} cittadine su una mappa di queste dimensioni (indicazione);The game can include up to approximately {n} cities on a map of this size (indication).;
+app:advanced.unknownPop;label;;Estimate unknown populations;Population inconnue estimée;Stima della popolazione sconosciuta;Estimation of the unknown population.;
+app:advanced.tooMany;label;;More than the game's ~{n} towns for this size.;Plus que les ~{n} villes du jeu pour cette taille.;Più delle ~{n} cittadine presenti nel gioco per questa dimensione.;More than the [number] female characters present in the game for this dimension.;
+app:advanced.refCapacity;label;;Size at 10,000 inh.;Taille 10 000 hab.;Dimensione a 10.000 abitanti.;Size: 10,000 inhabitants.;
+app:advanced.refCapacityTitle;tooltip;;In-game capacity of a town of 10,000 inhabitants;Capacité en jeu d'une ville de 10 000 habitants;Capacità di una cittadina di 10.000 abitanti nel gioco;Capacity of a town with 10,000 inhabitants in the game.;
+app:advanced.contrast;label;;Size contrast;Contraste tailles;Contrasto delle dimensioni;Contrast of dimensions.;
+app:advanced.contrastTitle;tooltip;;1 = in proportion to the population, 0 = all the same;1 = proportionnel à la population, 0 = toutes pareilles;1 = proporzionale alla popolazione, 0 = tutti uguali;1 = proportional to the population, 0 = all are equal.;
+app:advanced.townSpacing;sentence;;Min. distance between towns (m);Écart min. entre villes (m);Distanza minima tra le cittadine (m);Minimum distance between the towns (meters).;
+app:advanced.placement;title;;Placement;Emplacement;Posizionamento;Positioning.;
+app:advanced.seaDistance;label;;Distance to sea / lakes (m);Distance mer / lacs (m);Distanza dal mare/laghi (m);Distance from the sea/lakes (meters).;
+app:advanced.riverDistance;label;;Distance to rivers (m);Distance rivières (m);Distanza dai fiumi (m);Distance from rivers (meters).;
+app:advanced.edgeMargin;label;;Edge margin (m);Marge au bord (m);Margine ai bordi (m);Margin at the edges (m).;
+app:advanced.maxShift;sentence;;Max. move (m);Déplacement max. (m);Massimo spostamento (m);Maximum displacement (m).;
+app:advanced.industries;title;;Industries;Industries;Industrie;Industries.;
+app:advanced.economy;label;;Economy;Économie;Economia;Economy.;
+app:advanced.economyTitle;tooltip;;The same economy as the map's climate in the Map Editor;Même économie que le climat de la carte dans l'éditeur;Stessa economia del clima della mappa nell'editor di mappe;Same climate data for the map in the map editor.;
+app:advanced.density;label;;Game density;Densité du jeu;Densità del gioco;Density of the game.;
+app:advanced.count;label;;Count (0 = game: {n});Nombre (0 = jeu : {n});Conteggio (0 = gioco: {n});Count (0 = game: {n});
+app:advanced.countTitle;tooltip;;0 = the game's count for this density ({n});0 = nombre du jeu pour cette densité ({n});0 = il valore utilizzato dal gioco per questa densità ({n});0 = the value used by the game for this density ({n}).;
+app:advanced.industrySpacing;label;;Distance between industries (m);Écart entre industries (m);Distanza tra le industrie (m);Distance between the industries (meters).;
+app:advanced.townClearance;label;;Distance to towns (m);Distance aux villes (m);Distanza dalle cittadine (m);Distance from the towns (meters).;
+app:advanced.rail;title;;Railway;Voie ferrée;Ferrovia;Railway.;
+app:advanced.roads;label;;Roads;Routes;Strade;Streets.;
+app:roads.auto;sentence;;"Roads chosen automatically: each town is linked to 1 or 2 others; the game lays the roads and links the industries to them. Right-click the map to add or delete a link.";"Routes choisies automatiquement : chaque ville est reliée à 1 ou 2 autres ; le jeu trace les routes et y raccorde les industries. Clic droit sur la carte pour ajouter ou supprimer une liaison.";"Strade selezionate automaticamente: ogni cittadina è collegata a 1 o 2 altre; il gioco crea le strade e vi collega le industrie. Clicca con il tasto destro sulla mappa per aggiungere o eliminare un collegamento.";"Automatically selected roads: each town is connected to 1 or 2 other towns; the game creates the roads and connects the industries. Click with the right mouse button on the map to add or delete a connection.";
+app:roads.manual;sentence;;Roads changed by hand: no road between towns is added automatically any more.;Routes modifiées à la main : plus aucune route n'est ajoutée automatiquement entre les villes.;Strade modificate manualmente: nessuna strada verrà più aggiunta automaticamente tra le cittadine.;Manually modified roads: no road will be automatically added between towns anymore.;
+app:roads.reset;label;;Apply the default settings;Appliquer les paramètres par défaut;Applica le impostazioni predefinite;Apply the default settings.;
+app:roads.resetTitle;tooltip;;Go back to the automatic choice of roads between towns;Revenir au choix automatique des routes entre les villes;Torna all'impostazione automatica delle strade tra le cittadine;Return to the automatic setting for roads between towns.;
+app:roads.resetConfirm;sentence;;The roads you added, deleted or kept will be lost. Continue?;Les routes que tu as ajoutées, supprimées ou gardées seront perdues. Continuer ?;Le strade che hai aggiunto, eliminato o mantenuto andranno perse. Vuoi continuare?;The roads that you have added, deleted, or kept will be lost. Do you want to continue?;
+app:roads.resetYes;label;;Yes, back to the default roads;Oui, revenir aux routes par défaut;Sì, ripristina le strade predefinite;Yes, restore the default roads.;
+app:roads.resetCancel;label;;Cancel;Annuler;Annulla;Cancel.;
+app:advanced.minRadius;sentence;;Min. radius (m);Rayon min. (m);Raggio minimo (m);Minimum radius (m).;
+app:advanced.minRadiusTitle;tooltip;;"Tightest curve (the game allows 55 m; 300 m ≈ 90 km/h)";"Courbe la plus serrée (le jeu accepte 55 m ; 300 m ≈ 90 km/h)";"Curva più stretta (il gioco ammette curve di 55 m; 300 m ≈ 90 km/h)";"Tighter curve (the game allows for curves of 55 meters; 300 meters ≈ 90 km/h).";
+app:advanced.maxGrade;sentence;;Max. real gradient (%);Pente max. réelle (%);Pendenza massima reale (%);Maximum real slope (%).;
+app:advanced.maxGradeTitle;tooltip;;"Steepest real gradient; steeper in the game when heights are shrunk less than distances (the game allows 8.5%)";"Pente réelle la plus forte ; plus raide dans le jeu quand les hauteurs sont moins réduites que les distances (le jeu accepte 8,5 %)";"Pendenza reale massima; più ripida nel gioco quando le altezze vengono ridotte meno delle distanze (il gioco ammette una pendenza massima dell'8,5%)";"Maximum actual slope; steeper in the game when the heights are reduced less than the distances (the game allows a maximum slope of 8.5%).";
+app:advanced.railClearance;label;;Distance to towns (m);Écart aux villes (m);Distanza dalle cittadine (m);Distance from the towns (meters).;
+app:advanced.railClearanceTitle;tooltip;;Distance kept from a town centre, plus half its capacity;Distance gardée au centre d'une ville, plus la moitié de sa capacité;Distanza mantenuta dal centro di una cittadina, più la metà della sua capacità;Distance maintained from the center of a town, plus half of its capacity.;
+app:advanced.corridor;label;;Distance from the real line (m);Écart à la voie réelle (m);Distanza dalla linea reale (m);Distance from the real line (meters).;
+app:advanced.corridorTitle;tooltip;;How far the line may leave the real one to suit the game's relief: along a bank rather than across the river, on the valley floor rather than on a bridge. 0: the real line.;Jusqu'où la voie peut s'écarter du tracé réel pour suivre le relief du jeu : le long d'une berge plutôt qu'en traversant la rivière, en fond de vallée plutôt qu'en pont. 0 : tracé réel.;Quanto può discostarsi la linea dal tracciato reale per adattarsi al rilievo del gioco: lungo una sponda anziché attraversare il fiume, sul fondo della valle anziché su un ponte. 0: il tracciato reale.;How much can the line deviate from the actual route in order to adapt to the terrain of the game: along a bank instead of crossing the river, at the bottom of the valley instead of on a bridge. 0: the actual route.;
+app:advanced.autoUpdate;label;long-ui;Auto update;Recalcul auto;Aggiorna automaticamente;Automatically update.;
+app:advanced.update;button;;Update;Mettre à jour;Aggiorna;Update.;
+app:advanced.updating;label;;Computing… {pct};Calcul… {pct};Calcolo… {pct};Calculation... {percentage};
+app:advanced.upToDate;label;;Result up to date;Résultat à jour;Risultato aggiornato;Updated result.;
+app:export.summary;sentence;;{towns} towns · {industries} industries · {links} road links · {rails} railway line(s);{towns} villes · {industries} industries · {links} liaisons · {rails} voie(s) ferrée(s);{towns} cittadine · {industries} industrie · {links} collegamenti stradali · {rails} linea ferroviaria;{towns} towns · {industries} industries · {links} road connections · {rails} railway line.;
+app:export.showLists;button;;Show the lists;Voir les listes;Mostra le liste;Show the lists.;
+app:export.mapHint;sentence;;Right-click on the map: add an industry, a road or a railway line.;Clic droit sur la carte : ajouter une industrie, une route ou une voie ferrée.;Clicca con il tasto destro sulla mappa: aggiungi un'industria, una strada o una linea ferroviaria.;Click with the right mouse button on the map: add an industry, a road, or a railway line.;
+app:export.game;title;;Game;Jeu;Gioco;Game.;
+app:export.mapName;label;;Map name;Nom de la carte;Nome della mappa;Name of the map.;
+app:export.userdata;label;;TF3 userdata folder;Dossier userdata de TF3;"Cartella ""userdata"" di TF3";"Folder ""userdata"" of TF3.";
+app:export.inGame;label;;In the game: Map Editor, new empty map {size}, RealMap mod enabled.;Dans le jeu : éditeur de cartes, nouvelle carte vide {size}, mod RealMap activé.;Nel gioco: editor di mappe, nuova mappa vuota {size}, la mod RealMap è attiva.;In the game: map editor, new empty map {size}, the RealMap mod is active.;
+app:export.generate;button;;Generate the map;Générer la carte;Genera la mappa;Generate the map.;
+app:export.generating;label;;Generating… {pct};Génération… {pct};Generazione… {pct};Generation... {pct};
+app:export.generated;label;;Map generated (up to date);Carte générée (à jour);Mappa generata (aggiornata);Map generated (updated).;
+app:export.gameStep;label;;Game: {label};Jeu : {label};Gioco: {label};Game: {label};
+app:step.data.ign;label;;IGN RGE ALTI relief;Relief IGN RGE ALTI;Rilievo IGN RGE ALTI;IGN RGE Altitude Survey Data.;
+app:step.data.dem;label;;Copernicus GLO-30 relief;Relief Copernicus GLO-30;Rilievo Copernicus GLO-30;Copernicus GLO-30 data acquisition.;
+app:step.data.cover;label;;Land cover (ESA WorldCover);Occupation du sol (ESA WorldCover);Copertura del suolo (ESA WorldCover);Land cover (ESA WorldCover).;
+app:step.data.bathy;label;;Sea floor (EMODnet / ETOPO);Fonds marins (EMODnet / ETOPO);Fondale marino (EMODnet / ETOPO);Marine seabed (EMODnet / ETOPO).;
+app:step.data.osm;label;;Water and places (OpenStreetMap);Eau et lieux (OpenStreetMap);Acqua e luoghi (OpenStreetMap);Water and places (OpenStreetMap).;
+app:step.data.sites;label;;Industrial sites (OpenStreetMap);Sites industriels (OpenStreetMap);Sedi industriali (OpenStreetMap);Industrial sites (OpenStreetMap).;
+app:step.data.roads;label;;Roads and railways (OpenStreetMap);Routes et voies ferrées (OpenStreetMap);Strade e ferrovie (OpenStreetMap);Roads and railways (OpenStreetMap).;
+app:step.data.land;label;overridden;Beaches and business areas (OpenStreetMap);Plages et zones d'activité (OpenStreetMap);Zone balneari e aree industriali (OpenStreetMap);Coastal areas and industrial areas (OpenStreetMap).;Spiagge e zone commerciali e industriali (OpenStreetMap)
+app:step.export.relief;label;;Full-resolution relief;Relief pleine résolution;Rilievo ad alta risoluzione;High-resolution survey.;
+app:step.export.cover;label;;Full-resolution land cover;Occupation du sol pleine résolution;Copertura del suolo ad alta risoluzione;High-resolution ground coverage.;
+app:step.export.compute;label;;Computing the whole map;Calcul de la carte complète;Calcolo della mappa completa;Calculation of the complete map.;
+app:step.export.files;label;;Writing the files;Écriture des fichiers;Scrittura dei file;Writing of files.;
+app:step.game.heightmap;label;;Relief (heightmap);Relief (heightmap);Rilievo (mappa altimetrica);Relief (altimetric map).;
+app:step.game.biomes;label;;Biomes;Biomes;Biomi;Biomes.;
+app:step.game.rail;label;;Railway;Voie ferrée;Ferrovia;Railway.;
+app:step.game.towns;label;;Towns and sizes;Villes et tailles;Cittadine e dimensioni;City and dimensions.;
+app:step.game.industries;label;;Industries and names;Industries et noms;Industrie e nomi;Industries and names.;
+app:step.game.roads;label;;Roads between towns;Routes entre villes;Strade tra le cittadine;Roads between the small towns.;
+app:status.seeLog;label;;see the log;voir le journal;vedi il registro;see the register.;
+app:log.lines;label;;{n} line(s);{n} ligne(s);{n} linea/e;{n} line/lines.;
+app:log.details;label;;Details;Détails;Dettagli;Details.;
+app:log.copy;button;;Copy;Copier;Copia;Copy.;
+app:log.clear;button;;Clear;Effacer;Cancella;Delete.;
+app:log.empty;label;;Nothing yet.;Rien pour l'instant.;Nessun dato al momento.;No data at the moment.;
+app:map.lists;button;;Lists;Listes;Liste;Lists.;
+app:map.fit;button;;Fit;Recadrer;Adatta;Suitable.;
+app:map.real;button;;Real data;Données réelles;Dati reali;Real data.;
+app:map.game;button;;Game result;Résultat jeu;Risultato di gioco;Result of the game.;
+app:map.opacity;label;;Opacity;Opacité;Opacità;Opacity.;
+app:map.hideOff;label;;Hide places left out;Masquer les lieux non retenus;Nascondi i luoghi esclusi;Hide the excluded places.;
+app:map.crashed;label;;The map crashed: {error};La carte a planté : {error};La mappa non ha funzionato: {error};The map did not work: {error};
+app:map.retry;button;;Try again;Réessayer;Riprova;Try again.;
+app:map.placeHere;label;;Click: put the area here;Clic : placer la zone ici;Clicca: posiziona la zona qui;Click: position the area here.;
+app:map.markerTip;label;overridden;{marker} — click: details · right-click: menu ({action}, link…);{marker} — clic : détails · clic droit : menu ({action}, relier…);{marker} — click: details · right-click: menu ({action}, link…);{marker} — click: details · right-click: menu ({action}, link…);{marker} — clic: dettagli · clic destro: menu ({action}, collega…)
+app:map.add;label;;add;ajouter;aggiungi;add.;
+app:map.remove;label;;remove;retirer;rimuovi;remove.;
+app:map.linkTip;label;;{name} — right-click: menu;{name} — clic droit : menu;{name} — clic destro: menu;{name} - right click: menu.;
+app:map.bridge;label;;Bridge;Pont;Ponte;Bridge.;
+app:map.tunnel;label;identical;Tunnel;Tunnel;Tunnel;Tunnel.;
+app:map.road;label;;Road {a} – {b};Route {a} – {b};Strada {a} – {b};Road {a} – {b};
+app:map.railLine;label;;Railway line;Voie ferrée;Linea ferroviaria;Railway line.;
+app:map.realRail;label;;Railway;Voie ferrée;Ferrovia;Railway.;
+app:map.realRoad;label;;Road;Route;Strada;Road.;
+app:map.sea;label;;Sea · {z};Mer · {z};Mare · {z};Sea · {z};
+app:map.lake;label;;Lake · {z};Lac · {z};Lago · {z};Lake · {z};
+app:map.river;label;;River · {z};Rivière · {z};Fiume · {z};River · {z};
+app:map.ground;label;;{z} in the game (≈ {real} in reality) · {cover};{z} dans le jeu (≈ {real} réels) · {cover};{z} nel gioco (≈ {real} nella realtà) · {cover};{z} in the game (≈ {real} in reality) · {cover};
+app:map.roadFrom;label;;Road from {name}: click on the destination town;Route depuis {name} : cliquez sur la ville d'arrivée;Strada da {name}: clicca sulla cittadina di destinazione;Road from {name}: click on the destination city.;
+app:map.railFrom;label;;Railway line: click on the destination point or town;Voie ferrée : cliquez sur le point ou la ville d'arrivée;Linea ferroviaria: clicca sul punto di arrivo o sulla cittadina;Railway line: click on the arrival point or the town.;
+app:map.cancel;button;;cancel;annuler;Annulla;Cancel.;
+app:map.escape;label;;(Esc: cancel);(Échap : annuler);(Esc: annulla);(Esc: cancels);
+app:map.otherTown;label;;Click on another town (Esc: cancel);Cliquez sur une autre ville (Échap : annuler);Clicca su un'altra cittadina (Esc: annulla);Click on another town (Esc: cancel).;
+app:menu.addTown;button;;Add this town;Ajouter cette ville;Aggiungi questa cittadina;Add this town.;
+app:menu.removeTown;button;;Remove this town;Retirer cette ville;Rimuovi questa cittadina;Remove this city.;
+app:menu.roadTo;button;;Link by road to…;Relier par route à…;Collega tramite strada a…;Connects via road to…;
+app:menu.addIndustryHere;button;;Add this industry;Ajouter cette industrie;Aggiungi questa industria;Add this industry.;
+app:menu.removeIndustry;button;;Remove this industry;Retirer cette industrie;Rimuovi questa industria;Remove this industry.;
+app:menu.removeRoad;button;;Delete this road;Supprimer cette route;Elimina questa strada;Eliminate this road.;
+app:menu.restoreRoad;button;;Restore this road;Rétablir cette route;Ripristina questa strada;Restore this road.;
+app:menu.removeRail;button;;Delete this railway line;Supprimer cette voie ferrée;Elimina questa linea ferroviaria;Eliminate this railway line.;
+app:menu.restoreRail;button;;Restore this railway line;Rétablir cette voie ferrée;Ripristina questa linea ferroviaria;Restore this railway line.;
+app:menu.railFrom;button;;Railway line from here…;Voie ferrée depuis ici…;Linea ferroviaria da qui…;Railway line from here...;
+app:menu.addIndustry;button;;Add an industry;Ajouter une industrie;Aggiungi un'industria;Add an industry.;
+app:menu.needResult;label;;Compute the result first.;Calculez d'abord le résultat.;Calcola prima il risultato.;Calculate first the result.;
+app:sheet.addToMap;button;;Add to the map;Ajouter à la carte;Aggiungi alla mappa;Add to the map.;
+app:sheet.removeFromMap;button;;Remove from the map;Retirer de la carte;Rimuovi dalla mappa;Remove from the map.;
+app:sheet.close;tooltip;;Close;Fermer;Chiudi;Close.;
+app:sheet.population;label;;Population: {pop};Population : {pop};Popolazione: {pop};Population: {pop};
+app:sheet.estimated;label;;(estimated from the kind of place);(estimée d'après le type de lieu);(stimata in base al tipo di luogo);(estimated based on the type of place);
+app:sheet.osmPlace;label;;OpenStreetMap: {kind};OpenStreetMap : {kind};OpenStreetMap: {kind};OpenStreetMap: {kind};
+app:sheet.state;label;;State: {state};État : {state};Stato: {state};State: {state};
+app:sheet.moved;label;;Moved {m} m: {reason};Déplacée de {m} m : {reason};Spostata di {m} m: {reason};Moved by {m} mm: {reason};
+app:sheet.movedDefault;label;;ground not buildable;terrain non constructible;terreno non edificabile;Land not buildable.;
+app:sheet.districts;label;;Districts: residential {res}, commercial {com}, industrial {ind} {how};Quartiers : habitat {res}, commerce {com}, industrie {ind} {how};Quartieri: residenziale {res}, commerciale {com}, industriale {ind} {how};Districts: residential {res}, commercial {com}, industrial {ind} {how};
+app:sheet.districtsReal;label;term:areas->zona;(real areas);(zones réelles);(zone reali);(real zones);
+app:sheet.districtsDefault;label;;(default);(par défaut);(predefinito);(default);
+app:sheet.needs;label;;Demands: {needs};Besoins : {needs};Domanda: {needs};Question: {needs};
+app:sheet.needsCom;label;;commercial: {list};commerce : {list};commerciale: {list};commercial: {list};
+app:sheet.needsInd;label;;industrial: {list};industrie : {list};industriale: {list};industrial: {list};
+app:sheet.needsGame;label;;chosen by the game;tirés par le jeu;selezionato dal gioco;selected from the game.;
+app:sheet.type;label;;Type: {type};Type : {type};Tipo: {type};Type: {type};
+app:sheet.origin;label;;Origin: {origin};Origine : {origin};Origine: {origin};Origin: {origin};
+app:sheet.why;label;;Why: {why};Pourquoi : {why};Perché: {why};Why: {why};
+app:sheet.relevance;label;;Real presence: {n};Présence réelle : {n};Presenza reale: {n};Real presence: {n};
+app:sheet.relevanceNone;label;;none;aucune;nessuno;nobody.;
+app:sheet.missing;label;;Missing from its chain: {list};Il manque à sa chaîne : {list};Mancante nella catena: {list};Missing in the chain: {list};
+app:sheet.inhabitants;label;;{n} inh.;{n} hab.;{n} abitanti.;{n} inhabitants.;
+app:sheet.townPlaced;label;;town, capacity {n};ville, capacité {n};cittadina, capacità {n};city, ability {noun};
+app:sheet.townOff;label;overridden;left out;non retenue;"escluso
+non considerato
+omesso
+non incluso
+non salvato
+non utilizzato
+non applicato
+non preso in considerazione
+non memorizzato
+non visualizzato
+non presente
+non attivo
+non abilitato
+non disponibile
+non valido
+non corretto
+non aggiornato
+non modificato";"excluded
+not considered
+omitted
+not included
+not saved
+not used
+not applied
+not taken into consideration
+not stored
+not displayed
+not present
+not active
+not enabled
+not available
+not valid
+not correct
+not updated
+not modified";esclusa
+app:sheet.townDropped;label;;chosen but not placed: {reason};retenue mais non placée : {reason};selezionato ma non posizionato: {reason};selected but not positioned: {reason};
+app:sheet.noRoom;label;overridden;no room;pas de place;nessuno spazio disponibile;no space available.;nessuno spazio
+app:sheet.manual;label;;(chosen by hand);(choix manuel);(selezionato manualmente);(selected manually);
+app:sheet.industryPlaced;label;;placed;placée;collocata;"located; placed; situated.";
+app:sheet.industryOff;label;overridden;left out;non retenue;"escluso
+non considerato
+omesso
+non incluso
+non salvato
+non utilizzato
+non applicato
+non preso in considerazione
+non memorizzato
+non visualizzato
+non presente
+non attivo
+non abilitato
+non disponibile
+non valido
+non corretto
+non aggiornato
+non modificato";"excluded
+not considered
+omitted
+not included
+not saved
+not used
+not applied
+not taken into consideration
+not stored
+not displayed
+not present
+not active
+not enabled
+not available
+not valid
+not correct
+not updated
+not modified";esclusa
+app:sheet.industryDropped;label;;not placed: {reason};non placée : {reason};non posizionata: {reason};not positioned: {reason};
+app:sheet.missingShort;label;;missing: {list};il manque : {list};mancante: {list};missing: {list};
+app:lists.towns;button;;Towns;Villes;Cittadine;Citizens.;
+app:lists.industries;button;;Industries;Industries;Industrie;Industries.;
+app:lists.network;button;;Roads and rail;Routes et rail;Strade e ferrovie;Roads and railways.;
+app:lists.close;tooltip;;Close;Fermer;Chiudi;Close.;
+app:lists.empty;label;;Get the data, then compute the result to see the lists.;Récupérez les données puis calculez le résultat pour voir les listes.;Ottieni i dati, quindi calcola il risultato per visualizzare le liste.;Obtain the data, then calculate the result to display the lists.;
+app:lists.addTown;label;;Add a town…;Ajouter une ville…;Aggiungi una cittadina…;Add a town...;
+app:lists.allAuto;button;;All automatic;Tout auto;Tutto automatico;Everything automatic.;
+app:lists.allAutoTitle;tooltip;;Give every town back to the choice by population;Rendre toutes les villes au choix par population;Consenti a ogni cittadina di essere selezionata in base alla sua popolazione;Allow each city to be selected based on its population.;
+app:lists.none;button;;None;Aucune;Nessuno;Nobody.;
+app:lists.auto;label;identical;auto;auto;auto;car.;
+app:lists.autoTitle;tooltip;;Give back to the automatic choice;Rendre au choix automatique;Ripristina le impostazioni predefinite;Restore the default settings.;
+app:lists.notPlaced;label;;not placed;non placée;non posizionato;not positioned.;
+app:lists.sharesTitle;tooltip;overridden;Commercial / industrial (% of the capacity);Commerce / industrie (% de la capacité);Commercial / industrial (% of the capacity);Commercial / industrial (percentage of the capacity).;Commerciale / industriale (% della capacità)
+app:lists.industryHint;sentence;;Ticked = kept · click on the name = show on the map;Coché = retenue · clic sur le nom = sur la carte;Spuntato = incluso · clicca sul nome = visualizza sulla mappa;"""Spuntato"" = included. ""Click on the name"" = view on the map.";
+app:lists.relevanceTitle;tooltip;;Real presence (OSM sites, land cover);Présence réelle (sites OSM, occupation du sol);Presenza reale (siti OSM, copertura del suolo);Real presence (OSM sites, soil coverage).;
+app:lists.deleteIndustry;tooltip;;Delete this added industry;Supprimer cette industrie ajoutée;Elimina questa industria aggiunta;Eliminate this added industry.;
+app:lists.deleteRoad;tooltip;;Delete this added road;Supprimer cette route ajoutée;Elimina questa strada aggiunta;Eliminate this added path.;
+app:lists.deleteRail;tooltip;;Delete this added railway line;Supprimer cette voie ajoutée;Elimina questa linea ferroviaria aggiunta;Remove this railway line that was added.;
+app:lists.added;label;;added;ajoutée;aggiunta;addition.;
+app:lists.noRoad;label;;no road;sans route;nessuna strada;no road.;
+app:lists.realRoad;tooltip;;Along the real roads;Le long des routes réelles;Lungo le strade reali;Along the royal roads.;
+app:lists.directRoad;tooltip;;No real road: straight line;Pas de route réelle : ligne directe;Nessuna strada reale: linea retta;No real road: straight line.;
+app:lists.railFigures;label;;{bridges} bridge(s), {tunnels} tunnel(s);{bridges} pont(s), {tunnels} tunnel(s);{bridges} ponte/i, {tunnels} tunnel/i;{bridges} bridge/bridges, {tunnels} tunnel/tunnels.;
+app:lists.needs;label;;Demands: {needs};Besoins : {needs};Domanda: {needs};Question: {needs};
+app:lists.error;label;;{what}: {error};{what} : {error};{what}: {error};{what}: {error};
+app:lists.retry;button;;try again;réessayer;riprova;"retry; try again.";
+app:legend.show;button;;Legend;Légende;Legenda;Legend.;
+app:legend.hide;button;;Hide the legend;Masquer la légende;Nascondi la legenda;Hide the legend.;
+app:legend.water;label;;Water (below level 0);Eau (sous le niveau 0);Acqua (sotto il livello 0);Water (below level 0).;
+app:legend.town;label;;Town (size by population);Ville (taille selon la population);Cittadina (dimensione in base alla popolazione);City (size based on the population).;
+app:legend.off;label;;Place left out;Lieu non retenu;Luogo escluso;Excluded location.;
+app:legend.dropped;label;;Chosen but not placed;Retenu mais non placé;Selezionato ma non posizionato;Selected but not positioned.;
+app:legend.moved;label;;Town moved from its real position;Ville déplacée depuis sa position réelle;Cittadina spostata dalla sua posizione reale;City displaced from its real position.;
+app:legend.primary;label;;Primary industry (fields, mines, forests);Industrie primaire (champs, mines, forêts);Industrie primarie (campi, miniere, foreste);Primary industries (fields, mines, forests).;
+app:legend.factory;label;;Factory;Usine;Fabbrica;Factory.;
+app:legend.onWater;label;;Industry on water;Industrie sur l'eau;Industrie sull'acqua;Industries on the water.;
+app:legend.road;label;;Planned road link (the game lays the road);Liaison routière prévue (le jeu trace la route);Collegamento stradale previsto (il gioco crea la strada);Road connection planned (the game creates the road).;
+app:legend.rail;label;;Railway line;Voie ferrée;Linea ferroviaria;Railway line.;
+app:legend.bridge;label;;Railway bridge;Pont ferroviaire;Ponte ferroviario;Railway bridge.;
+app:legend.tunnel;label;;Railway tunnel;Tunnel ferroviaire;Tunnel ferroviario;Railway tunnel.;
+app:legend.help;sentence;;Ctrl + click: put the area · click: details · right-click: menu (add, remove, link, delete);Ctrl + clic : placer la zone · clic : détails · clic droit : menu (ajouter, retirer, relier, supprimer);Ctrl + clic: seleziona la zona · clic: dettagli · clic destro: menu (aggiungi, rimuovi, collega, elimina);Ctrl + click: select the area · click: details · right click: menu (add, remove, link, delete).;
+app:size.tiny;label;;Tiny;Minuscule;Minuscola;Minuscule.;
+app:size.small;label;;Small;Petite;Piccola;Small.;
+app:size.medium;label;;Medium;Moyenne;Media;Media.;
+app:size.large;label;;Large;Grande;Grande;Big.;
+app:size.veryLarge;label;;Very large;Très grande;Molto grande;Very big.;
+app:size.huge;label;;Huge;Énorme;Enorme;Enormous.;
+app:size.megalomaniac;label;;Megalomaniac;Mégalomane;Megalomane;Megalomaniac.;
+app:size.gigantomaniac;label;;Gigantomaniac;Gigantomane;Gigantomane;Gigantomania.;
+app:size.label;label;;{size} ({format}) — {w} × {h} km;{size} ({format}) — {w} × {h} km;{size} ({format}) — {w} × {h} km;{size} ({format}) — {w} × {h} km;
+app:density.0;label;;Rare;Rare;Raro;Rare.;
+app:density.1;label;;Sparse;Dispersée;Diradata;Diluted.;
+app:density.2;label;;Medium;Moyenne;Media;Media.;
+app:density.3;label;;Dense;Dense;Fitta;Dense.;
+app:density.4;label;;Very dense;Très dense;Molto densa;Very dense.;
+app:economy.temperate;label;;Temperate;Tempéré;Temperato;Tempered.;
+app:economy.dry;label;;Dry;Aride;Secco;Dry.;
+app:economy.tropic;label;;Tropical;Tropical;Tropicale;Tropical.;
+app:economy.subarctic;label;;Subarctic;Subarctique;Subartico;Subarctic.;
+app:cover.0;label;;Open (fields, meadows, towns);Ouvert (champs, prés, villes);Aperto (campi, prati, cittadine);Open (fields, meadows, towns).;
+app:cover.1;label;;Forest;Forêt;Foresta;Forest.;
+app:cover.2;label;;Heath, scrub;Landes, broussailles;Vegetazione rada, macchia;Sparse vegetation, scrubland.;
+app:cover.3;label;;Rock, scree, glacier;Roche, éboulis, glacier;Roccia, detrito, ghiacciaio;Rock, debris, glacier.;
+app:origin.osm;label;;real site (OpenStreetMap);site réel (OpenStreetMap);sito reale (OpenStreetMap);real site (OpenStreetMap);
+app:origin.landcover;label;;land cover;occupation du sol;copertura del suolo;covering of the ground.;
+app:origin.chain;label;;production chain;chaîne de production;catena di produzione;production chain.;
+app:origin.user;label;;added by hand;ajoutée à la main;aggiunto manualmente;added manually.;
+app:originShort.osm;label;;real;réel;reale;real.;
+app:originShort.landcover;label;;land;sol;territorio;territory;
+app:originShort.chain;label;;chain;chaîne;collegamento;connection.;
+app:originShort.user;label;;added;ajoutée;aggiunto;added.;
+app:place.city;label;;city;ville;città;city;
+app:place.town;label;;town;petite ville;cittadina;town/city;
+app:place.village;label;;village;village;villaggio;village.;
+app:industry.farm;label;;Crop Farm;Exploitation agricole;Azienda agricola;Agricultural company.;
+app:industry.livestock_farm;label;;Livestock Farm;Ferme d'élevage;Allevamento di bestiame;Raising of livestock.;
+app:industry.cotton_farm;label;;Cotton Farm;Ferme de coton;Piantagione di cotone;Cotton plantation.;
+app:industry.rubber_farm;label;;Rubber Farm;Plantation d'hévéas;Piantagione di gomma;Rubber plantation.;
+app:industry.forest;label;;Logging Camp;Camp de bûcherons;Campo di disboscamento;Area of deforestation.;
+app:industry.quarry;label;;Quarry;Carrière;Cava;Cave.;
+app:industry.clay_pit;label;;Clay Pit;Carrière d'argile;Cava di argilla;Clay quarry.;
+app:industry.sand_pit;label;;Sand Pit;Carrière de sable;Cava di sabbia;Sand quarry.;
+app:industry.sand_excavator;label;;Sand Dredger;Drague à sable;Dragatore di sabbia;Sand dredger.;
+app:industry.coal_mine;label;;Coal Mine;Mine de charbon;Miniera di carbone;Coal mine.;
+app:industry.iron_ore_mine;label;;Iron Ore Mine;Mine de fer;Miniera di ferro;Iron mine.;
+app:industry.oil_well;label;;Oil Well;Site pétrolier;Pozzo petrolifero;Oil well.;
+app:industry.oil_platform;label;;Oil Platform;Plateforme pétrolière;Piattaforma petrolifera;Oil platform.;
+app:industry.fishing_grounds;label;;Fishing Grounds;Zone de pêche;Area di pesca;Fishing area.;
+app:industry.oil_refinery;label;;Oil Refinery;Raffinerie de pétrole;Raffineria di petrolio;Oil refinery.;
+app:industry.chemical_plant;label;;Chemical Plant;Usine chimique;Impianto chimico;Chemical plant.;
+app:industry.steel_mill;label;;Steel Mill;Aciérie;Acciaieria;Steel mill.;
+app:industry.saw_mill;label;;Saw Mill;Scierie;Segheria;Sawmill.;
+app:industry.brewery;label;;Brewery;Brasserie;Birrificio;Brewery.;
+app:industry.bricks_works;label;;Brickworks;Briqueterie;Mattonificio;Brick factory.;
+app:industry.glass_works;label;;Glassworks;Verrerie;Vetreria;Glassware.;
+app:industry.food_factory;label;;Canning Factory;Conserverie;Fabbrica di conserve;Factory of preserved foods.;
+app:industry.weaving_mill;label;;Weaving Mill;Tisseranderie;Fabbrica di filati;Factory of yarns.;
+app:industry.textile_factory;label;;Textile Factory;Usine textile;Fabbrica tessile;Textile factory.;
+app:industry.furniture_factory;label;;Furniture Factory;Usine de meubles;Fabbrica di mobili;Factory of furniture.;
+app:industry.machine_factory;label;;Machine Factory;Usine de machines;Fabbrica meccanica;Mechanical factory.;
+app:industry.tool_factory;label;;Tools Factory;Usine d'outils;Fabbrica di strumenti;Factory of instruments.;
+app:industry.vehicle_factory;label;;Vehicle Factory;Usine de véhicules;Fabbrica di veicoli;Factory of vehicles.;
+app:industry.cement_plant;label;;Cement Plant;Cimenterie;Cementificio;Cement factory.;
+app:industry.paper_mill;label;;Paper Mill;Papeterie;Cartiera;Paper mill.;
+app:industry.printing_press;label;;Printing Factory;Imprimerie;Stamperia industriale;Industrial printing.;
+app:industry.tire_factory;label;;Tire Factory;Usine de pneus;Fabbrica di pneumatici;Factory of tires.;
+app:cargo.beverages;label;;beverages;boissons;bevande;drinks.;
+app:cargo.books;label;;books;livres;libri;books.;
+app:cargo.clothes;label;;clothes;vêtements;indumenti;clothing.;
+app:cargo.fish;label;;fish;poisson;pesce;fish.;
+app:cargo.meat;label;;meat;viande;carne;meat.;
+app:cargo.tinned_food;label;;tinned food;conserves;cibo in scatola;food in can/tin.;
+app:cargo.vegetables;label;;vegetables;légumes;verdure;vegetables;
+app:cargo.bricks;label;;bricks;briques;mattoni;bricks;
+app:cargo.cement;label;;cement;ciment;cemento;cement;
+app:cargo.fuel;label;;fuel;carburant;carburante;fuel;
+app:cargo.furniture;label;;furniture;meubles;mobili;furniture.;
+app:cargo.machines;label;;machines;machines;macchinari;machines.;
+app:cargo.planks;label;;planks;planches;assi;axes;
+app:cargo.tools;label;;tools;outils;strumenti;instruments.;
+app:cargo.vehicles;label;;vehicles;véhicules;veicoli;vehicles.;
+app:credits;sentence;;IGN RGE ALTI® · Copernicus DEM © DLR / Airbus, ESA · © ESA WorldCover 2021 (CC BY 4.0) · © OpenStreetMap contributors (ODbL);IGN RGE ALTI® · Copernicus DEM © DLR / Airbus, ESA · © ESA WorldCover 2021 (CC BY 4.0) · © contributeurs OpenStreetMap (ODbL);IGN RGE ALTI® · Copernicus DEM © DLR / Airbus, ESA · © ESA WorldCover 2021 (CC BY 4.0) · © Contributori di OpenStreetMap (ODbL);IGN RGE ALTI® · Copernicus DEM © DLR / Airbus, ESA · © ESA WorldCover 2021 (CC BY 4.0) · © Contributors of OpenStreetMap (ODbL);
+app:industry.nameOf;label;overridden;{town} {industry};{industry} de {town};{town} {industry};{town} {industry};{industry} di {town}
+app:progress.cover;label;;Land cover;Occupation du sol;Copertura del suolo;Coverage of the ground.;
+app:progress.relief;label;;Relief and water;Relief et eau;Rilievo e acqua;Relief and water.;
+app:progress.biomes;label;;Biomes;Biomes;Biomi;Biomes.;
+app:progress.towns;label;;Towns;Villes;Cittadine;Citizens.;
+app:progress.network;label;;Roads and railway;Routes et voie ferrée;Strade e ferrovia;Roads and railway.;
+app:progress.industries;label;;Industries;Industries;Industrie;Industries.;
+app:progress.files;label;;Files;Fichiers;File;File.;
+app:net.noSlot;label;;{server}: no slot before {s} s;{server} : pas de créneau avant {s} s;{server}: nessun slot disponibile prima di {s} secondi;{server}: no available slot before {s} seconds.;
+app:net.waitSlot;label;;{server}, waiting for a slot;{server}, attente d'un créneau;{server}, in attesa di una disponibilità;{server}, waiting for availability.;
+app:net.sent;label;;request sent to {server};requête envoyée à {server};richiesta inviata a {server};request sent to {server};
+app:net.refused;label;;OpenStreetMap refused the request (HTTP {status}).;OpenStreetMap a refusé la requête (HTTP {status}).;OpenStreetMap ha rifiutato la richiesta (HTTP {status}).;OpenStreetMap has rejected the request (HTTP {status}).;
+app:net.rateLimit;label;;{server}: rate limit;{server} : limite de débit;{server}: limite di velocità;{server}: speed limit.;
+app:net.busy;label;;{server}: overloaded (HTTP {status});{server} : saturé (HTTP {status});{server}: sovraccarico (HTTP {status});{server}: overloaded (HTTP {status});
+app:net.noAnswer;label;;{server}: no answer;{server} : pas de réponse;{server}: nessuna risposta;{server}: no response.;
+app:net.serversBusy;label;;servers overloaded;serveurs saturés;serveri sovraccarichi;Overloaded servers.;
+app:net.osmDown;sentence;;OpenStreetMap unavailable ({failures}). Try again in a few minutes: the data already received stays in the cache.;OpenStreetMap indisponible ({failures}). Réessaie dans quelques minutes : les données déjà reçues restent en cache.;OpenStreetMap non disponibile ({failures}). Riprova tra qualche minuto: i dati già ricevuti rimangono nella cache.;OpenStreetMap is not available ({failures}). Try again in a few minutes: the data already received remains in the cache.;
+app:net.noBathy;label;;none (default depth);aucune (profondeur par défaut);nessuno (profondità predefinita);none (default depth);
+app:why.offMap;label;;off the map;hors carte;fuori dalla mappa;outside the map.;
+app:why.inWater;label;;in the water;dans l'eau;nell'acqua;in the water.;
+app:why.nearSea;label;;too close to the sea or a lake;trop près de la mer ou d'un lac;troppo vicino al mare o a un lago;too close to the sea or to a lake.;
+app:why.nearRiver;label;;too close to a river;trop près d'une rivière;troppo vicino a un fiume;too close to a river.;
+app:why.nearEdge;label;;too close to the edge;trop près du bord;troppo vicino al bordo;too close to the edge.;
+app:why.slope;label;;sloping ground;terrain en pente;terreno in pendenza;land in slope.;
+app:why.noLandNear;label;;{why}, no buildable ground within {m} m;{why}, pas de terrain constructible à moins de {m} m;{why}, nessun terreno edificabile entro {m} metri;{why}, no buildable land within {m} meters.;
+app:why.nearTown;label;;too close to {town};trop près de {town};troppo vicino a {town};too close to {town};
+app:why.crops;label;overridden;{pct} % crops;{pct} % de cultures;{pct} % crops;{pct} % crops.;{pct} % coltivazioni
+app:why.grass;label;overridden;{pct} % grassland;{pct} % de prairies;{pct} % grassland;{pct} % grassland.;{pct} % prati
+app:why.forest;label;overridden;{pct} % forest;{pct} % de forêt;{pct} % forest;{pct} % forest.;{pct} % bosco
+app:why.sea;label;overridden;{pct} % sea;{pct} % de mer;{pct} % sea;{pct} % sea.;{pct} % mare
+app:why.supplies;label;;supplies: {list};fournit : {list};forniture: {list};supplies: {list};
+app:why.chain;label;;completes a production chain;complète une chaîne de production;completa una catena di produzione;completes a production chain.;
+app:why.noOpenWater;label;;no open water far enough from the shore;pas d'eau libre assez loin du rivage;nessuna zona d'acqua libera sufficientemente lontana dalla costa;no zone of free water sufficiently far from the coast.;
+app:why.noFreeLand;label;;no free ground nearby (towns, water, slope);pas de terrain libre (villes, eau, pente) à proximité;nessuna area disponibile nelle vicinanze (cittadine, acqua, pendenza);No areas available in the vicinity (city, water source, slope).;
+app:msg.townMoved;label;;{town} moved by {m} m ({reason});{town} déplacée de {m} m ({reason});{town} spostata di {m} metri ({reason});{town} moved by {m} meters ({reason}).;
+app:msg.townDropped;label;;{town} left out: {reason};{town} écartée : {reason};{town} esclusa: {reason};{town} excluded: {reason};
+app:msg.ageNow;label;;less than 1 h ago;il y a moins d'1 h;meno di 1 ora fa;Less than 1 hour ago.;
+app:msg.ageHours;label;;{n} h ago;il y a {n} h;{n} h fa;{n} h does.;
+app:msg.ageDays;label;;{n} days ago;il y a {n} j;{n} giorni fa;{n} days ago.;
+app:msg.noMessage;label;;error without a message;erreur sans message;errore senza messaggio;error without message.;
+app:msg.unknownError;label;;unknown error;erreur inconnue;errore sconosciuto;unknown error.;
+app:msg.errorIn;label;;{where}: {error};{where} : {error};{where}: {error};{where}: {error};
+app:msg.coverWindows;label;;ESA WorldCover ({n} window(s));ESA WorldCover ({n} fenêtre(s));ESA WorldCover ({n} finestra/e);ESA WorldCover ({n} window/s).;
+app:msg.noCover;label;;no land cover (biomes from the relief);pas d'occupation du sol (biomes déduits du relief);nessuna copertura del suolo (biomi derivati dal rilievo);no ground cover (biomes derived from topography).;
+app:msg.ignBlocks;label;;IGN {d}/{n} blocks;IGN {d}/{n} blocs;IGN {d}/{n} blocchi;IGN {d}/{n} blocks.;
+app:msg.blocks;label;;{d}/{n} blocks;{d}/{n} blocs;{d}/{n} blocchi;{d}/{n} blocks.;
+app:msg.tiles;label;;{d}/{n} tiles;{d}/{n} tuiles;{d}/{n} tessere;{d}/{n} tiles.;
+app:msg.tilesDone;label;;{n} tile(s);{n} tuile(s);{n} piastrelle;{n} tiles;
+app:msg.windows;label;;{n} window(s);{n} fenêtre(s);{n} finestra/e;{n} window/windows.;
+app:msg.coverFullFailed;sentence;;Full-resolution land cover unavailable ({error}): the preview's is used.;Occupation du sol pleine résolution indisponible ({error}) : celle de l'aperçu est reprise.;La copertura del suolo ad alta risoluzione non è disponibile ({error}): viene utilizzata quella della versione di anteprima.;The high-resolution ground cover is not available ({error}): the ground cover from the preview version is being used.;
+app:msg.largeArea;label;;Area of {km2} km²: the OpenStreetMap requests can be slow.;Zone de {km2} km² : les requêtes OpenStreetMap peuvent être lentes.;Zona di {km2} km²: le richieste a OpenStreetMap potrebbero essere lente.;Area of {km2} km²: requests to OpenStreetMap may be slow.;
+app:msg.queued;label;;queued;en file d'attente;in coda;in queue / in line / at the end.;
+app:msg.retryIn;label;;{reason}, retrying in {s} s;{reason}, nouvel essai dans {s} s;{reason}, riprova tra {s} secondi;{reason}, try again in {s} seconds.;
+app:msg.fromCache;label;identical;cache ({age});cache ({age});cache ({age});cache ({age});
+app:msg.fromServer;label;;{server}, {s} s;{server}, {s} s;{server}, {s} s;{server}, {s} s.;
+app:msg.ignNone;label;;no data here: Copernicus;pas de données ici : Copernicus;nessun dato disponibile: Copernicus;No data available: Copernicus.;
+app:msg.ignNoneWarn;label;;IGN: no data here, falling back to Copernicus.;IGN : pas de données ici, repli sur Copernicus.;IGN: nessun dato disponibile qui, si utilizza Copernicus come alternativa.;"IGN: no data available here; Copernicus is used as an alternative.";
+app:msg.demSkipped;label;;not needed (IGN covers everything);inutile (IGN complet);non necessario (IGN include tutto);Not necessary (IGN includes everything).;
+app:msg.coverFailed;label;;Land cover unavailable ({error}): biomes from the relief.;Occupation du sol indisponible ({error}) : biomes déduits du relief.;Copertura del suolo non disponibile ({error}): biomi derivati dal rilievo.;Land cover not available ({error}): biomes derived from the elevation data.;
+app:msg.waterPlaces;label;;{water} water features, {places} places;{water} eaux, {places} lieux;{water} elementi acquatici, {places} località;{water} water elements, {places} places.;
+app:msg.sites;label;;{n} sites;{n} sites;{n} siti;{n} sites;
+app:msg.sitesFailed;sentence;;Industrial sites unavailable ({error}): industries from the land cover.;Sites industriels indisponibles ({error}) : industries déduites de l'occupation du sol.;Sedi industriali non disponibili ({error}): le industrie sono state dedotte dalla copertura del suolo.;Industrial sites not available ({error}): the industries were derived from the land cover.;
+app:msg.roadsRails;label;;{roads} roads, {rails} railways;{roads} routes, {rails} voies ferrées;{roads} strade, {rails} ferrovie;{roads} roads, {rails} railways.;
+app:msg.roadsFailed;label;;Roads and railways unavailable ({error}): no link planned.;Routes et voies ferrées indisponibles ({error}) : aucune liaison prévue.;Strade e ferrovie non disponibili ({error}): nessuna connessione prevista.;Roads and railways not available ({error}): no connection foreseen.;
+app:msg.landCounts;label;term:areas->zona;{beaches} beaches, {business} business areas;{beaches} plages, {business} zones d'activité;{beaches} spiagge, {business} zone commerciali;{beaches} beaches, {business} commercial areas.;
+app:msg.landFailed;sentence;term:areas->zona;Beaches and business areas unavailable ({error}): beaches from the land cover, default districts.;Plages et zones d'activité indisponibles ({error}) : plages déduites de l'occupation du sol, quartiers par défaut.;Spiagge e zone commerciali non disponibili ({error}): le spiagge sono dedotte dalla copertura del suolo, i quartieri sono predefiniti.;Beaches and commercial areas not available ({error}): the beaches are determined by the land cover, and the neighborhoods are predefined.;
+app:msg.workerFailed;label;;the computation failed;le calcul a échoué;il calcolo non è andato a buon fine;The calculation did not complete successfully.;
+app:msg.workerFailedAt;label;;the computation failed in {file}:{line};le calcul a échoué dans {file}:{line};il calcolo non è andato a buon fine in {file}:{line};The calculation did not complete successfully in {file}:{line}.;
+app:msg.resultTerrain;sentence;;Result: water level = {ref} m in reality, heights {min} → {max} m, water {water}, steep slopes {slope}.;Résultat : niveau de l'eau = {ref} m réels, hauteurs {min} → {max} m, eau {water}, pentes fortes {slope}.;Risultato: livello dell'acqua = {ref} m nella realtà, altitudini da {min} a {max} m, presenza di acqua {water}, pendenze elevate {slope}.;Result: water level = {ref} meters in reality, altitudes from {min} to {max} meters, presence of water {water}, high slopes {slope}.;
+app:msg.resultRiversOne;label;;a single network;un seul réseau;una singola rete;a single network.;
+app:msg.resultRiversMany;label;;{n} separate networks;{n} réseaux séparés;{n} reti separate;{n} separate networks.;
+app:msg.resultRivers;sentence;;Rivers: {networks}, {joined} junctions, {routed} led to the water, {channels} channels, {marsh} marshes turned into lakes, {ponds} ponds filled in, {beach} beach cells without trees.;Rivières : {networks}, {joined} jonctions, {routed} tracés jusqu'à l'eau, {channels} chenaux, {marsh} marais en lacs, {ponds} étangs comblés, {beach} cellules de plage sans arbres.;Fiumi: {networks}, {joined} incroci, {routed} percorsi che raggiungono l'acqua, {channels} canali, {marsh} zone umide trasformate in laghi, {ponds} stagni prosciugati, {beach} aree sabbiose senza alberi.;Rivers: {networks}, {joined} intersections, {routed} paths that reach the water, {channels}, canals, {marsh} wetlands transformed into lakes, {ponds} drained ponds, {beach} sandy areas without trees.;
+app:msg.resultCounts;sentence;term:railway line->linea ferroviaria;{towns} towns, {industries} industries, {links} links between towns, {rails} railway line(s).;{towns} villes, {industries} industries, {links} liaisons entre villes, {rails} voie(s) ferrée(s).;{towns} cittadine, {industries} industrie, {links} collegamenti tra le cittadine, {rails} linea/e ferroviaria/e.;{towns} towns, {industries} industries, {links} connections between the towns, {rails} railway line/lines.;
+app:msg.resultRail;sentence;overridden;Railway: {km} km, tightest curve {radius} m, steepest {grade} % in the game, {bridges} bridge(s) (highest {high} m), {tunnels} tunnel(s).;Voie ferrée : {km} km, courbe la plus serrée {radius} m, pente max. {grade} % dans le jeu, {bridges} pont(s) (le plus haut {high} m), {tunnels} tunnel(s).;Railway: {km} km, tightest curve {radius} m, steepest {grade} % in the game, {bridges} bridge(s) (highest {high} m), {tunnels} tunnel(s).;Railway: {km} km, tightest curve {radius} m, steepest {grade} % in the game, {bridges} bridge(s) (highest {high} m), {tunnels} tunnel(s).;Ferrovia: {km} km, curva più stretta {radius} m, pendenza massima {grade} % nel gioco, {bridges} ponte/i (il più alto {high} m), {tunnels} tunnel.
+app:msg.dataSummary;sentence;;Data: relief {relief}, sea floor {sea}, {cover}, {water} water features, {places} places, {sites} industrial sites, {roads} roads, {rails} railways.;Données : relief {relief}, fonds marins {sea}, {cover}, {water} eaux, {places} lieux, {sites} sites industriels, {roads} routes, {rails} voies ferrées.;Dati: rilievo {relief}, fondale marino {sea}, {cover}, elementi acquatici {water}, luoghi {places}, siti industriali {sites}, strade {roads}, ferrovie {rails}.;Data: relief, seabed, cover, water elements, places, industrial sites, roads, railways.;
+app:msg.noUserdata;label;;TF3 data folder not found: enter it in the Export tab.;Dossier de données de TF3 introuvable : indique-le dans l'onglet Export.;Cartella dati di TF3 non trovata: indicala nella scheda Esporta.;"Data folder for TF3 not found: specify it in the ""Export"" tab.";
+app:msg.sizeScale;label;;{size} · scale 1:{scale};{size} · échelle 1:{scale};{size} · scala 1:{scale};{size} · scale 1: {scale};
+app:msg.relief;label;;Relief: {source};Relief : {source};Rilievo: {source};Highlight: {source};
+app:msg.points;label;;{w} × {h} points;{w} × {h} points;{w} × {h} punti;{w} by {h} points.;
+app:msg.files;label;;{n} files;{n} fichiers;{n} file;{n} file;
+app:msg.written;label;;Map “{name}” written: {n} files in {dir}.;Carte « {name} » écrite : {n} fichiers dans {dir}.;"Mappa ""{name}"" creata: {n} file in {dir}.";"Map ""{name}"" created: {n} files in {dir}.";
+app:msg.sent;label;;Request sent to the game: generating in the Map Editor…;Demande envoyée au jeu : génération dans l'éditeur de cartes…;Richiesta inviata al gioco: generazione in corso nell'editor di mappe…;Request sent to the game: generation in progress within the map editor…;
+app:msg.generated;sentence;;Map “{name}” generated in the game. Save it in the Map Editor.;Carte « {name} » générée dans le jeu. Enregistre-la dans l'éditeur.;"La mappa ""{name}"" è stata generata nel gioco. Salvala nell'editor di mappe.";"The map ""{name}"" was generated within the game. Save it in the map editor.";
+app:msg.game;label;;Game;Jeu;Gioco;Game.;
+app:msg.gameStep;label;;Game: {message};Jeu : {message};Gioco: {message};Game: {message};
+app:msg.noAnswer;sentence;;The game does not answer. Start Transport Fever 3, open the Map Editor on a new empty map “{size}” with the RealMap mod enabled, then generate again.;Le jeu ne répond pas. Lance Transport Fever 3, ouvre l'éditeur de cartes sur une nouvelle carte vide « {size} » avec le mod RealMap activé, puis génère à nouveau.;"Il gioco non risponde. Avvia Transport Fever 3, apri l'editor di mappe su una nuova mappa vuota ""{size}"" con la mod RealMap attivata, quindi genera di nuovo.";"The game is not responding. Start Transport Fever 3, open the map editor on a new, empty map ""{size}"" with the RealMap mod enabled, and then generate it again.";
+app:msg.stalled;label;;No news from the game for 5 minutes (generation stuck?).;Le jeu ne donne plus de nouvelles depuis 5 minutes (génération bloquée ?).;Nessuna novità dal gioco da 5 minuti (generazione bloccata?).;No news from the 5-minute game (generation blocked?).;
+app:msg.testWritten;label;;Test map written: {name} ({size}).;Carte de test écrite : {name} ({size}).;Mappa di test creata: {name} ({size}).;Test map created: {name} ({size}).;
+app:msg.testImport;label;;Import Heightmap → Minimum {min}, Maximum {max}, Water Level 0.;Import Heightmap → Minimum {min}, Maximum {max}, Water Level 0.;Importa la mappa altimetrica → Minimo {min}, Massimo {max}, Livello dell'acqua 0.;Import the altimetric map → Minimum {min}, Maximum {max}, Water level 0.;
+app:msg.testColumns;label;;Columns (west → east): channels {list} m wide.;Colonnes (ouest → est) : chenaux de {list} m de large.;Colonne (da ovest a est): canali di {list} metri di larghezza.;Columns (from west to east): channels of {list} meters of width.;
+app:msg.testRows;label;;Rows (north → south): {list} m deep.;Bandes (nord → sud) : {list} m de profondeur.;Righe (da nord a sud): {list} m di profondità.;Rows (from north to south): {list} meters of depth.;
+app:msg.testLayer;label;;Show the “Navigable Waters” layer and note the coloured channels.;Affiche le calque « Navigable Waters » (eaux navigables) et note les chenaux colorés.;"Mostra il livello ""Acque navigabili"" e osserva i canali colorati.";"Show the ""Navigable Waters"" level and observe the colored channels.";
+app:updates.title;title;;Updates;Mises à jour;Aggiornamenti;Updates.;
+app:updates.badge;label;;Version {version};Version {version};Versione {version};Version {version};
+app:updates.installed;label;;Installed version;Version installée;Versione installata;Installed version.;
+app:updates.status;label;;Status;État;Stato;State.;
+app:updates.check;label;;Check;Vérifier;Verifica;Verification.;
+app:updates.checking;label;;Checking…;Vérification…;Verifica…;Verify...;
+app:updates.upToDate;label;;Up to date;À jour;Aggiornato;Updated.;
+app:updates.never;label;;Not checked yet;Pas encore vérifié;Non ancora verificato;Not yet verified.;
+app:updates.available;label;;Version {version} available;Version {version} disponible;Versione {version} disponibile;Version {version} available.;
+app:updates.install;label;;Install and restart;Installer et redémarrer;Installa e riavvia;Install and restart.;
+app:updates.download;label;;Download;Télécharger;Scarica;Download.;
+app:updates.notes;label;;Release notes;Notes de version;Note di rilascio;Release notes.;
+app:updates.skip;label;;Skip this version;Ignorer cette version;Ignora questa versione;Ignore this version.;
+app:updates.downloading;label;;Downloading;Téléchargement;Download;Download.;
+app:updates.installing;label;;Installing…;Installation…;Installazione…;Installation...;
+app:updates.cancel;label;;Cancel;Annuler;Annulla;Cancel.;
+app:updates.mb;label;;{v} MB;{v} Mo;{v} MB;{v} MB;
+app:updates.busy;sentence;;A computation or a generation is running: installing closes the app and stops it. Install anyway?;Un calcul ou une génération est en cours : l'installation ferme l'application et l'interrompt. Installer quand même ?;Un calcolo o una generazione è in corso: l'installazione chiude l'applicazione e la interrompe. Vuoi comunque procedere con l'installazione?;A calculation or a generation is in progress: the installation will close the application and interrupt it. Do you still want to proceed with the installation?;
+app:updates.manual;sentence;;This install does not update itself: download the new installer from the release page.;Cette installation ne se met pas à jour toute seule : télécharge le nouvel installeur sur la page de la version.;Questa installazione non si aggiorna automaticamente: scarica il nuovo programma di installazione dalla pagina delle release.;This installation does not update automatically: download the new installer from the releases page.;
+app:updates.manualPortable;sentence;;Portable version: download the new zip from the release page and replace RealMap.exe.;Version portable : télécharge le nouveau zip sur la page de la version et remplace RealMap.exe.;Versione portatile: scarica il nuovo file zip dalla pagina delle release e sostituisci il file RealMap.exe.;Portable version: download the new zip file from the releases page and replace the RealMap.exe file.;
+app:updates.auto;label;;Check at startup;Vérifier au démarrage;Verifica all'avvio;Verification at startup.;
+app:updates.lastCheck;label;;Last check: {date};Dernière vérification : {date};Ultima verifica: {date};Last verification: {date};
+app:updates.modHint;sentence;;The mod is updated separately: through the game's Mod Hub, or with the zip attached to each release.;Le mod se met à jour à part : par le Mod Hub du jeu, ou avec le zip joint à chaque version.;La mod viene aggiornata separatamente: tramite il Mod Hub del gioco, oppure tramite il file zip allegato a ogni versione.;The mod is updated separately: either through the game's Mod Hub, or through the zip file attached to each version.;
+app:updates.err.notFound;status;;No public release found on GitHub (private repository?): cannot check.;Aucune version publique trouvée sur GitHub (dépôt privé ?) : vérification impossible.;Nessuna versione pubblica trovata su GitHub (repository privato?): impossibile verificare.;No public version found on GitHub (private repository?): impossible to verify.;
+app:updates.err.limited;status;;GitHub is limiting requests: try again in a few minutes.;GitHub limite les requêtes : réessaie dans quelques minutes.;GitHub sta limitando le richieste: riprova tra qualche minuto.;GitHub is limiting the requests: please try again in a few minutes.;
+app:updates.err.network;status;;GitHub unreachable (no connection?);GitHub injoignable (pas de connexion ?);GitHub non raggiungibile (nessuna connessione?);GitHub is unreachable (no connection?).;
+app:updates.err.signature;status;;Invalid update signature: nothing was installed.;Signature de la mise à jour invalide : rien n'a été installé.;Firma dell'aggiornamento non valida: nulla è stato installato.;Signature of the update is invalid: nothing has been installed.;
+app:updates.err.install;status;;The installation failed.;L'installation a échoué.;L'installazione non è riuscita.;The installation did not succeed.;
+app:updates.err.other;status;;Could not check.;Vérification impossible.;Impossibile verificare.;Impossible to verify.;
+mod:hint_1;sentence;;To generate a map: open a new empty map of the right size in the Map Editor,;Pour générer une carte : ouvre une nouvelle carte vide de la bonne taille dans l'éditeur de cartes,;Per generare una mappa: apri una nuova mappa vuota, delle dimensioni corrette, nell'editor di mappe,;To generate a map: open a new, empty map with the correct dimensions in the map editor.;
+mod:hint_2;sentence;;then click “Generate the map” in the RealMap app. Everything is built here, automatically.;puis clique sur « Générer la carte » dans l'application RealMap. Tout se construit ici, automatiquement.;"quindi, clicca su ""Genera la mappa"" nell'applicazione RealMap. Tutto viene creato qui, automaticamente.";"So, click on ""Generate the map"" in the RealMap application. Everything is created here, automatically.";
+mod:title;title;;RealMap: “%s”;RealMap : « %s »;RealMap: “%s”;"RealMap: ""%s""";
+mod:check;label;;Checking the open map…;Vérification de la carte ouverte…;Verifica della mappa in corso…;Verification of the map is in progress…;
+mod:err_not_editor;status;;Open the Map Editor: the map can only be generated in a new empty map of the Map Editor.;Ouvre l'éditeur de cartes : la génération ne se fait que dans une nouvelle carte vide de l'éditeur.;Apri l'editor di mappe: la mappa può essere generata solo in una nuova mappa vuota dell'editor di mappe.;Open the map editor: the map can only be generated in a new, empty map within the map editor.;
+mod:err_note_missing;status;;Map note not found (userdata/importcity/%s.lua).;Note de la carte introuvable (userdata/importcity/%s.lua).;Impossibile trovare il file della mappa (userdata/importcity/%s.lua).;It is impossible to find the map file (userdata/importcity/%s.lua).;
+mod:err_map_size;status;;The open map is %d × %d tiles, %d × %d are needed (%s): create a new map of that size.;La carte ouverte fait %d × %d tuiles, il en faut %d × %d (%s) : crée une nouvelle carte de cette taille.;La mappa aperta è composta da %d × %d celle, ne servono %d × %d (%s): crea una nuova mappa di queste dimensioni.;"The open map is composed of %d x %d cells; it requires %d x %d (%s): create a new map of these dimensions.";
+mod:err_map_not_empty;status;;The open map already has towns or industries: create a new empty map.;La carte ouverte contient déjà des villes ou des industries : crée une nouvelle carte vide.;La mappa aperta contiene già cittadine o industrie: crea una nuova mappa vuota.;The open map already contains cities or industries: create a new, empty map.;
+mod:err_heightmap_missing;status;;Heightmap “%s” not found in userdata/heightmaps.;Heightmap « %s » introuvable dans userdata/heightmaps.;"La mappa altimetrica ""%s"" non è stata trovata in userdata/heightmaps.";"The altimetric map ""%s"" was not found in userdata/heightmaps.";
+mod:err_biomes_missing;status;;Biomes “%s” not found in userdata/biomes.;Biomes « %s » introuvables dans userdata/biomes.;"I biomi ""{%s}"" non sono stati trovati in userdata/biomi.";"The biomes ""{%s}"" were not found in userdata/biomes.";
+mod:err_no_generator;status;;No import generator for the climate of this map.;Aucun générateur d'import pour le climat de cette carte.;Nessun generatore di importazione disponibile per il clima di questa mappa.;No import generator is available for the climate of this map.;
+mod:err_towns_missing;status;;Towns not found (userdata/towns_industries/%s.lua).;Villes introuvables (userdata/towns_industries/%s.lua).;Cittadine non trovate (userdata/towns_industries/%s.lua).;Cities not found (userdata/towns_industries/%s.lua).;
+mod:err_terrain_refused;status;;the game refused to replace the terrain;le jeu a refusé de remplacer le terrain;Il gioco ha rifiutato di sostituire il terreno;The game refused to replace the ground.;
+mod:err_towns_refused;status;;the game refused to create the towns;le jeu a refusé de créer les villes;Il gioco ha rifiutato di creare le cittadine;The game refused to create the female characters.;
+mod:warn_economy;sentence;;Warning: the map's economy is “%s”, the industries were planned for “%s”.;Attention : économie de la carte « %s », industries prévues pour « %s ».;"Attenzione: l'economia della mappa è ""%s"", le industrie previste sono per ""%s"".";"Attention: the economy of the map is ""%s"", and the expected industries are for ""%s"".";
+mod:heightmap_importing;label;;Relief: importing “%s” (%d → %d m)…;Relief : import de « %s » (%d → %d m)…;"Rilievo: importazione di ""%s"" (%d → %d m)…";"Highlight: importing ""%s"" (%d → %d m)…";
+mod:heightmap_done;label;;Relief imported.;Relief importé.;Rilievo importato.;Imported relief.;
+mod:biomes_importing;label;;Biomes: “%s”…;Biomes : « %s »…;Biomi: “%s”…;"Biomes: ""%s""...";
+mod:biomes_done;label;;Biomes imported.;Biomes importés.;Biomi importati.;Biomes imported.;
+mod:rail_building;label;;Railway: %d section(s)…;Voie ferrée : %d tronçon(s)…;Ferrovia: %d tratto/i…;Railway: %d section(s)…;
+mod:rail_done;label;;Railway: %d / %d section(s)%s%s%s.;Voie ferrée : %d / %d tronçon(s)%s%s%s.;Ferrovia: %d / %d tratto/i%s%s%s.;Railway: %d / %d section(s)%s%s%s.;
+mod:rail_bridges;label;;, %d as bridges;, %d en pont;, %d ponti;, %d bridges.;
+mod:rail_tunnels;label;;, %d in tunnels;, %d en tunnel;, %d in tunnel;, %d in tunnel.;
+mod:rail_failed;label;;"; %d refused%s, gaps near %s";" ; %d refusé(s)%s, coupures vers %s";"; %d rifiutati%s, lacune vicino a %s";"; %d rejected%s, gaps near %s.";
+mod:rail_critical;label;;critical error;erreur critique;errore critico;critical error.;
+mod:towns_done;label;;%d town(s) created, %d set to their real size.;%d ville(s) créée(s), %d mise(s) à leur taille réelle.;%d cittadine create, %d impostate alla loro dimensione reale.;%d cities created, %d set to their real size.;
+mod:industries_building;label;;Industries (%d)…;Industries (%d)…;Industrie (%d)…;Industries (%d)…;
+mod:industries_done;label;;Industries built: %d, named: %d%s.;%d industrie(s) posée(s), %d nommée(s)%s.;Industrie create: %d, nominate: %d%s.;Industries created: %d, nominated: %d%s.;
+mod:industries_missing;label;;, %d impossible;, %d impossible(s);, %d impossibili;, %d impossible.;
+mod:roads_building;label;;Roads: %d link(s) between towns…;Routes : %d liaison(s) entre villes…;Strade: %d collegamento/i tra le cittadine…;Roads: %d connection(s) between the towns...;
+mod:roads_done;label;term:road link->collegamento stradale;%d road link(s)%s.;%d liaison(s) routière(s)%s.;%d collegamento(i) stradale(i)%s.;%d road connection(s)%s.;
+mod:roads_partly;label;; (partly refused); (refusées en partie); (parzialmente rifiutate);(partially rejected);
+mod:done;sentence;;Map “%s” generated. Save it (Map Editor menu).;Carte « %s » générée. Enregistre-la (menu de l'éditeur).;"Mappa ""%s"" generata. Salvala (nel menu dell'editor di mappe).";"Map ""%s"" generated. Save it (in the menu of the map editor).";

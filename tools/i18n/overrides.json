@@ -1,0 +1,63 @@
+{
+  "de": {
+    "app:lists.sharesTitle": "Gewerbe / Industrie (% der Kapazität)",
+    "app:sheet.industryPlaced": "platziert",
+    "app:originShort.osm": "real",
+    "app:legend.bridge": "Eisenbahnbrücke",
+    "app:legend.tunnel": "Eisenbahntunnel",
+    "app:advanced.autoUpdate": "Automatisch aktualisieren",
+    "app:sheet.noRoom": "kein Platz",
+    "app:why.crops": "{pct} % Ackerland",
+    "app:why.grass": "{pct} % Grünland",
+    "app:why.forest": "{pct} % Wald",
+    "app:why.sea": "{pct} % Meer",
+    "app:msg.townMoved": "{town} um {m} m verschoben ({reason})",
+    "app:industry.nameOf": "{industry} {town}",
+    "app:updates.install": "Installieren und neu starten"
+  },
+  "it": {
+    "app:lists.sharesTitle": "Commerciale / industriale (% della capacità)",
+    "app:sheet.townOff": "esclusa",
+    "app:sheet.industryOff": "esclusa",
+    "app:map.markerTip": "{marker} — clic: dettagli · clic destro: menu ({action}, collega…)",
+    "app:step.data.land": "Spiagge e zone commerciali e industriali (OpenStreetMap)",
+    "app:sheet.noRoom": "nessuno spazio",
+    "app:why.crops": "{pct} % coltivazioni",
+    "app:why.grass": "{pct} % prati",
+    "app:why.forest": "{pct} % bosco",
+    "app:why.sea": "{pct} % mare",
+    "app:msg.resultRail": "Ferrovia: {km} km, curva più stretta {radius} m, pendenza massima {grade} % nel gioco, {bridges} ponte/i (il più alto {high} m), {tunnels} tunnel.",
+    "app:industry.nameOf": "{industry} di {town}"
+  },
+  "es": {
+    "app:lists.sharesTitle": "Comercial / industrial (% de la capacidad)",
+    "app:sheet.townOff": "excluida",
+    "app:sheet.industryOff": "excluida",
+    "app:data.experimental": "(experimental)",
+    "app:map.markerTip": "{marker} — clic: detalles · clic derecho: menú ({action}, enlazar…)",
+    "app:lists.railFigures": "{bridges} puente(s), {tunnels} túnel(es)",
+    "app:step.data.land": "Playas y zonas comerciales e industriales (OpenStreetMap)",
+    "app:tabs.data": "1. Zona y datos",
+    "app:sheet.noRoom": "sin espacio",
+    "app:why.crops": "{pct} % cultivos",
+    "app:why.grass": "{pct} % pastos",
+    "app:why.forest": "{pct} % bosque",
+    "app:why.sea": "{pct} % mar",
+    "app:msg.resultRail": "Ferrocarril: {km} km, curva más cerrada {radius} m, pendiente máxima {grade} % en el juego, {bridges} puente(s) (el más alto {high} m), {tunnels} túnel(es).",
+    "app:net.rateLimit": "{server}: límite de solicitudes",
+    "app:industry.nameOf": "{industry} de {town}"
+  },
+  "zh": {
+    "app:lists.sharesTitle": "商业 / 工业（占容量的 %）",
+    "mod:err_map_size": "当前打开的地图为 %d × %d 个图块，需要 %d × %d（%s）：请新建该尺寸的地图。",
+    "mod:rail_bridges": "，%d 段为桥梁",
+    "app:tabs.data": "1. 区域与数据",
+    "app:why.crops": "{pct} % 农田",
+    "app:why.grass": "{pct} % 草地",
+    "app:why.forest": "{pct} % 森林",
+    "app:why.sea": "{pct} % 海域",
+    "app:msg.resultRail": "铁路：{km} 公里，最小转弯半径 {radius} 米，游戏内最大坡度 {grade} %，{bridges} 座桥梁（最高 {high} 米），{tunnels} 条隧道。",
+    "app:industry.nameOf": "{town}{industry}",
+    "app:updates.mb": "{v} MB"
+  }
+}

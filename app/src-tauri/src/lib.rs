@@ -4,6 +4,19 @@ use tauri_plugin_fs::FsExt;
 
 /// Steam app id of Transport Fever 3 (userdata: `<...>/<SteamID>/3493540/local`).
 const TF3_APP_ID: &str = "3493540";
+/// File next to the executable of the portable zip (written by tools/pack-portable.ps1): the updater
+/// must not install a second copy there, the app only links to the new release.
+const PORTABLE_MARKER: &str = "RealMap.portable";
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct InstallInfo {
+    /// Portable zip (marker next to the executable).
+    portable: bool,
+    /// The Tauri updater can replace this install: the Windows installers, the macOS app, the
+    /// AppImage; not the portable zip nor the Linux .deb (managed by the system's packages).
+    self_update: bool,
+}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -112,6 +125,16 @@ fn detect_paths() -> DetectedPaths {
     }
 }
 
+#[tauri::command]
+fn install_info() -> InstallInfo {
+    let portable = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|dir| dir.join(PORTABLE_MARKER).is_file()))
+        .unwrap_or(false);
+    let linux_package = cfg!(target_os = "linux") && std::env::var_os("APPIMAGE").is_none();
+    InstallInfo { portable, self_update: !portable && !linux_package }
+}
+
 /// Grant the fs plugin access to folders outside the static scope (a userdata folder chosen by hand).
 #[tauri::command]
 fn allow_dirs(app: tauri::AppHandle, dirs: Vec<String>) {
@@ -131,7 +154,9 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![detect_paths, allow_dirs])
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
+        .invoke_handler(tauri::generate_handler![detect_paths, install_info, allow_dirs])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

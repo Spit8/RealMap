@@ -1,38 +1,28 @@
 -- Handlers of main_gui: this file is ours (TFUI creates it once and never rewrites it).
--- Real town sizes (FACT-016): the Map Editor's towns import only multiplies the capacity the game
--- draws itself, so the towns of an ImportCity map get their target capacity (computed by the app
--- from the population) from here:
---  - automatically: a pump installed by the mod-area button (it ticks even with the window
---    closed) checks the towns every ~2 s in the Map Editor and sizes the ImportCity towns once,
---    right after the « Towns / Industries » import;
---  - or with the window's button « Appliquer les tailles réelles ».
--- The app writes <userdata>/importcity/latest.lua = { name = "<map>" } and
--- <userdata>/importcity/<map>.lua with towns = { { name, x, y, population, capacity } }.
+-- RealMap generates the whole map automatically in the Map Editor (DECISION-012): the app writes
+-- the map's files and <userdata>/importcity/request.lua; the pump below (installed by the mod-area
+-- button, it ticks even with the window closed) sees each new request and hands it to
+-- `importcity_auto.lua`, which builds heightmap > biomes > towns > industries > roads > rail and
+-- answers in <userdata>/importcity/status.lua. The mod has one window (DECISION-013), opened by the
+-- « RealMap » button (`handlers.openWindow`) or when a generation starts; it only shows where it stands.
+-- Real town sizes (FACT-016): the towns get their target capacity (computed by the app from the
+-- population, note `towns = { { name, x, y, population, capacity } }`) right after they are built.
 -- react.onStep MUST be registered during a recipe render, on EVERY render (hooks model): the
 -- button label expression calls handlers.pump(react), which installs it (as in HQminiMap).
 
+local auto = ug_require "importcity::/gui/importcity_auto.lua"
+
 local handlers = {}
 
-local refs = { status = nil }
---- Auto pump: ticks counted, import seen (name|createdAt), towns already sized.
-local auto = { tick = 0, key = nil, done = {} }
-local PUMP_EVERY = 120
---- Apply automatically only when at least this share of the import's towns is found by name:
---- another map's towns are never resized by position alone.
-local AUTO_MIN_NAMED = 0.5
+--- Pump: ticks counted; a request is looked for every PUMP_EVERY ticks (~0.5 s).
+local pump = { tick = 0 }
+local PUMP_EVERY = 30
 
---- How far (game m) a game town may be from an ImportCity town of another name to match it.
+--- How far (game m) a game town may be from a RealMap town of another name to match it.
 local MATCH_RADIUS = 500
 
 local function log(text)
 	print("[importcity] " .. text)
-end
-
-local function setStatus(text)
-	log(text)
-	if refs.status ~= nil then
-		refs.status:set(text)
-	end
 end
 
 local function loadUserdata(dir, name)
@@ -71,25 +61,25 @@ local function latestImport()
 	if note == nil or type(note.towns) ~= "table" then
 		return nil
 	end
-	return latest.name, note.towns, note.createdAt
+	return latest.name, note.towns, note.createdAt, note
 end
 
---- Game towns: { entity, name, x, y }.
+--- Game towns: { entity, name, x, y }, in the order of the game map's towns (and that map).
 local function gameTowns()
 	local out = {}
 	local ok, map = pcall(function()
 		return api.engine.terrain.makeMapFromGame(false, true, false, false)
 	end)
 	if not ok or map == nil then
-		return out
+		return out, nil
 	end
 	for _, t in ipairs(map.towns or {}) do
 		out[#out + 1] = { entity = t.existing, name = t.name, x = t.pos.x, y = t.pos.y }
 	end
-	return out
+	return out, map
 end
 
---- The game town for an ImportCity town: same name, else the nearest one within MATCH_RADIUS.
+--- The game town for a RealMap town: same name, else the nearest one within MATCH_RADIUS.
 local function match(target, towns, used)
 	for _, t in ipairs(towns) do
 		if not used[t.entity] and t.name == target.name then
@@ -106,10 +96,14 @@ local function match(target, towns, used)
 	return best
 end
 
---- Split `capacity` over residential / commercial / industrial like the game's own draw.
-local function split(capacity, initial)
+--- Split `capacity` over residential / commercial / industrial: the real shares sent by the app
+--- (`wanted` = { res, com, ind }), else like the game's own draw.
+local function split(capacity, initial, wanted)
 	local sum = initial[1] + initial[2] + initial[3]
 	local shares = sum > 0 and { initial[1] / sum, initial[2] / sum, initial[3] / sum } or { 0.5, 0.3, 0.2 }
+	if type(wanted) == "table" and tonumber(wanted.res) and tonumber(wanted.com) and tonumber(wanted.ind) then
+		shares = { tonumber(wanted.res), tonumber(wanted.com), tonumber(wanted.ind) }
+	end
 	local out = {}
 	for i = 1, 3 do
 		out[i] = math.max(1, math.floor(capacity * shares[i] + 0.5))
@@ -117,21 +111,53 @@ local function split(capacity, initial)
 	return out
 end
 
---- Window status text (TFUI: text = handlers.statusText(status)); also keeps the state to update it.
-function handlers.statusText(status)
-	refs.status = status
-	local s = status:old()
-	if s ~= nil and s ~= "" then
-		return s
-	end
-	local name = latestImport()
-	return name and ("Dernier import ImportCity : " .. name .. ". Importe d'abord ses villes (Towns / Industries), puis applique les tailles.")
-		or "Aucun import ImportCity trouvé : génère une carte dans l'app ImportCity."
+--- The « RealMap » button (TFUI onClick): open the mod's window.
+function handlers.openWindow()
+	auto.open()
 end
 
---- Send the capacity commands for one town; true when sent.
-local function sizeTown(entity, town, capacity, label)
-	local caps = split(capacity, numbers(town.initialLandUseCapacities, 3))
+--- Cargo type ids for the app's goods (« beverages » → ::/cargos/beverages/beverages.cargo); unknown ones skipped.
+local function cargoIds(names)
+	local out = {}
+	for _, n in ipairs(names or {}) do
+		local ok, id = pcall(api.res.cargoTypeRep.find, "::/cargos/" .. n .. "/" .. n .. ".cargo")
+		if ok and id and id >= 0 then
+			out[#out + 1] = id
+		end
+	end
+	return out
+end
+
+--- Goods asked by the commercial and industrial land use (residential kept as the game drew it).
+local function setNeeds(entity, town, needs, label)
+	if type(needs) ~= "table" then
+		return
+	end
+	local com, ind = cargoIds(needs.com), cargoIds(needs.ind)
+	if #com == 0 and #ind == 0 then
+		return
+	end
+	local res = {}
+	for _, pair in ipairs((town.cargoNeeds or {})[1] or {}) do
+		res[#res + 1] = pair[1]
+	end
+	local ok, err = pcall(function()
+		api.cmd.sendCommand(api.cmd.makeTownUpdateCargoNeedsCmd(entity, { res, com, ind }, true), function(_, success)
+			if not success then
+				log("cargo needs refused for " .. tostring(label))
+			end
+		end)
+	end)
+	if ok then
+		log(string.format("%s needs: %s / %s", tostring(label), table.concat(needs.com or {}, ","), table.concat(needs.ind or {}, ",")))
+	else
+		log("cargo needs failed for " .. tostring(label) .. ": " .. tostring(err))
+	end
+end
+
+--- Send the capacity (and cargo needs) commands for one town; true when sent.
+local function sizeTown(entity, town, capacity, label, target)
+	local caps = split(capacity, numbers(town.initialLandUseCapacities, 3), target and target.shares)
 	local factors = numbers(town.sizeFactors, 3)
 	if factors[1] <= 0 or factors[2] <= 0 or factors[3] <= 0 then
 		factors = { 1, 1, 1 } -- unreadable: a 0 factor would empty the town
@@ -141,6 +167,7 @@ local function sizeTown(entity, town, capacity, label)
 			if success then
 				-- Rebuild the town's buildings to the new capacity right away.
 				api.cmd.sendCommand(api.cmd.makeTownUpdateSizeCmd(entity, factors, true))
+				setNeeds(entity, town, target and target.needs, label)
 			else
 				log("capacity refused for " .. tostring(label))
 			end
@@ -154,7 +181,7 @@ local function sizeTown(entity, town, capacity, label)
 	return ok
 end
 
---- Size the ImportCity towns found in the game. `skip(entity, town, target)` = leave this one.
+--- Size the RealMap towns found in the game. `skip(entity, town, target)` = leave this one.
 --- Returns name, sized, missing, named (towns matched by name), total.
 local function applySizes(skip)
 	local name, targets = latestImport()
@@ -173,7 +200,7 @@ local function applySizes(skip)
 			if t.name == target.name then
 				named = named + 1
 			end
-			if not (skip and skip(t.entity, town, target)) and sizeTown(t.entity, town, target.capacity, t.name) then
+			if not (skip and skip(t.entity, town, target)) and sizeTown(t.entity, town, target.capacity, t.name, target) then
 				done = done + 1
 			end
 		end
@@ -181,90 +208,42 @@ local function applySizes(skip)
 	return name, done, missing, named, #targets
 end
 
-function handlers.onApplySizes()
-	local name, done, missing = applySizes(nil)
-	if name == nil then
-		setStatus("Aucun import ImportCity trouvé (userdata/importcity/latest.lua).")
+--- Look for a new request from the app and run it (one at a time).
+local function poll()
+	if auto.busy() then
 		return
 	end
-	if done == 0 and #missing > 0 and #gameTowns() == 0 then
-		setStatus("Aucune ville dans la partie : importe d'abord les villes de « " .. name .. " ».")
-		return
-	end
-	local text = string.format("« %s » : %d ville(s) mises à la taille réelle.", name, done)
-	if #missing > 0 then
-		text = text .. " Introuvables : " .. table.concat(missing, ", ") .. "."
-	end
-	setStatus(text)
-end
-
-local function isMapEditor()
-	local ok, v = pcall(function()
-		return api.gui.game.isMapEditor()
-	end)
-	return ok and v == true
-end
-
---- One automatic pass: in the Map Editor, size the ImportCity towns not sized yet (each once per import).
-local function autoApply()
-	if not isMapEditor() then
-		return
-	end
-	local name, targets, createdAt = latestImport()
-	if name == nil or #targets == 0 then
-		return
-	end
-	local key = name .. "|" .. tostring(createdAt)
-	if auto.key ~= key then
-		auto.key = key
-		auto.done = {}
-	end
-	-- Only once enough of this import's towns exist by name (the import has run).
-	local towns = gameTowns()
-	local byName = {}
-	for _, t in ipairs(towns) do
-		byName[t.name] = true
-	end
-	local named = 0
-	for _, target in ipairs(targets) do
-		if byName[target.name] then
-			named = named + 1
-		end
-	end
-	if named < #targets * AUTO_MIN_NAMED then
-		return
-	end
-	local _, done = applySizes(function(entity, town, target)
-		if auto.done[entity] then
-			return true
-		end
-		auto.done[entity] = true
-		local initial = numbers(town.initialLandUseCapacities, 3)
-		local sum = initial[1] + initial[2] + initial[3]
-		-- Already at the target (a saved map loaded again): leave it.
-		return math.abs(sum - target.capacity) <= target.capacity * 0.02
-	end)
-	if done and done > 0 then
-		setStatus(string.format("« %s » : %d ville(s) mises automatiquement à la taille réelle.", name, done))
+	local request = auto.pending()
+	if request then
+		log("generation of " .. request.name .. " requested by the app")
+		auto.start(request, { applySizes = function() return applySizes(nil) end })
 	end
 end
 
---- Mod-area button label (TFUI: text = handlers.pump(react)): installs the automatic pump.
+--- Mod-area button label (TFUI: text = handlers.pump(react)): installs the pump.
 function handlers.pump(react)
 	if react ~= nil and type(react.onStep) == "function" then
 		pcall(function()
 			react.onStep(function()
-				auto.tick = auto.tick + 1
-				if auto.tick % PUMP_EVERY == 0 then
-					local ok, err = pcall(autoApply)
+				pump.tick = pump.tick + 1
+				if pump.tick % PUMP_EVERY == 0 then
+					local ok, err = pcall(poll)
 					if not ok then
-						log("auto apply failed: " .. tostring(err))
+						log("poll failed: " .. tostring(err))
 					end
 				end
 			end)
 		end)
 	end
-	return "Import your Town"
+	return "RealMap"
+end
+
+--- Mod-area button icon (TFUI: ImageView path = handlers.buttonIcon(react), as in HQminiMap; the
+--- @2x file is picked on high-DPI screens). The button is always displayed, so it installs the pump:
+--- a generation asked by the app runs with the window closed.
+function handlers.buttonIcon(react)
+	handlers.pump(react)
+	return "importcity::/gui/icons/realmap.tga"
 end
 
 return handlers

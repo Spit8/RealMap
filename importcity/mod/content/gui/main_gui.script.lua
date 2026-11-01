@@ -3,58 +3,8 @@ function data()
 	local react = ug_require "::/gui/main/react.lua"
 	local builtin = ug_require "::/gui/main/builtin.lua"
 	local main_mod_button_area = ug_require "::/gui/main/main_mod_button_area.tl"
-	local game_react_globals = ug_require "::/gui/main/game_react_globals.tl"
-	local handlers = ug_require "importcity::/gui/main_gui.handlers.lua"
 	
 	local recipes = {}
-	
-	recipes.ImportcityMainWindow = react.RegisterWrapperRecipe("ImportcityMainWindow", builtin.Window, function(_params)
-		local status = react.useState("")
-		return builtin.Window {
-			id = "importcity.main",
-			title = "Import your Town",
-			initialX = 0.15,
-			initialY = 0.12,
-			closable = true,
-			movable = true,
-			expanded = true,
-			onClose = function()
-				pcall(function()
-					api.gui.byId.setVisible("importcity.main", false)
-				end)
-			end,
-			meta = {
-				class = "importcity-main-window",
-			},
-			content = builtin.BoxLayout {
-				orientation = builtin.type.Orientation.Vertical,
-				meta = {
-					class = "my-root",
-				},
-				children = {
-					builtin.TextView {
-						text = handlers.statusText(status),
-						meta = {
-							class = "font-scale-body",
-						},
-					},
-					builtin.Button {
-						onClick = handlers.onApplySizes,
-						meta = {
-							class = "primary",
-							tooltip = "Fixe la capacité de chaque ville importée d'après sa population réelle",
-						},
-						content = builtin.TextView {
-							text = "Appliquer les tailles réelles",
-							meta = {
-								class = "font-scale-body",
-							},
-						},
-					},
-				},
-			},
-		}
-	end)
 	
 	recipes.ImportcityModButton = react.RegisterPluginRecipe(main_mod_button_area.MainModButtonAreaExtension, "ImportcityModButton", function(_params)
 		return builtin.BoxLayout {
@@ -62,25 +12,15 @@ function data()
 			children = {
 				builtin.Button {
 					onClick = function()
-					local wapi = game_react_globals.getDefaultWindowApi()
-					if wapi == nil then
-						return
-					end
-					wapi.addSingletonWindow(recipes.ImportcityMainWindow, {})
-					pcall(function()
-						api.gui.byId.setVisible("importcity.main", true)
-					end)
-					wapi.moveSingletonWindowToFront(recipes.ImportcityMainWindow)
+					ug_require("importcity::/gui/main_gui.handlers.lua").openWindow()
 				end,
 					meta = {
-						class = "secondary",
-						tooltip = "Import your Town",
+						class = "tfui-c7e0057e",
+						tooltip = "RealMap",
 					},
-					content = builtin.TextView {
-						text = handlers.pump(react),
-						meta = {
-							class = "font-scale-body",
-						},
+					content = builtin.ImageView {
+						path = ug_require("importcity::/gui/main_gui.handlers.lua").buttonIcon(react),
+						scaling = builtin.type.ImageViewScaling.AutoFit,
 					},
 				},
 			},
@@ -88,7 +28,6 @@ function data()
 	end)
 	
 	return {
-		ImportcityMainWindow = recipes.ImportcityMainWindow,
 		ImportcityModButton = recipes.ImportcityModButton,
 	}
 end

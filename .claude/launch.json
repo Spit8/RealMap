@@ -5,7 +5,7 @@
       "name": "importcity-dev",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["--prefix", "app", "run", "dev"],
-      "port": 1420
+      "port": 1430
     }
   ]
 }

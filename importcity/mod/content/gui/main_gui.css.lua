@@ -3,14 +3,31 @@ local ssu = require "::/gui/main/stylesheetutil.lua"
 function data()
 	local result = {}
 	local a = ssu.makeAdder(result)
+	local colorDefault = api.gui.genericRep.get(api.gui.genericRep.find("::/gui/main/default_colors.gres")).data
 	a("BoxLayout!my-root", {
 		innerSpacing = { 12, 10 },
 	})
-	a("Window!importcity-main-window!window-expanded", {
-		size = { 720, 420 },
+	a("Window!realmap-window!window-expanded", {
+		size = { 960, 400 },
 	})
-	a("Window!importcity-main-window Window::Content", {
+	a("Window!realmap-window Window::Content", {
 		padding = { 8, 8, 8, 8 },
+	})
+	a("Button!tfui-c7e0057e", {
+		size = { 40, 40 },
+		padding = { 0, 0, 0, 0 },
+		margin = { 1, 1, 2, 1 },
+		gravity = { 0, 0 },
+		backgroundColor1 = colorDefault.Invisible,
+		borderColor = colorDefault.Invisible,
+	})
+	a("Button!tfui-c7e0057e:hover", {
+		backgroundColor1 = { colorDefault.NeutralLightest[1], colorDefault.NeutralLightest[2], colorDefault.NeutralLightest[3], 0.18 },
+		borderColor = colorDefault.Invisible,
+	})
+	a("Button!tfui-c7e0057e:active", {
+		backgroundColor1 = { colorDefault.NeutralLightest[1], colorDefault.NeutralLightest[2], colorDefault.NeutralLightest[3], 0.32 },
+		borderColor = colorDefault.Invisible,
 	})
 	return result
 end

@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  app:
+    name: App (types + tests) and mod simulation
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install
+        working-directory: app
+        run: npm ci
+
+      - name: Type check
+        working-directory: app
+        run: npm run check
+
+      - name: Tests
+        working-directory: app
+        run: npm test
+
+      - name: Front-end build
+        working-directory: app
+        run: npm run build
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Mod simulation (automatic generation)
+        run: |
+          pip install lupa
+          python importcity/tools/sim_mod.py
+
+      - name: Versions agree
+        run: node tools/bump-version.mjs "$(node tools/bump-version.mjs --print)" --check
+
+      - name: Mod content index up to date
+        run: node tools/content-list.mjs --check
+
+      - name: Mod package
+        run: node tools/pack-mod.mjs

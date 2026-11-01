@@ -1,15 +1,35 @@
 {
   "authors": [
     {
-      "name": "Author",
+      "name": "Wilfried Lambert",
       "role": "CREATOR"
     }
   ],
-  "description": "Créé avec TFUI.",
-  "name": "Import your Town",
-  "summary": "Mod UI Import your Town",
+  "name": "RealMap",
+  "summary": "Turn a real place into a Transport Fever 3 map with the free RealMap desktop app",
+  "description": "Builds, in the Map Editor, a map of a real-world area prepared by the free RealMap desktop app: relief, sea, rivers and lakes, biomes, towns at their real size, named industries, road links and a railway.\nGet the app: https://github.com/Spit8/RealMap/releases/latest",
+  "localization": {
+    "fr": {
+      "summary": "Transforme un lieu réel en carte Transport Fever 3 avec l'app gratuite RealMap"
+    },
+    "de": {
+      "summary": "Verwandle mit der kostenlosen RealMap-Desktop-App einen realen Ort in eine Transport Fever 3-Karte"
+    },
+    "it": {
+      "summary": "Trasforma un luogo reale in una mappa per Transport Fever 3 grazie all'app gratuita RealMap"
+    },
+    "es": {
+      "summary": "Crea una mapa de Transport Fever 3 a partir de un lugar real usando la aplicación gratuita RealMap"
+    },
+    "zh_CN": {
+      "summary": "使用免费的RealMap桌面应用，将真实地点转化为Transport Fever 3的游戏地图"
+    },
+    "zh_TW": {
+      "summary": "使用免费的RealMap桌面应用，将真实地点转化为Transport Fever 3的游戏地图"
+    }
+  },
   "tags": [
     "Script Mod"
   ],
-  "url": ""
+  "url": "https://github.com/Spit8/RealMap"
 }

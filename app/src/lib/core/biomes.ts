@@ -60,23 +60,6 @@ export function mountainsImage(t: TerrainResult, g: Grid): Uint8Array {
   return out;
 }
 
-/**
- * Test map to identify the biomes in game: gentle west→east ramp (5 → 25 m) and five vertical
- * stripes, biome 0 to 4 from west to east.
- */
-export function biomeTestPattern(nx: number, ny: number): { heights: Float32Array; biomes: Uint8Array } {
-  const heights = new Float32Array(nx * ny);
-  const biomes = new Uint8Array(nx * ny);
-  for (let r = 0; r < ny; r++) {
-    for (let c = 0; c < nx; c++) {
-      const i = r * nx + c;
-      heights[i] = 5 + (20 * c) / Math.max(1, nx - 1);
-      biomes[i] = biomeByte(Math.min(4, Math.floor((5 * c) / nx)));
-    }
-  }
-  return { heights, biomes };
-}
-
 /** Channel widths (game m, west → east) and depths (m, north → south) of the river test map. */
 export const RIVER_TEST_WIDTHS = [8, 16, 24, 32, 48, 64];
 export const RIVER_TEST_DEPTHS = [2, 4, 6, 8, 10];

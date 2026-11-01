@@ -49,7 +49,30 @@ Track unresolved issues so they do not get mistaken for facts.
 - Next: import Cherbourg 1:3 Large; if a listed town is missing, raise « Distance mer / lacs » and record the value that works.
 - Status: OPEN · Date added: 2026-10-29
 
-## QUESTION-010 — How do the game-built roads and railway behave on an imported map?
-- Does `makeTownConnectWithIndustriesCmd` also connect every industry (the user wants 0–1 per town)? Do track proposals along the real line pass on the imported relief (slopes, rivers, bridges ≤ 250 m)? Do the industry renames find their industries (≤ 300 m match)?
-- Next: import a v0.8 map in the Map Editor with the importcity mod and report.
+## QUESTION-011 — Does the automatic generation (DECISION-012) run in the game as in the simulation?
+- To see in game: the pump runs in the Map Editor and answers within 15 s; `MapPreviewComp` computes in the mod's window (does it need to be visible / docked like the editor's preview?); `getAllHeightmaps` / `getAllBiomes` entries (with or without extension); the import generator's default params; town creation then sizing; `os.time()` available for the request age check (else every request is accepted).
 - Status: OPEN · Date added: 2026-10-31
+
+## QUESTION-010 — How do the game-built roads and railway behave on an imported map?
+- ANSWERED from the source (FACT-024): the connection command links every existing industry → the mod builds the industries itself after the town roads (DECISION-011). Still to see in game: index base of the town pairs (0-based assumed, `importcity_build.lua` `indexBase`), whether calling the command again links the newly built industries to their nearest town, whether `createIndustryProposal` results are constructions the rename reaches, whether `makeMapFromGame(false, true, false, false)` lists the towns in the order the command expects. Do track proposals along the real line pass on the imported relief (slopes, rivers, bridges ≤ 250 m)? Do the industry renames find their industries (≤ 300 m match)?
+- 2026-10-31: in game the roads were built; every railway segment was refused (missing edge fields, FACT-027, fixed in v0.10: to check in game, with the bridges over water).
+- 2026-10-31 (v0.10 in game): segments built but the line was discontinuous, too tight, through towns → designed in the app (DECISION-014). To check in game: whole line laid without cuts, bridges / tunnels accepted with the app's heights and tangents, towns and roads built around the track.
+- Next: generate a map with v0.11 and read the report's rail line.
+- Status: OPEN · Date added: 2026-10-31
+
+## QUESTION-012 — Do the town shares and goods hold in game (DECISION-015)?
+- To see in game: `makeTownUpdateCargoNeedsCmd` accepted after `makeTownUpdateSizeCmd` (not reset by it), the town window shows the app's goods, the commercial / industrial districts grow with the shares; beaches without trees (biome 1 still gets plain / single trees: a tree-free biome index is QUESTION-002); the rail profile laid without the tall viaduct.
+- Status: OPEN · Date added: 2026-10-31
+
+## QUESTION-013 — Why do some town roads cross rivers on a land strip (Carentan)?
+- Reproduced nothing in the app: at Carentan (1:3 and the user's 1:6 map, preview and full 4 m grid) the water mask is continuous at the pont-canal (`e2e.live.ts` with `CROP=lon,lat,radius`). Hypothesis: the game builds a road on a fill across very shallow water (we had 0.5 m at the bank) → river water now ≥ 2 m at the bank; named canals no longer dropped.
+- To see in game: a land strip still there? Where exactly (screenshot / coordinates)?
+- Status: OPEN · Date added: 2026-10-31
+
+## QUESTION-014 — Which format does `api.util.getLanguage()` return in Transport Fever 3?
+- The mod reads `code`, `locale`, `language`, `name` or `id` of a table, or a string, and logs it once (`[importcity] game language: …`): read that line in the game's log to confirm the French window.
+- Status: OPEN · Date added: 2026-10-31
+
+## QUESTION-015 — Do the mod's roads join the towns' streets in game? (CLOSED: the mod no longer lays roads, DECISION-019)
+- `B.road` relies on `octree.findEntitiesInCircle(…, BASE_NODE)` returning street nodes and on `getNodeStreetSegments`; if it returns nothing, every road stops 400 m short of the towns and the town pairs fall back to the game's routing (the report says how many). Check the report line « Routes : x / y posée(s) selon la carte » and the game log lines `road A - B: … ends joined / free`, at Lyon (Givors, Microbrasserie Caribrew).
+- Status: CLOSED · Date added: 2026-10-31

@@ -1,11 +1,11 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "ImportCity",
-  "version": "0.3.0",
+  "productName": "RealMap",
+  "version": "1.0.0",
   "identifier": "com.importcity.app",
   "build": {
     "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:1430",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../build"
   },
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "ImportCity",
+        "title": "RealMap",
         "width": 1400,
         "height": 900,
         "minWidth": 900,
@@ -27,11 +27,27 @@
   "plugins": {
     "fs": {
       "requireLiteralLeadingDot": false
+    },
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEYxRDUwRkQ5NkQxMTE1NzkKUldSNUZSRnQyUS9WOGJJMzZFR0p4UW1NOW9lb3ZSQ1BsY0FEOExFUEVmalJBaFk2YjlsOUl1UlMK",
+      "endpoints": [
+        "https://github.com/Spit8/RealMap/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis"],
+    "createUpdaterArtifacts": true,
+    "targets": [
+      "nsis",
+      "msi",
+      "appimage",
+      "deb",
+      "dmg"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -39,9 +55,18 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "shortDescription": "Importer une ville réelle dans Transport Fever 3",
+    "shortDescription": "Turn a real place into a Transport Fever 3 map",
     "publisher": "Wilfried Lambert",
+    "copyright": "© 2026 Wilfried Lambert — GPL-3.0",
+    "homepage": "https://github.com/Spit8/RealMap",
     "category": "Utility",
-    "license": "GPL-3.0-only"
+    "license": "GPL-3.0-only",
+    "longDescription": "Companion app of the RealMap mod for Transport Fever 3: fetches the real relief, water, land cover, towns, industries, roads and railways of an area from open data, computes a game map from them, and has the mod build it in the game's Map Editor.",
+    "windows": {
+      "webviewInstallMode": {
+        "type": "embedBootstrapper",
+        "silent": true
+      }
+    }
   }
 }

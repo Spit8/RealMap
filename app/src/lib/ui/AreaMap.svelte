@@ -9,8 +9,10 @@
    *    not chosen, grey = not placed), moved towns linked to their OSM position, the industries,
    *    the planned road links (brown) and railway (black).
    * Ctrl held: a ghost of the area follows the mouse; Ctrl + click moves the area there. Click on a
-   * town / industry: its sheet. Right click: add or remove it. Hover: what is under the cursor in
-   * the game (height, water, land cover).
+   * town / industry: its sheet. Right click: a menu (add / remove a town or an industry, add an
+   * industry here, a road to another town, a railway line to another point; the next click picks
+   * the other end, Escape cancels). Hover: what is under the cursor in the game (height, water,
+   * land cover).
    */
   import { onMount } from "svelte";
   import "ol/ol.css";
@@ -31,7 +33,7 @@
   import { Fill, RegularShape, Stroke, Style, Circle as CircleStyle } from "ol/style";
   import { frameOutline, frameProjection, makeFrame, TILE_M, type Frame } from "$lib/core/area";
   import { b64ToBytes, b64ToFloats } from "$lib/core/b64";
-  import { COVER_LABELS } from "$lib/core/biomes";
+  import { fmtNum, t, tk } from "$lib/i18n/index.svelte";
   import { COVER_RGB, WATER_RGB } from "$lib/core/preview";
   import { WATER_LAKE, WATER_RIVER, WATER_SEA } from "$lib/core/terrain";
   import type { PreviewState, RealLayer } from "$lib/state/importer.svelte";
@@ -39,6 +41,7 @@
     INDUSTRY_COLORS, TOWN_COLORS, industryColor, industryDetails, industryFeature, industryTitle, shownTownKeys, townDetails, townFeature,
     townTitle, type MarkerDetails,
   } from "./townMarkers";
+  import { industryLabel } from "./townMarkers";
 
   let {
     frame,
@@ -51,6 +54,11 @@
     onPick,
     onToggleTown,
     onToggleIndustry,
+    industryTypes = [],
+    onAddIndustry,
+    onAddRoad,
+    onAddRail,
+    onLink,
   }: {
     frame: Frame;
     preview: PreviewState | null;
@@ -64,7 +72,33 @@
     onPick: (lon: number, lat: number) => void;
     onToggleTown?: (key: string) => void;
     onToggleIndustry?: (key: string) => void;
+    /** Industry types offered by « Ajouter une industrie ». */
+    industryTypes?: { tag: string; label: string }[];
+    onAddIndustry?: (tag: string, lon: number, lat: number) => void;
+    /** A road between two towns (town keys). */
+    onAddRoad?: (from: string, to: string) => void;
+    /** A railway line between two points (lon / lat). */
+    onAddRail?: (from: [number, number], to: [number, number]) => void;
+    /** Remove a road link / railway line (or put it back when it was left out). */
+    onLink?: (key: string) => void;
   } = $props();
+
+  /** The right-click menu: where (pixel in the map), what is there (lon / lat, town, industry). */
+  let menu = $state<{ x: number; y: number; lon: number; lat: number; town?: string; industry?: string; link?: string; linkName?: string } | null>(null);
+  let menuIndustries = $state(false);
+  /** Waiting for the other end of a road (from a town) or a railway line (from a point). */
+  let pending = $state<{ kind: "road"; town: string; name: string } | { kind: "rail"; from: [number, number] } | null>(null);
+
+  function closeMenu(): void {
+    menu = null;
+    menuIndustries = false;
+  }
+  function menuAction(fn: () => void): void {
+    fn();
+    closeMenu();
+  }
+  const statusOf = (k: { town?: string; industry?: string }) =>
+    k.town ? preview?.candidates?.find((x) => x.key === k.town)?.status : preview?.industryCandidates?.find((x) => x.key === k.industry)?.status;
 
   let el: HTMLDivElement;
   let popupEl: HTMLDivElement;
@@ -89,32 +123,46 @@
   let lastPixel: number[] | null = null;
 
   const outlineStyle = new Style({
-    stroke: new Stroke({ color: "#e4572e", width: 2 }),
-    fill: new Fill({ color: "rgba(228, 87, 46, 0.06)" }),
+    stroke: new Stroke({ color: "#FD9401", width: 2 }),
+    fill: new Fill({ color: "rgba(253, 148, 1, 0.06)" }),
   });
-  const gridStyle = new Style({ stroke: new Stroke({ color: "rgba(228, 87, 46, 0.3)", width: 1 }) });
+  const gridStyle = new Style({ stroke: new Stroke({ color: "rgba(253, 148, 1, 0.3)", width: 1 }) });
   const centreStyle = new Style({
-    image: new CircleStyle({ radius: 5, fill: new Fill({ color: "#e4572e" }), stroke: new Stroke({ color: "#fff", width: 2 }) }),
+    image: new CircleStyle({ radius: 5, fill: new Fill({ color: "#FD9401" }), stroke: new Stroke({ color: "#fff", width: 2 }) }),
   });
   const shiftStyle = new Style({ stroke: new Stroke({ color: "#c82828", width: 2, lineDash: [6, 4] }) });
-  const rawWater = new Style({ stroke: new Stroke({ color: "#1565c0", width: 2 }), fill: new Fill({ color: "rgba(21, 101, 192, 0.35)" }) });
+  const rawWater = new Style({ stroke: new Stroke({ color: "#1565c0", width: 2 }), fill: new Fill({ color: "rgba(21, 101, 192, 0.35)" }), zIndex: 1 });
   const rawPlace = new Style({ image: new CircleStyle({ radius: 3, fill: new Fill({ color: "#2e9d4a" }), stroke: new Stroke({ color: "#fff", width: 1 }) }) });
   const rawSite = (tag: string) =>
     new Style({ image: new RegularShape({ points: 4, radius: 5, angle: Math.PI / 4, fill: new Fill({ color: industryColor(tag) }), stroke: new Stroke({ color: "#fff", width: 1 }) }) });
   const ghostStyle = new Style({
-    stroke: new Stroke({ color: "#e4572e", width: 2, lineDash: [8, 6] }),
-    fill: new Fill({ color: "rgba(228, 87, 46, 0.1)" }),
+    stroke: new Stroke({ color: "#FD9401", width: 2, lineDash: [8, 6] }),
+    fill: new Fill({ color: "rgba(253, 148, 1, 0.1)" }),
   });
-  const linkStyle = (on: boolean, real: boolean) =>
-    new Style({ stroke: new Stroke({ color: on ? "#8b5a2b" : "rgba(139, 90, 43, 0.35)", width: on ? 3 : 2, lineDash: on && real ? undefined : [6, 5] }) });
+  // A planned link, straight from town to town (the game routes the road): pale and dashed when off.
+  const linkStyle = (on: boolean) =>
+    new Style({ stroke: new Stroke({ color: on ? "#8b5a2b" : "rgba(139, 90, 43, 0.35)", width: on ? 3 : 2, lineDash: on ? undefined : [6, 5] }) });
   const railStyle = (on: boolean) => [
     new Style({ stroke: new Stroke({ color: on ? "#1d2329" : "rgba(29, 35, 41, 0.35)", width: 4 }) }),
     new Style({ stroke: new Stroke({ color: "#fff", width: 2, lineDash: [8, 8] }) }),
   ];
-  const rawRoad = new Style({ stroke: new Stroke({ color: "rgba(139, 90, 43, 0.6)", width: 1.5 }) });
-  const rawRail = new Style({ stroke: new Stroke({ color: "rgba(29, 35, 41, 0.7)", width: 2, lineDash: [6, 3] }) });
+  // Bridge: the track on a wide white deck edged in black (like a map's bridge); tunnel: a dotted
+  // track on a pale band. No blue: it read as water.
+  const bridgeStyle = [
+    new Style({ stroke: new Stroke({ color: "#1d2329", width: 12, lineCap: "butt" }), zIndex: 2 }),
+    new Style({ stroke: new Stroke({ color: "#fff", width: 8, lineCap: "butt" }), zIndex: 2 }),
+    new Style({ stroke: new Stroke({ color: "#1d2329", width: 3, lineCap: "butt" }), zIndex: 2 }),
+  ];
+  const tunnelStyle = [
+    new Style({ stroke: new Stroke({ color: "rgba(255, 255, 255, 0.85)", width: 10, lineCap: "butt" }), zIndex: 2 }),
+    new Style({ stroke: new Stroke({ color: "#3d4851", width: 3, lineDash: [3, 5], lineCap: "butt" }), zIndex: 2 }),
+  ];
+  const rawRoad = new Style({ stroke: new Stroke({ color: "rgba(139, 90, 43, 0.6)", width: 1.5 }), zIndex: 2 });
+  const rawRail = new Style({ stroke: new Stroke({ color: "#1d2329", width: 2.5 }), zIndex: 3 });
   const rgb = (c: [number, number, number]) => `rgb(${c.join(",")})`;
-  const m = (x: number) => `${x.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} m`;
+  const m = (x: number) => `${fmtNum(x, 1)} m`;
+  /** Land-cover classes of the legend and the hover text. */
+  const COVERS = [0, 1, 2, 3];
 
   function draw(f: Frame): void {
     source.clear();
@@ -183,16 +231,31 @@
     for (const l of net.links) {
       const ll = net.ll[l.key];
       if (!ll) continue;
-      const feat = new Feature(new LineString(ll.map((pt) => fromLonLat(pt))));
-      feat.setStyle(linkStyle(picks[l.key] !== false, l.real));
+      const feat = new Feature(new LineString([fromLonLat(ll[0]), fromLonLat(ll[ll.length - 1])]));
+      feat.setStyle(linkStyle(picks[l.key] !== false));
+      feat.set("linkKey", l.key);
+      feat.set("linkRoad", [l.a, l.b]);
       networkSource.addFeature(feat);
     }
     for (const r of net.rail) {
       const ll = net.ll[r.key];
       if (!ll) continue;
+      const on = picks[r.key] !== false;
       const feat = new Feature(new LineString(ll.map((pt) => fromLonLat(pt))));
-      feat.setStyle(railStyle(picks[r.key] !== false));
+      feat.setStyle(railStyle(on));
+      feat.set("linkKey", r.key);
+      feat.set("linkRail", r.key.startsWith("rail:user:") ? "" : (r.name ?? ""));
       networkSource.addFeature(feat);
+      // Bridges and tunnels of the designed alignment, over the line.
+      (r.nodes ?? []).forEach((p, i) => {
+        if (p.kind === "n" || !ll[i + 1]) return;
+        const seg = new Feature(new LineString([fromLonLat(ll[i]), fromLonLat(ll[i + 1])]));
+        seg.setStyle(p.kind === "b" ? bridgeStyle : tunnelStyle);
+        seg.set("structure", p.kind);
+        seg.set("linkKey", r.key);
+        seg.set("linkRail", r.key.startsWith("rail:user:") ? "" : (r.name ?? ""));
+        networkSource.addFeature(seg);
+      });
     }
   }
 
@@ -213,7 +276,7 @@
     for (const w of r.roads ?? []) {
       const feat = new Feature(new LineString(w.pts.map((pt) => fromLonLat(pt))));
       feat.setStyle(w.kind === "rail" ? rawRail : rawRoad);
-      feat.set("tip", `${w.kind === "rail" ? "Voie ferrée" : "Route"} ${w.cls}${w.name ? ` · ${w.name}` : ""}`);
+      feat.set("tip", `${w.kind === "rail" ? t("map.realRail") : t("map.realRoad")} ${w.cls}${w.name ? ` · ${w.name}` : ""}`);
       realSource.addFeature(feat);
     }
     for (const s of r.water) {
@@ -228,7 +291,7 @@
     for (const pl of r.places) {
       const feat = new Feature(new Point(fromLonLat([pl.lon, pl.lat])));
       feat.setStyle(rawPlace);
-      feat.set("tip", `${pl.name} (${pl.place}${pl.population ? `, ${pl.population.toLocaleString("fr-FR")} hab.` : ""})`);
+      feat.set("tip", `${pl.name} (${tk(`place.${pl.place}`)}${pl.population ? `, ${t("sheet.inhabitants", { n: fmtNum(pl.population) })}` : ""})`);
       realSource.addFeature(feat);
     }
     for (const s of r.sites) {
@@ -239,13 +302,20 @@
     }
   }
 
-  function keyAt(pixel: number[]): { town?: string; industry?: string; tip?: string } {
+  function keyAt(pixel: number[]): { town?: string; industry?: string; link?: string; linkName?: string; tip?: string } {
     return (
       map?.forEachFeatureAtPixel(
         pixel,
         (f) => {
           if (f.get("townKey")) return { town: f.get("townKey") as string };
           if (f.get("industryKey")) return { industry: f.get("industryKey") as string };
+          if (f.get("linkKey") && view === "game") {
+            const road = f.get("linkRoad") as [string, string] | undefined;
+            const name = road ? t("map.road", { a: road[0], b: road[1] }) : (f.get("linkRail") as string) || t("map.railLine");
+            const st = f.get("structure") as string | undefined;
+            const what = st === "b" ? `${t("map.bridge")} · ` : st === "t" ? `${t("map.tunnel")} · ` : "";
+            return { link: f.get("linkKey") as string, linkName: name, tip: t("map.linkTip", { name: what + name }) };
+          }
           if (f.get("tip")) return { tip: f.get("tip") as string };
           return undefined;
         },
@@ -272,11 +342,11 @@
     const i = r * h.width + c;
     const z = h.z[i];
     const w = h.w[i];
-    if (w === WATER_SEA) return `Mer · ${m(z)}`;
-    if (w === WATER_LAKE) return `Lac · ${m(z)}`;
-    if (w === WATER_RIVER) return `Rivière · ${m(z)}`;
+    if (w === WATER_SEA) return t("map.sea", { z: m(z) });
+    if (w === WATER_LAKE) return t("map.lake", { z: m(z) });
+    if (w === WATER_RIVER) return t("map.river", { z: m(z) });
     const realZ = z / p.frame.verticalScale + p.stats.refHeight;
-    return `${m(z)} dans le jeu (≈ ${m(realZ)} réels) · ${COVER_LABELS[h.c[i]] ?? ""}`;
+    return t("map.ground", { z: m(z), real: m(realZ), cover: tk(`cover.${h.c[i]}`) });
   }
 
   /** The marker of the open sheet, if it is still there. */
@@ -298,6 +368,24 @@
   function closeSheet(): void {
     sheet = null;
     popup?.setPosition(undefined);
+  }
+
+  /**
+   * Centre the map on a town or an industry and open its sheet (from the lists panel); `insetPx`
+   * of the map on the left is covered (the panel), so the marker goes in the middle of the rest.
+   */
+  export function focus(kind: "town" | "industry", key: string, insetPx = 0): void {
+    if (!map || !preview) return;
+    const c = kind === "town" ? preview.candidates?.find((x) => x.key === key) : preview.industryCandidates?.find((x) => x.key === key);
+    if (!c) return;
+    const at = fromLonLat([c.lon, c.lat]);
+    const view = map.getView();
+    const zoom = Math.max(view.getZoom() ?? 12, 12);
+    const width = map.getSize()?.[0] ?? 0;
+    const shift = width > insetPx * 1.5 ? (insetPx / 2) * view.getResolutionForZoom(zoom) : 0;
+    view.animate({ center: [at[0] - shift, at[1]], zoom, duration: 300 });
+    sheet = kind === "town" ? { town: key } : { industry: key };
+    popup?.setPosition(at);
   }
 
   /** Fit the view on the area. */
@@ -323,6 +411,25 @@
         return;
       }
       const k = keyAt(ev.pixel);
+      if (menu) {
+        closeMenu();
+        return;
+      }
+      // The other end of a road or a railway line started from the menu.
+      if (pending) {
+        const [lon, lat] = toLonLat(ev.coordinate);
+        if (pending.kind === "road") {
+          if (k.town && k.town !== pending.town) {
+            onAddRoad?.(pending.town, k.town);
+            pending = null;
+          } else tip = t("map.otherTown");
+        } else {
+          const town = k.town ? preview?.candidates?.find((x) => x.key === k.town) : undefined;
+          onAddRail?.(pending.from, town ? [town.lon, town.lat] : [lon, lat]);
+          pending = null;
+        }
+        return;
+      }
       if (k.town || k.industry) {
         sheet = k.town ? { town: k.town } : { industry: k.industry };
         popup?.setPosition(ev.coordinate);
@@ -330,6 +437,10 @@
     });
     // Ctrl held: the ghost follows the mouse; released: it goes away.
     const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape" && (pending || menu)) {
+        pending = null;
+        closeMenu();
+      }
       if (ev.ctrlKey === ctrl) return;
       ctrl = ev.ctrlKey;
       showGhost(ctrl ? lastPixel : null);
@@ -345,9 +456,17 @@
     const onContext = (ev: MouseEvent) => {
       ev.preventDefault();
       if (!map) return;
-      const k = keyAt(map.getEventPixel(ev));
-      if (k.town) onToggleTown?.(k.town);
-      else if (k.industry) onToggleIndustry?.(k.industry);
+      const pixel = map.getEventPixel(ev);
+      const k = keyAt(pixel);
+      const [lon, lat] = toLonLat(map.getCoordinateFromPixel(pixel));
+      const town = k.town ? preview?.candidates?.find((x) => x.key === k.town) : undefined;
+      const ind = k.industry ? preview?.industryCandidates?.find((x) => x.key === k.industry) : undefined;
+      // A town or an industry snaps the point to it.
+      const at = town ?? ind;
+      pending = null;
+      closeSheet();
+      menu = { x: pixel[0], y: pixel[1], lon: at?.lon ?? lon, lat: at?.lat ?? lat, town: k.town, industry: k.industry, link: k.link, linkName: k.linkName };
+      menuIndustries = false;
     };
     el.addEventListener("contextmenu", onContext);
     map.on("pointermove", (ev) => {
@@ -359,7 +478,11 @@
       }
       if (ctrl) {
         showGhost(ev.pixel);
-        tip = "Clic : placer la zone ici";
+        tip = t("map.placeHere");
+        return;
+      }
+      if (pending) {
+        tip = `${pending.kind === "road" ? t("map.roadFrom", { name: pending.name }) : t("map.railFrom")} ${t("map.escape")}`;
         return;
       }
       const k = keyAt(ev.pixel);
@@ -368,7 +491,7 @@
       const status = town?.status ?? ind?.status;
       const marker = town ? townTitle(town) : ind ? industryTitle(ind) : "";
       const [lon, lat] = toLonLat(ev.coordinate);
-      tip = marker ? `${marker} — clic : détails · clic droit : ${status === "off" ? "ajouter" : "retirer"}` : (k.tip ?? describe(lon, lat));
+      tip = marker ? t("map.markerTip", { marker, action: status === "off" ? t("map.add") : t("map.remove") }) : (k.tip ?? describe(lon, lat));
       el.style.cursor = town || ind ? "pointer" : "";
     });
     el.addEventListener("pointerleave", () => {
@@ -411,35 +534,77 @@
   <div class="popup" class:open={!!sheetMarker} bind:this={popupEl}>
     {#if sheetMarker}
       {@const d = sheetMarker.details}
-      <button class="close" title="Fermer" onclick={closeSheet}>×</button>
+      <button class="close" title={t("sheet.close")} onclick={closeSheet}>×</button>
       <h4>{d.title}</h4>
       <ul>
         {#each d.lines as line, i (i)}<li>{line}</li>{/each}
       </ul>
-      <button class="small" onclick={toggleSheet}>{sheetMarker.status === "off" ? "Ajouter à la carte" : "Retirer de la carte"}</button>
+      <button class="small" onclick={toggleSheet}>{sheetMarker.status === "off" ? t("sheet.addToMap") : t("sheet.removeFromMap")}</button>
     {/if}
   </div>
   {#if tip}<div class="tip">{tip}</div>{/if}
+  {#if pending}
+    <div class="banner">
+      {pending.kind === "road" ? t("map.roadFrom", { name: pending.name }) : t("map.railFrom")}
+      <button class="link" onclick={() => (pending = null)}>{t("map.cancel")}</button>
+    </div>
+  {/if}
+  {#if menu}
+    {@const m = menu}
+    {@const st = statusOf(m)}
+    <div class="menu" style:left="{m.x}px" style:top="{m.y}px" role="menu">
+      {#if m.town}
+        <button onclick={() => menuAction(() => onToggleTown?.(m.town!))}>{st === "off" ? t("menu.addTown") : t("menu.removeTown")}</button>
+        {#if st === "placed"}
+          <button onclick={() => menuAction(() => { const name = preview?.candidates?.find((x) => x.key === m.town)?.name ?? ""; pending = { kind: "road", town: m.town!, name }; })}>{t("menu.roadTo")}</button>
+        {/if}
+      {:else if m.industry}
+        <button onclick={() => menuAction(() => onToggleIndustry?.(m.industry!))}>{st === "off" ? t("menu.addIndustryHere") : t("menu.removeIndustry")}</button>
+      {:else if m.link}
+        {@const isRail = m.link.startsWith("rail:")}
+        {@const off = linkPicks[m.link] === false}
+        <p class="what">{m.linkName}</p>
+        <button onclick={() => menuAction(() => onLink?.(m.link!))}>{off ? t(isRail ? "menu.restoreRail" : "menu.restoreRoad") : t(isRail ? "menu.removeRail" : "menu.removeRoad")}</button>
+      {/if}
+      {#if preview}
+        <button onclick={() => menuAction(() => (pending = { kind: "rail", from: [m.lon, m.lat] }))}>{t("menu.railFrom")}</button>
+        {#if !m.town && !m.industry && !m.link}
+          <button class="sub" onclick={() => (menuIndustries = !menuIndustries)}>{t("menu.addIndustry")} {menuIndustries ? "▾" : "▸"}</button>
+          {#if menuIndustries}
+            <div class="types">
+              {#each industryTypes as it (it.tag)}
+                <button onclick={() => menuAction(() => onAddIndustry?.(it.tag, m.lon, m.lat))}>{industryLabel(it.tag)}</button>
+              {/each}
+            </div>
+          {/if}
+        {/if}
+      {:else}
+        <p>{t("menu.needResult")}</p>
+      {/if}
+    </div>
+  {/if}
   {#if preview && view === "game"}
     <div class="legend">
-      <button class="link" onclick={() => (legendOpen = !legendOpen)}>{legendOpen ? "Masquer la légende" : "Légende"}</button>
+      <button class="link" onclick={() => (legendOpen = !legendOpen)}>{legendOpen ? t("legend.hide") : t("legend.show")}</button>
       {#if legendOpen}
         <ul>
-          <li><i style:background={rgb(WATER_RGB)}></i>Eau (sous le niveau 0)</li>
-          {#each COVER_LABELS as label, i (label)}
-            <li><i style:background={rgb(COVER_RGB[i])}></i>{label}</li>
+          <li><i style:background={rgb(WATER_RGB)}></i>{t("legend.water")}</li>
+          {#each COVERS as i (i)}
+            <li><i style:background={rgb(COVER_RGB[i])}></i>{tk(`cover.${i}`)}</li>
           {/each}
-          <li><i class="dot" style:background={TOWN_COLORS.placed}></i>Ville (taille selon la population)</li>
-          <li><i class="dot" style:background={TOWN_COLORS.off}></i>Lieu non retenu</li>
-          <li><i class="dot" style:background={TOWN_COLORS.dropped}></i>Retenu mais non placé</li>
-          <li><i class="dash"></i>Ville déplacée depuis sa position réelle</li>
-          <li><i class="sq" style:background={INDUSTRY_COLORS.primary}></i>Industrie primaire (champs, mines, forêts)</li>
-          <li><i class="sq" style:background={INDUSTRY_COLORS.factory}></i>Usine</li>
-          <li><i class="sq" style:background={INDUSTRY_COLORS.water}></i>Industrie sur l'eau</li>
-          <li><i class="line road"></i>Liaison routière (pointillés : pas de route réelle)</li>
-          <li><i class="line rail"></i>Voie ferrée principale</li>
+          <li><i class="dot" style:background={TOWN_COLORS.placed}></i>{t("legend.town")}</li>
+          <li><i class="dot" style:background={TOWN_COLORS.off}></i>{t("legend.off")}</li>
+          <li><i class="dot" style:background={TOWN_COLORS.dropped}></i>{t("legend.dropped")}</li>
+          <li><i class="dash"></i>{t("legend.moved")}</li>
+          <li><i class="sq" style:background={INDUSTRY_COLORS.primary}></i>{t("legend.primary")}</li>
+          <li><i class="sq" style:background={INDUSTRY_COLORS.factory}></i>{t("legend.factory")}</li>
+          <li><i class="sq" style:background={INDUSTRY_COLORS.water}></i>{t("legend.onWater")}</li>
+          <li><i class="line road"></i>{t("legend.road")}</li>
+          <li><svg width="28" height="12" aria-hidden="true"><line x1="0" y1="6" x2="28" y2="6" stroke="#1d2329" stroke-width="4" /><line x1="0" y1="6" x2="28" y2="6" stroke="#fff" stroke-width="2" stroke-dasharray="5 5" /></svg>{t("legend.rail")}</li>
+          <li><svg width="28" height="12" aria-hidden="true"><line x1="0" y1="6" x2="28" y2="6" stroke="#1d2329" stroke-width="12" /><line x1="0" y1="6" x2="28" y2="6" stroke="#fff" stroke-width="8" /><line x1="0" y1="6" x2="28" y2="6" stroke="#1d2329" stroke-width="3" /></svg>{t("legend.bridge")}</li>
+          <li><svg width="28" height="12" aria-hidden="true"><rect x="0" y="1" width="28" height="10" fill="#e9ecef" /><line x1="0" y1="6" x2="28" y2="6" stroke="#3d4851" stroke-width="3" stroke-dasharray="3 5" /></svg>{t("legend.tunnel")}</li>
         </ul>
-        <p>Ctrl + clic : placer la zone · clic : détails · clic droit : ajouter / retirer</p>
+        <p>{t("legend.help")}</p>
       {/if}
     </div>
   {/if}
@@ -465,6 +630,63 @@
     border-radius: 4px;
     font-size: 12px;
     pointer-events: none;
+  }
+  .banner {
+    position: absolute;
+    left: 50%;
+    bottom: 40px;
+    transform: translateX(-50%);
+    background: #1d2329;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    z-index: 6;
+  }
+  .banner button.link {
+    color: #9cc3ff;
+    margin-left: 8px;
+  }
+  .menu {
+    position: absolute;
+    z-index: 7;
+    min-width: 200px;
+    max-height: 60%;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid #c3c9d0;
+    border-radius: 6px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    padding: 4px 0;
+    font-size: 12px;
+  }
+  .menu button {
+    border: none;
+    background: none;
+    text-align: left;
+    padding: 5px 12px;
+    font: inherit;
+    cursor: pointer;
+  }
+  .menu button:hover {
+    background: #f1f5fb;
+  }
+  .menu .types {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid #eef0f2;
+    border-bottom: 1px solid #eef0f2;
+    padding-left: 10px;
+  }
+  .menu p {
+    margin: 4px 12px;
+    color: #6b747c;
+  }
+  .menu p.what {
+    font-weight: 600;
+    color: #1d2329;
   }
   .popup {
     display: none;
@@ -547,8 +769,8 @@
   .legend i.line.road {
     border-top: 3px solid #8b5a2b;
   }
-  .legend i.line.rail {
-    border-top: 4px solid #1d2329;
+  .legend svg {
+    flex: none;
   }
   .legend i.dash {
     height: 0;

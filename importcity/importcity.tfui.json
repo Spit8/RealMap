@@ -7,140 +7,6 @@
   },
   "screens": [
     {
-      "id": "5f8d008b-24b7-49c5-815a-0dca9e827e03",
-      "fileBase": "main_gui",
-      "recipeName": "ImportcityMainWindow",
-      "kind": "window",
-      "state": [
-        {
-          "name": "status",
-          "initial": ""
-        }
-      ],
-      "root": {
-        "id": "257356a3-e854-4b8b-98a3-2b9e64dcb42c",
-        "type": "Window",
-        "name": "ImportcityMainWindow",
-        "props": {
-          "title": {
-            "kind": "literal",
-            "value": "Import your Town"
-          },
-          "initialX": {
-            "kind": "literal",
-            "value": 0.15
-          },
-          "initialY": {
-            "kind": "literal",
-            "value": 0.12
-          },
-          "closable": {
-            "kind": "literal",
-            "value": true
-          },
-          "movable": {
-            "kind": "literal",
-            "value": true
-          },
-          "expanded": {
-            "kind": "literal",
-            "value": true
-          }
-        },
-        "meta": {
-          "id": "importcity.main",
-          "class": [
-            "importcity-main-window"
-          ]
-        },
-        "slots": {
-          "content": [
-            {
-              "id": "4da1b597-e9d2-46ef-997e-d873800a2ac6",
-              "type": "BoxLayout",
-              "name": "BoxLayout",
-              "props": {
-                "orientation": {
-                  "kind": "enum",
-                  "value": "Orientation.Vertical"
-                }
-              },
-              "meta": {
-                "class": [
-                  "my-root"
-                ]
-              },
-              "slots": {
-                "children": [
-                  {
-                    "id": "c5bcb904-c86a-409b-9b29-7ba9e781730a",
-                    "type": "TextView",
-                    "name": "Status",
-                    "props": {
-                      "text": {
-                        "kind": "lua",
-                        "code": "handlers.statusText(status)"
-                      }
-                    },
-                    "meta": {
-                      "class": [
-                        "font-scale-body"
-                      ]
-                    },
-                    "slots": {}
-                  },
-                  {
-                    "id": "cbda21da-f3b7-453e-8bdc-f5f206e10f39",
-                    "type": "Button",
-                    "name": "ApplySizesButton",
-                    "props": {
-                      "onClick": {
-                        "kind": "handler",
-                        "fn": "onApplySizes"
-                      }
-                    },
-                    "meta": {
-                      "class": [
-                        "primary"
-                      ],
-                      "tooltip": "Fixe la capacité de chaque ville importée d'après sa population réelle"
-                    },
-                    "slots": {
-                      "content": [
-                        {
-                          "id": "d6ae8e1c-cf8d-462b-87a3-43e4e5d86151",
-                          "type": "TextView",
-                          "name": "ApplySizesLabel",
-                          "props": {
-                            "text": {
-                              "kind": "literal",
-                              "value": "Appliquer les tailles réelles"
-                            }
-                          },
-                          "meta": {
-                            "class": [
-                              "font-scale-body"
-                            ]
-                          },
-                          "slots": {}
-                        }
-                      ]
-                    }
-                  }
-                ],
-                "child": []
-              }
-            }
-          ],
-          "header": []
-        }
-      },
-      "previewViewport": {
-        "w": 1920,
-        "h": 1080
-      }
-    },
-    {
       "id": "5dbf6647-16fb-4805-9d25-f69050732fbb",
       "fileBase": "main_gui",
       "recipeName": "ImportcityModButton",
@@ -148,8 +14,8 @@
       "plugin": {
         "extensionPoint": "MainModButtonAreaExtension",
         "pluginName": "ImportcityModButton",
-        "order": 100,
-        "buttonLabel": "Import your Town"
+        "order": 110,
+        "buttonLabel": "RealMap"
       },
       "state": [],
       "root": {
@@ -172,32 +38,29 @@
               "props": {
                 "onClick": {
                   "kind": "lua",
-                  "code": "function()\n\t\t\t\t\tlocal wapi = game_react_globals.getDefaultWindowApi()\n\t\t\t\t\tif wapi == nil then\n\t\t\t\t\t\treturn\n\t\t\t\t\tend\n\t\t\t\t\twapi.addSingletonWindow(recipes.ImportcityMainWindow, {})\n\t\t\t\t\tpcall(function()\n\t\t\t\t\t\tapi.gui.byId.setVisible(\"importcity.main\", true)\n\t\t\t\t\tend)\n\t\t\t\t\twapi.moveSingletonWindowToFront(recipes.ImportcityMainWindow)\n\t\t\t\tend"
+                  "code": "function()\n\t\t\t\t\tug_require(\"importcity::/gui/main_gui.handlers.lua\").openWindow()\n\t\t\t\tend"
                 }
               },
               "meta": {
-                "class": [
-                  "secondary"
-                ],
-                "tooltip": "Import your Town"
+                "tooltip": "RealMap"
               },
               "slots": {
                 "content": [
                   {
                     "id": "5347fc13-3dd5-46d0-9c51-4d7e033545de",
-                    "type": "TextView",
-                    "name": "TextView",
+                    "type": "ImageView",
+                    "name": "Icon",
                     "props": {
-                      "text": {
+                      "path": {
                         "kind": "lua",
-                        "code": "handlers.pump(react)"
+                        "code": "ug_require(\"importcity::/gui/main_gui.handlers.lua\").buttonIcon(react)"
+                      },
+                      "scaling": {
+                        "kind": "enum",
+                        "value": "ImageViewScaling.AutoFit"
                       }
                     },
-                    "meta": {
-                      "class": [
-                        "font-scale-body"
-                      ]
-                    },
+                    "meta": {},
                     "slots": {}
                   }
                 ]
@@ -226,17 +89,17 @@
     },
     {
       "id": "c652a0bd-4679-4bf3-bf6e-7f5a0070ac2f",
-      "selector": "Window!importcity-main-window!window-expanded",
+      "selector": "Window!realmap-window!window-expanded",
       "props": {
         "size": [
-          720,
-          420
+          960,
+          400
         ]
       }
     },
     {
       "id": "debf06dc-cb6e-4d35-ac1a-13f5c7b62718",
-      "selector": "Window!importcity-main-window Window::Content",
+      "selector": "Window!realmap-window Window::Content",
       "props": {
         "padding": [
           8,
@@ -244,6 +107,75 @@
           8,
           8
         ]
+      }
+    },
+    {
+      "id": "3f6b2a10-7c41-4e59-9a0e-6d1c2b7e8f01",
+      "selector": "",
+      "ownerNodeId": "c7e0057e-125b-4ce7-8f28-b13583d7364d",
+      "props": {
+        "size": [
+          40,
+          40
+        ],
+        "padding": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "margin": [
+          1,
+          1,
+          2,
+          1
+        ],
+        "gravity": [
+          0,
+          0
+        ],
+        "backgroundColor1": {
+          "kind": "palette",
+          "name": "Invisible"
+        },
+        "borderColor": {
+          "kind": "palette",
+          "name": "Invisible"
+        }
+      }
+    },
+    {
+      "id": "3f6b2a10-7c41-4e59-9a0e-6d1c2b7e8f02",
+      "selector": "",
+      "ownerNodeId": "c7e0057e-125b-4ce7-8f28-b13583d7364d",
+      "state": "hover",
+      "props": {
+        "backgroundColor1": {
+          "kind": "palette",
+          "name": "NeutralLightest",
+          "alpha": 0.18
+        },
+        "borderColor": {
+          "kind": "palette",
+          "name": "Invisible"
+        }
+      }
+    },
+    {
+      "id": "3f6b2a10-7c41-4e59-9a0e-6d1c2b7e8f03",
+      "selector": "",
+      "ownerNodeId": "c7e0057e-125b-4ce7-8f28-b13583d7364d",
+      "state": "active",
+      "props": {
+        "backgroundColor1": {
+          "kind": "palette",
+          "name": "NeutralLightest",
+          "alpha": 0.32
+        },
+        "borderColor": {
+          "kind": "palette",
+          "name": "Invisible"
+        }
       }
     }
   ],
