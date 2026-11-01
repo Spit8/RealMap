@@ -1,2 +1,2 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# LF everywhere, including Windows checkouts (the tests parse the Lua sources line by line)
+* text=auto eol=lf
