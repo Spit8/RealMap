@@ -65,8 +65,7 @@ npx tsx test/e2e.live.ts <outDir> <lon> <lat> <scale> [size] [preview|full]
 
 ## Translations
 
-French and English are written by hand; German, Italian, Spanish and Simplified Chinese are
-produced with lowCost_Translator (local Ollama + TranslateGemma) in units mode (context per section and a
+German, Italian, Spanish and Simplified Chinese are produced from the English and French texts with lowCost_Translator (local Ollama + TranslateGemma) in units mode (context per section and a
 glossary drawn from the game's own catalogues). See [tools/i18n/README.md](../tools/i18n/README.md).
 
 ## Releasing

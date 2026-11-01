@@ -25,17 +25,6 @@ biomes, towns at their real size, named industries, road links and a railway, al
 The **RealMap desktop app** prepares the map; the **RealMap mod** builds it by itself in the game's
 Map Editor.
 
-## Languages
-
-The app and the in-game mod are both available in the six languages above.
-
-- The app follows your system language on first launch; change it with the picker at the top of
-  the panel. The mod follows the game's language (English when the game's language is not listed).
-- English and French are written by hand. German, Italian, Spanish and Chinese are machine
-  translations made with each sentence's context and the game's own vocabulary, checked by
-  back-translation only: corrections are welcome.
-- Only the **technical details** of the log (shown with *Details*) stay in French.
-
 ## Features
 
 - **Any place in the world**: the game's map sizes and formats, a scale from 1:1 (real size) to 1:8,

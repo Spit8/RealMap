@@ -25,17 +25,6 @@ mer, rivières et lacs, biomes, villes à leur taille réelle, industries nommé
 voie ferrée, le tout depuis des données ouvertes. **L'application RealMap** prépare la carte ; **le mod
 RealMap** la construit tout seul dans l'éditeur de cartes du jeu.
 
-## Langues
-
-L'application et le mod en jeu sont tous deux disponibles dans les six langues ci-dessus.
-
-- L'application prend la langue du système au premier lancement ; elle se change avec le sélecteur en
-  haut du panneau. Le mod suit la langue du jeu (anglais si la langue du jeu n'est pas dans la liste).
-- L'anglais et le français sont écrits à la main. L'allemand, l'italien, l'espagnol et le chinois sont
-  des traductions automatiques faites avec le contexte de chaque phrase et le vocabulaire du jeu,
-  vérifiées seulement par retraduction : les corrections sont les bienvenues.
-- Seuls les **détails techniques** du journal (affichés avec *Détails*) restent en français.
-
 ## Fonctions
 
 - **N'importe quel lieu du monde** : tailles et formats de carte du jeu, échelle de 1:1 (taille réelle)
