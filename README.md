@@ -1,28 +1,33 @@
-<p align="center"><img src="captures/icon_transparent.png" width="120" alt="RealMap"></p>
+<p align="center">
+  <img src="captures/icon_white.png" alt="RealMap logo" width="120">
+</p>
 
-# RealMap
+<h1 align="center">RealMap</h1>
 
-**Choose a real place. Turn it into a Transport Fever 3 map. Redefine the transport strategy.**
+<p align="center">
+  <b>Choose a real place. Turn it into a Transport Fever 3 map. Redefine the transport strategy.</b>
+</p>
+
+<p align="center">
+  <img src="https://flagcdn.com/20x15/gb.png" width="20" height="15" alt=""> English · <img src="https://flagcdn.com/20x15/fr.png" width="20" height="15" alt=""> Français · <img src="https://flagcdn.com/20x15/de.png" width="20" height="15" alt=""> Deutsch · <img src="https://flagcdn.com/20x15/it.png" width="20" height="15" alt=""> Italiano · <img src="https://flagcdn.com/20x15/es.png" width="20" height="15" alt=""> Español · <img src="https://flagcdn.com/20x15/cn.png" width="20" height="15" alt=""> 简体中文<br>
+  💻 Windows · Linux · macOS
+</p>
+
+<p align="center">
+  <a href="https://github.com/Spit8/RealMap/releases/latest"><b>⬇ Download the app</b></a> ·
+  <a href="README.fr.md"><img src="https://flagcdn.com/20x15/fr.png" width="20" height="15" alt=""> Version française</a>
+</p>
+
+![RealMap: choose a real life location and turn it into a TF3 map](captures/slides/Concept_1.png)
 
 RealMap builds a custom Transport Fever 3 map of a real-world area: relief, sea, rivers and lakes,
 biomes, towns at their real size, named industries, road links and a railway, all from open data.
 The **RealMap desktop app** prepares the map; the **RealMap mod** builds it by itself in the game's
 Map Editor.
 
-[Français](README.fr.md)
-
-![RealMap: choose a real life location and turn it into a TF3 map](captures/slides/Concept_1.png)
-
 ## Languages
 
-| | App | In-game mod |
-|---|---|---|
-| English | ✓ | ✓ |
-| Français | ✓ | ✓ |
-| Deutsch | ✓ | ✓ |
-| Italiano | ✓ | ✓ |
-| Español | ✓ | ✓ |
-| 简体中文 (Simplified Chinese) | ✓ | ✓ |
+The app and the in-game mod are both available in the six languages above.
 
 - The app follows your system language on first launch; change it with the picker at the top of
   the panel. The mod follows the game's language (English when the game's language is not listed).

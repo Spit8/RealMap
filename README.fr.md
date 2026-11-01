@@ -1,28 +1,33 @@
-<p align="center"><img src="captures/icon_transparent.png" width="120" alt="RealMap"></p>
+<p align="center">
+  <img src="captures/icon_white.png" alt="Logo RealMap" width="120">
+</p>
 
-# RealMap
+<h1 align="center">RealMap</h1>
 
-**Choisis un lieu réel. Transforme-le en carte Transport Fever 3. Redéfinis la stratégie de transport.**
+<p align="center">
+  <b>Choisis un lieu réel. Transforme-le en carte Transport Fever 3. Redéfinis la stratégie de transport.</b>
+</p>
+
+<p align="center">
+  <img src="https://flagcdn.com/20x15/gb.png" width="20" height="15" alt=""> English · <img src="https://flagcdn.com/20x15/fr.png" width="20" height="15" alt=""> Français · <img src="https://flagcdn.com/20x15/de.png" width="20" height="15" alt=""> Deutsch · <img src="https://flagcdn.com/20x15/it.png" width="20" height="15" alt=""> Italiano · <img src="https://flagcdn.com/20x15/es.png" width="20" height="15" alt=""> Español · <img src="https://flagcdn.com/20x15/cn.png" width="20" height="15" alt=""> 简体中文<br>
+  💻 Windows · Linux · macOS
+</p>
+
+<p align="center">
+  <a href="https://github.com/Spit8/RealMap/releases/latest"><b>⬇ Télécharger l'application</b></a> ·
+  <a href="README.md"><img src="https://flagcdn.com/20x15/gb.png" width="20" height="15" alt=""> English version</a>
+</p>
+
+![RealMap : choisir un lieu réel et en faire une carte TF3](captures/slides/Concept_1.png)
 
 RealMap construit une carte personnalisée de Transport Fever 3 à partir d'une zone réelle : relief,
 mer, rivières et lacs, biomes, villes à leur taille réelle, industries nommées, liaisons routières et
 voie ferrée, le tout depuis des données ouvertes. **L'application RealMap** prépare la carte ; **le mod
 RealMap** la construit tout seul dans l'éditeur de cartes du jeu.
 
-[English](README.md)
-
-![RealMap : choisir un lieu réel et en faire une carte TF3](captures/slides/Concept_1.png)
-
 ## Langues
 
-| | Application | Mod en jeu |
-|---|---|---|
-| English | ✓ | ✓ |
-| Français | ✓ | ✓ |
-| Deutsch | ✓ | ✓ |
-| Italiano | ✓ | ✓ |
-| Español | ✓ | ✓ |
-| 简体中文 (chinois simplifié) | ✓ | ✓ |
+L'application et le mod en jeu sont tous deux disponibles dans les six langues ci-dessus.
 
 - L'application prend la langue du système au premier lancement ; elle se change avec le sélecteur en
   haut du panneau. Le mod suit la langue du jeu (anglais si la langue du jeu n'est pas dans la liste).
