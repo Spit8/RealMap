@@ -1,7 +1,9 @@
 /**
  * TF3 folders written by the app, all under the userdata root (`<UD>`). The Map Editor reads
  * heightmaps from `<UD>/heightmaps` and town lists from `<UD>/towns_industries` (FACT-001/002);
- * the app's own notes (real heights, area) go to `<UD>/importcity`.
+ * the files shared with the RealMap mod (map note, request, answers) go to `<UD>/towns_industries`
+ * too, named `realmap_*` (`sharedFile`): since game build 40420/40423 a mod may only read and write
+ * `towns_industries`, `heightmaps` and `mod_presets` (FACT-034).
  */
 import { invoke } from "@tauri-apps/api/core";
 import { joinPath } from "./fsx";
@@ -10,7 +12,6 @@ export interface GamePaths {
   userdata: string;
   heightmaps: string;
   townsIndustries: string;
-  notes: string;
 }
 
 export function gamePaths(userdata: string): GamePaths {
@@ -18,8 +19,12 @@ export function gamePaths(userdata: string): GamePaths {
     userdata,
     heightmaps: joinPath(userdata, "heightmaps"),
     townsIndustries: joinPath(userdata, "towns_industries"),
-    notes: joinPath(userdata, "importcity"),
   };
+}
+
+/** A file shared with the RealMap mod in `towns_industries`: `realmap_<name>.lua`. */
+export function sharedFile(userdata: string, name: string): string {
+  return joinPath(userdata, "towns_industries", `realmap_${name}.lua`);
 }
 
 export interface DetectedPaths {

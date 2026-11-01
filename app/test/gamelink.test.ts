@@ -1,11 +1,63 @@
 import { describe, expect, it } from "vitest";
-import { gameProgress, gameSteps, parseGameStatus, requestData } from "../src/lib/core/gamelink";
+import {
+  ALIVE_STALE_MS, diagnoseNoAnswer, gameProgress, gameSteps, parseAlive, parseGameStatus, requestData, shouldResend,
+} from "../src/lib/core/gamelink";
 import { parseUserdata, toUserdata } from "../src/lib/core/luadata";
 
 describe("app ↔ game", () => {
   it("writes the request the mod reads", () => {
     const back = parseUserdata(toUserdata(requestData("Lyon", 1730000000, 1730000000123)));
     expect(back).toEqual({ id: 1730000000123, name: "Lyon", createdAt: 1730000000 });
+    // Given up by the app: cancelled, so the mod never runs it later.
+    expect(parseUserdata(toUserdata(requestData("Lyon", 1, 2, true)))).toEqual({ id: 2, name: "Lyon", createdAt: 1, cancelled: true });
+  });
+
+  // alive.lua as app.saveUserdata writes it (DECISION-024).
+  const aliveText = (fields: string) =>
+    `function data()
+return {
+	busy = false,
+	editor = true,
+	pump = "button",
+	ticks = 301,
+	userdata = "C:/Steam/userdata/1/3493540/local/",
+	version = "1.0.1",
+${fields}}
+end
+`;
+
+  it("reads the mod's sign of life", () => {
+    const a = parseAlive(aliveText(`	seen = 42,
+	decision = "baseline",
+`))!;
+    expect(a).toEqual({ version: "1.0.1", userdata: "C:/Steam/userdata/1/3493540/local/", editor: true, busy: false, seen: 42, decision: "baseline" });
+    expect(parseAlive(aliveText(""))!.seen).toBeUndefined();
+    expect(parseAlive(null)).toBeNull();
+    expect(parseAlive("function data() return { ticks = 1 } end")).toBeNull();
+  });
+
+  it("sends a request again only when the mod found it there at start", () => {
+    const base = parseAlive(aliveText(`	seen = 42,
+	decision = "baseline",
+`));
+    expect(shouldResend(base, 1000, 42)).toBe(true);
+    expect(shouldResend(base, 1000, 43)).toBe(false);
+    expect(shouldResend(base, ALIVE_STALE_MS + 1, 42)).toBe(false);
+    expect(shouldResend(parseAlive(aliveText(`	seen = 42,
+	decision = "accepted",
+`)), 1000, 42)).toBe(false);
+    expect(shouldResend(null, null, 42)).toBe(false);
+  });
+
+  it("says why the game does not answer", () => {
+    const alive = (extra: string) => parseAlive(aliveText(extra));
+    expect(diagnoseNoAnswer(null, null, "1.0.1")).toBe("silent");
+    expect(diagnoseNoAnswer(alive(""), ALIVE_STALE_MS + 1, "1.0.1")).toBe("silent");
+    expect(diagnoseNoAnswer({ ...alive("")!, editor: false }, 1000, "1.0.1")).toBe("notEditor");
+    expect(diagnoseNoAnswer({ ...alive("")!, busy: true }, 1000, "1.0.1")).toBe("busy");
+    expect(diagnoseNoAnswer(alive(""), 1000, "1.0.2")).toBe("oldMod");
+    expect(diagnoseNoAnswer(alive(""), 1000, null)).toBe("notTaken");
+    expect(diagnoseNoAnswer(alive(""), 1000, "1.0.1")).toBe("notTaken");
   });
 
   it("reads the mod's status (as app.saveUserdata writes it)", () => {

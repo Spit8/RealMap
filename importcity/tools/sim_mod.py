@@ -8,7 +8,8 @@ window is rendered so its MapPreviewComp computes the imported map (onReady), as
 Checks: an explicit error outside the Map Editor and for a map of the wrong size, the stage and
 command order, import settings (heightmap min/max, biome files, generator), towns created then
 sized, industries named, 0-based town pairs, a refused railway piece retried then skipped with the
-game's reason, a request run once, an old request ignored.
+game's reason, a request run once, the request found at start left alone and a cancelled one ignored
+(no clock), every decision logged, alive.lua written, the window's pump when the button's is missing.
 
   pip install lupa
   python importcity/tools/sim_mod.py
@@ -37,15 +38,27 @@ def check_generated_script() -> None:
         raise SystemExit("main_gui.script.lua must only hold the RealMap button opening the mod's window")
 
 
+def check_no_clock() -> None:
+    """Game updates may change os.time (DECISION-024): the request logic must not depend on it."""
+    for name in ("importcity_auto.lua", "main_gui.handlers.lua"):
+        if "os.time" in (MOD / "gui" / name).read_text(encoding="utf-8"):
+            raise SystemExit(f"{name} uses os.time")
+
+
 def main() -> int:
     check_generated_script()
+    check_no_clock()
     rt = L.LuaRuntime()
     rt.globals().MODDIR = str(MOD).replace("\\", "/")
     ok = rt.execute(r'''
 SIM = { queue = {}, cmds = {}, saves = {}, names = {}, nodes = {}, nextEntity = 5000, stages = {},
-        editor = true, tiles = { 32, 32 }, gameTowns = {}, constructions = {} }
+        editor = true, tiles = { 32, 32 }, gameTowns = {}, constructions = {}, logs = {}, missing = {} }
 local _print = print
-print = function() end
+print = function(...) SIM.logs[#SIM.logs + 1] = table.concat({ ... }, " ") end
+--- A line logged by the mod (stdout.txt in the game) matching `pattern`.
+function SIM.logged(pattern)
+  for _, l in ipairs(SIM.logs) do if l:match(pattern) then return l end end
+end
 local function file(p) local f = assert(io.open(MODDIR .. "/" .. p, "r")); local s = f:read("a"); f:close(); return s end
 
 -- React stub: hook states kept per call position, onStep callbacks collected at each render.
@@ -212,6 +225,10 @@ api = {
     sendCommand = function(c, cb) SIM.cmds[#SIM.cmds + 1] = c; SIM.queue[#SIM.queue + 1] = { c, cb } end,
   }, { __index = function(_, k) return rec(k) end }),
 }
+local USERDATA_DIRS = { towns_industries = true, heightmaps = true, mod_presets = true }
+local function allowed(dir)
+  if not USERDATA_DIRS[dir] then error("The directory you trying to access is not available or invalid") end
+end
 app = {
   res = { terrainGeneratorRep = {
     getAll = function() return { [1] = true, [2] = true } end,
@@ -221,19 +238,27 @@ app = {
     end,
     getName = function(k) return k == 2 and "temperate_import.gen" or "temperate.gen" end,
   } },
+  getUserDataFolder = function() return "C:/Steam/userdata/1/3493540/local/" end,
   getAllHeightmaps = function() return { "Other", "Test" } end,
   getAllBiomes = function() return { "Test_biomes", "Test_mountains", "Test_rivers" } end,
+  -- As the game since build 40420/40423 (FACT-034): only these folders, anything else throws.
   loadUserdata = function(dir, name)
-    if dir == "towns_industries" and name == "Test" then return TOWNS_FILE end
-    if dir ~= "importcity" then return nil end
-    if name == "latest" then return { name = "Test" } end
-    if name == "Test" then return NOTE end
-    if name == "request" then return SIM.request end
-    return SIM.saves[dir .. "/" .. name]
+    allowed(dir)
+    if dir ~= "towns_industries" then return nil end
+    if name == "Test" then return TOWNS_FILE end
+    if name == "realmap_latest" then return { name = "Test" } end
+    if name == "realmap_note_Test" then return NOTE end
+    if name == "realmap_request" and SIM.request then return SIM.request end
+    if SIM.saves[name] ~= nil then return SIM.saves[name] end
+    -- A missing file: the game logs an error block (even under pcall) and returns an empty table.
+    SIM.missing[name] = (SIM.missing[name] or 0) + 1
+    return {}
   end,
   saveUserdata = function(dir, name, tbl)
-    SIM.saves[dir .. "/" .. name] = tbl
-    if name == "status" then SIM.stages[#SIM.stages + 1] = tbl.stage end
+    allowed(dir)
+    if SIM.failSave == name then error("disk full") end
+    SIM.saves[name] = tbl
+    if name == "realmap_status" then SIM.stages[#SIM.stages + 1] = tbl.stage end
   end,
 }
 
@@ -331,7 +356,14 @@ local pumpStep
 -- The mod-area button: its icon expression installs the pump (generation runs with the window closed).
 assert(handlers.buttonIcon({ onStep = function(fn) pumpStep = fn end }) == "importcity::/gui/icons/realmap.tga", "button icon path")
 assert(pumpStep, "the button icon installs the pump")
-local function last() return SIM.saves["importcity/status"] end
+local function last() return SIM.saves["realmap_status"] end
+-- The mod looks before the app sends anything (no request yet: nothing left alone). The missing
+-- request file is read once, then replaced by an empty one: no error flood in the game's log.
+SIM.play(pumpStep)
+SIM.play(pumpStep)
+assert(SIM.missing.realmap_request == 1 and SIM.saves.realmap_request and next(SIM.saves.realmap_request) == nil,
+       "missing request read once, then an empty one: " .. tostring(SIM.missing.realmap_request))
+assert(not SIM.logged("unreadable"), "no request is not an unreadable one")
 
 -- 1. Outside the Map Editor: explicit error, nothing built.
 SIM.editor = false
@@ -400,14 +432,62 @@ assert(#a[1] == 1 and a[1][1] == 5 and #a[2] == 1 and a[2][1] == 22 and #a[3] ==
        "cargo needs: residential kept, vegetables / planks, unknown skipped")
 assert(last().message:match("générée"), "done message")
 
--- 4. Same request: not run again. 5. An old request: ignored.
+-- 4. Same request: not run again; the mod says so in the log and in alive.lua.
 local n = #SIM.cmds
 SIM.play(pumpStep)
 assert(#SIM.cmds == n, "a request runs once")
-SIM.request = { id = (now() - 3600) * 1000, name = "Test", createdAt = 42 }
-SIM.play(pumpStep)
-assert(#SIM.cmds == n and last().id ~= SIM.request.id, "old request ignored")
--- 4. A game in German, Chinese, or an unknown language: the generated tables, else English.
+local alive = SIM.saves["realmap_alive"]
+assert(alive and alive.version and alive.userdata == "C:/Steam/userdata/1/3493540/local/" and alive.editor == true
+       and alive.seen == SIM.request.id and alive.decision == "answered" and alive.pump == "button", "alive.lua")
+assert(SIM.logged("^%[importcity%] mod .* loaded, userdata C:/Steam"), "load line")
+assert(SIM.logged("button pump installed") and SIM.logged("pump ticking %(button%)"), "pump lines")
+assert(SIM.logged("request %d+ Test: accepted") and SIM.logged("request %d+ Test: answered"), "decision lines")
+assert(not SIM.logged("not read") and not SIM.logged("not saved"), "every shared file in a folder the game allows")
+
+-- 5. The mod starts (game launched) with an unanswered request left: no clock, it is left alone;
+--    the next one runs. A request cancelled by the app is never run.
+local function freshMod()
+  SIM.window = nil
+  local h = ug_require("importcity::/gui/main_gui.handlers.lua")
+  local fn
+  h.buttonIcon({ onStep = function(f) fn = f end })
+  return h, fn
+end
+SIM.editor = false
+SIM.request = { id = 1, name = "Test", createdAt = 42 }
+local h2, step2 = freshMod()
+SIM.play(step2)
+assert(#SIM.cmds == n and last().id ~= 1 and SIM.saves["realmap_alive"].decision == "baseline", "request found at start left alone")
+SIM.request = { id = 2, name = "Test", createdAt = 42 }
+SIM.play(step2)
+assert(last().id == 2 and last().stage == "error", "next request run")
+SIM.request = { id = 3, name = "Test", createdAt = 42, cancelled = true }
+SIM.play(step2)
+assert(last().id == 2 and SIM.saves["realmap_alive"].decision == "cancelled", "cancelled request ignored")
+
+-- 6. No step from the button (a game update): logged, and the open window runs the pump instead.
+SIM.logs = {}
+local h3 = ug_require("importcity::/gui/main_gui.handlers.lua")
+h3.buttonIcon({})
+assert(SIM.logged("pump NOT installed: react.onStep unavailable"), "missing pump logged")
+h3.openWindow()
+SIM.request = { id = 4, name = "Test", createdAt = 42 }
+for _ = 1, 80 do SIM.render() end
+assert(SIM.logged("pump ticking %(window%)"), "window pump")
+-- First look = baseline (id 4); the next request is run from the window's steps alone.
+SIM.request = { id = 5, name = "Test", createdAt = 42 }
+for _ = 1, 80 do SIM.render() end
+assert(last().id == 5 and SIM.saves["realmap_alive"].pump == "window", "request run by the window pump")
+
+-- 7. status.lua cannot be written: said in the log instead of silence.
+SIM.failSave = "realmap_status"
+SIM.request = { id = 6, name = "Test", createdAt = 42 }
+for _ = 1, 80 do SIM.render() end
+SIM.failSave = nil
+assert(SIM.logged("realmap_status%.lua not saved: .*disk full"), "save failure logged")
+SIM.editor = true
+
+-- 8. A game in German, Chinese, or an unknown language: the generated tables, else English.
 for lang, want in pairs({ de_DE = "wurde erstellt", zh_CN = "已生成", pt_BR = "generated" }) do
   SIM.lang = lang
   local m = assert(load(file("gui/importcity_i18n.lua"), "i18n"))()

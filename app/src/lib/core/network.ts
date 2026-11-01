@@ -477,7 +477,7 @@ function mainRail(f: Frame, ways: NetworkWay[], towns: NetTown[], o: NetworkOpti
   return keep.map((l, k) => ({ key: `rail:${k}`, pts: l.pts }));
 }
 
-/** Note fields read by the importcity mod (`<UD>/importcity/<name>.lua`). */
+/** Note fields read by the importcity mod (`<UD>/towns_industries/realmap_note_<name>.lua`). */
 export function networkData(plan: NetworkPlan, picks: LinkPicks): {
   connections: { a: string; b: string }[];
   rail: { lines: NoteNode[][] };

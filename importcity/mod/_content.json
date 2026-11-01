@@ -6,6 +6,7 @@
         "gui/importcity_auto.lua",
         "gui/importcity_build.lua",
         "gui/importcity_i18n.lua",
+        "gui/importcity_version.lua",
         "gui/main_gui.css.lua",
         "gui/main_gui.handlers.lua",
         "gui/main_gui.script.lua",

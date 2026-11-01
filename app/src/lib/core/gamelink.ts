@@ -1,8 +1,8 @@
 /**
  * The app and the game talk through two userdata files (DECISION-012): the game cannot be called
- * from outside. After writing the map's files, the app writes `<UD>/importcity/request.lua`; the
+ * from outside. After writing the map's files, the app writes `<UD>/towns_industries/realmap_request.lua`; the
  * importcity mod (running in the Map Editor) picks it up, builds the map in a fixed order and
- * reports each stage in `<UD>/importcity/status.lua`, which the app reads back.
+ * reports each stage in `<UD>/towns_industries/realmap_status.lua`, which the app reads back.
  */
 import { parseUserdata } from "./luadata";
 
@@ -30,9 +30,70 @@ export interface GameStatus {
   report: string[];
 }
 
-/** What the app writes in `request.lua`: a new `id` asks the mod for a new generation. */
-export function requestData(name: string, createdAt: number, id: number): { id: number; name: string; createdAt: number } {
-  return { id, name, createdAt };
+/**
+ * What the app writes in `request.lua`: a new `id` asks the mod for a new generation. `cancelled`
+ * when the app gave up waiting: the mod must not run it later (the app no longer follows it).
+ */
+export function requestData(
+  name: string, createdAt: number, id: number, cancelled = false,
+): { id: number; name: string; createdAt: number; cancelled?: boolean } {
+  return cancelled ? { id, name, createdAt, cancelled } : { id, name, createdAt };
+}
+
+/** What the mod made of the last request it read (DECISION-024). */
+export type AliveDecision = "accepted" | "answered" | "baseline" | "cancelled" | "unreadable";
+
+/** `<UD>/towns_industries/realmap_alive.lua`: the mod's sign of life, rewritten every few seconds. */
+export interface GameAlive {
+  version: string;
+  /** The userdata folder the game uses (as the game writes it). */
+  userdata: string;
+  editor: boolean;
+  busy: boolean;
+  /** Id of the last request read and what the mod made of it. */
+  seen?: number;
+  decision?: AliveDecision;
+}
+
+/** alive.lua older than this (by the file's date): the mod is not running (it rewrites it every ~5 s). */
+export const ALIVE_STALE_MS = 60_000;
+
+export function parseAlive(text: string | null): GameAlive | null {
+  if (!text) return null;
+  const v = parseUserdata(text) as Record<string, unknown> | null;
+  if (!v || typeof v !== "object" || typeof v.version !== "string") return null;
+  return {
+    version: v.version,
+    userdata: typeof v.userdata === "string" ? v.userdata : "",
+    editor: v.editor === true,
+    busy: v.busy === true,
+    seen: typeof v.seen === "number" ? v.seen : undefined,
+    decision: typeof v.decision === "string" ? (v.decision as AliveDecision) : undefined,
+  };
+}
+
+/** The mod is running in that folder: alive.lua rewritten less than ALIVE_STALE_MS ago. */
+export function isAlive(alive: GameAlive | null, ageMs: number | null): alive is GameAlive {
+  return alive !== null && ageMs !== null && ageMs < ALIVE_STALE_MS;
+}
+
+/**
+ * The mod found request `id` already there when it started looking (sent while the Map Editor was
+ * loading, say) and left it alone: the app sends it again under a new id.
+ */
+export function shouldResend(alive: GameAlive | null, ageMs: number | null, id: number): boolean {
+  return isAlive(alive, ageMs) && alive.seen === id && alive.decision === "baseline";
+}
+
+/** Why the game did not answer request `id`, from alive.lua (null = missing). */
+export type NoAnswer = "silent" | "notEditor" | "busy" | "oldMod" | "notTaken";
+
+export function diagnoseNoAnswer(alive: GameAlive | null, ageMs: number | null, appVersion: string | null): NoAnswer {
+  if (!isAlive(alive, ageMs)) return "silent";
+  if (!alive.editor) return "notEditor";
+  if (alive.busy) return "busy";
+  if (appVersion && alive.version !== appVersion) return "oldMod";
+  return "notTaken";
 }
 
 /** `status.lua` as written by the mod, or null when it is missing or not one. */

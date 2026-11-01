@@ -635,7 +635,7 @@ export function planIndustries(
 
 /** `industries` of `<UD>/towns_industries/<name>.lua` (FACT-002). */
 /**
- * `industries` of the note `<UD>/importcity/<name>.lua`. The game's town-connection command links
+ * `industries` of the note `<UD>/towns_industries/realmap_note_<name>.lua`. The game's town-connection command links
  * every industry that exists (FACT-024), so the industries are not in the towns_industries import:
  * the importcity mod builds them after the roads between towns, gives them their name, and links
  * only those of `industryLinks`.

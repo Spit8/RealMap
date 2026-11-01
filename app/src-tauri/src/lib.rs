@@ -111,7 +111,39 @@ fn userdata_candidates() -> (Vec<PathBuf>, Vec<PathBuf>) {
             expected.push(dir);
         }
     }
+    rank_by_mod_life(&mut found);
     (found, expected)
+}
+
+/// The RealMap mod's sign of life in a userdata folder (`towns_industries/realmap_alive.lua`, rewritten by the
+/// mod while the game runs, DECISION-024): its date, if any.
+fn mod_alive_time(local: &Path) -> Option<std::time::SystemTime> {
+    std::fs::metadata(local.join("towns_industries").join("realmap_alive.lua")).and_then(|m| m.modified()).ok()
+}
+
+/// Folders where the mod last ran first (most recent first), the others after in their order: the
+/// folder the game really uses beats a folder only recently touched (another Steam account).
+fn rank_by_mod_life(dirs: &mut [PathBuf]) {
+    dirs.sort_by_key(|d| std::cmp::Reverse(mod_alive_time(d)));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn folder_where_the_mod_ran_comes_first() {
+        let root = std::env::temp_dir().join(format!("realmap-rank-{}", std::process::id()));
+        let (a, b, c) = (root.join("a"), root.join("b"), root.join("c"));
+        for d in [&a, &b, &c] {
+            std::fs::create_dir_all(d.join("towns_industries")).unwrap();
+        }
+        std::fs::write(b.join("towns_industries").join("realmap_alive.lua"), "x").unwrap();
+        let mut dirs = vec![a.clone(), b.clone(), c.clone()];
+        rank_by_mod_life(&mut dirs);
+        assert_eq!(dirs, vec![b, a, c]);
+        let _ = std::fs::remove_dir_all(&root);
+    }
 }
 
 #[tauri::command]

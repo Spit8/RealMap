@@ -27,7 +27,10 @@ import {
   type OsmShape,
 } from "$lib/core/osm";
 import { DEFAULT_TERRAIN, type TerrainOptions } from "$lib/core/terrain";
-import { gameProgress, gameSteps, parseGameStatus, requestData, type GameStatus } from "$lib/core/gamelink";
+import {
+  diagnoseNoAnswer, gameProgress, gameSteps, isAlive, parseAlive, parseGameStatus, requestData, shouldResend,
+  type GameAlive, type GameStatus,
+} from "$lib/core/gamelink";
 import { DEFAULT_RAIL, type RailOptions } from "$lib/core/railway";
 import {
   networkData, overpassNetworkQuery, parseNetwork, type CustomRail, type LinkPicks, type NetworkPlan, type NetworkWay,
@@ -37,15 +40,24 @@ import {
   type DroppedTown, type MapTown, type OsmPlace, type PlaceFilter, type TownCandidate, type TownPicks, type TownsOptions,
 } from "$lib/core/towns";
 import { loadBathymetry, loadDemTile, loadIgnGrid, loadLandcover, overpass } from "$lib/platform/download";
+import { getVersion } from "@tauri-apps/api/app";
+import { buildWarning, parseGameBuild, testedBuildsText } from "$lib/core/gamebuild";
 import { appCacheDir } from "@tauri-apps/api/path";
-import { ensureDir, joinPath, readText, writeBytes, writeText } from "$lib/platform/fsx";
-import { allowDirs, detectUserdata, gamePaths } from "$lib/platform/paths";
+import { ensureDir, fileStat, joinPath, readText, writeBytes, writeText } from "$lib/platform/fsx";
+import { allowDirs, detectUserdata, gamePaths, sharedFile } from "$lib/platform/paths";
 import type { TerrainMessage, TerrainRequest, TerrainStats } from "$lib/workers/terrain.worker";
 import { MsgError } from "$lib/core/msg";
 import { fmtNum, i18n, t, tk, tm, type MessageKey } from "$lib/i18n/index.svelte";
 import { TILE_M } from "$lib/core/area";
 
 const LS_KEY = "importcity.settings";
+
+/** The mod's realmap_alive.lua in a game folder, and its age by the file's date (null = missing). */
+async function readAlive(userdata: string): Promise<{ alive: GameAlive | null; ageMs: number | null }> {
+  const path = sharedFile(userdata, "alive");
+  const [text, st] = await Promise.all([readText(path), fileStat(path)]);
+  return { alive: parseAlive(text), ageMs: st ? Math.max(0, Date.now() - st.mtimeMs) : null };
+}
 /**
  * Saved settings older than this get the defaults that changed since (v0.7: land at 0.5 m by the
  * shore; v0.8: rivers 64 m, steeper underwater slope; v0.12: rivers 14 m; v0.13: rivers and marshes
@@ -353,6 +365,8 @@ class Importer {
   result = $state<RunResult | null>(null);
   /** `experimentalMapFeatures` in the game's settings.lua: more map sizes and formats. */
   experimentalMaps = $state(false);
+  /** The game's build at its last launch (its log), null when unknown. */
+  gameBuild = $state<number | null>(null);
 
   frame = $derived(makeFrame(this.settings.area));
   /** Options that change the map (not the file name or folder): the preview is stale when they differ. */
@@ -544,6 +558,8 @@ class Importer {
     await allowDirs([ud]);
     const text = await readText(joinPath(ud, "settings.lua"));
     this.experimentalMaps = text ? parseExperimentalMapFeatures(text) ?? false : false;
+    this.gameBuild = parseGameBuild(await readText(joinPath(ud, "crash_dump", "stdout.txt")));
+    if (this.gameBuild !== null) this.diag(`jeu : build ${this.gameBuild}`);
     const a = this.settings.area;
     const size = nearestAvailable(a.size, availableSizes(this.experimentalMaps));
     const format = nearestAvailable(a.format, availableFormats(this.experimentalMaps));
@@ -1015,8 +1031,8 @@ class Importer {
       const st = done.stats;
       const createdAt = Math.floor(Date.now() / 1000);
       await write(
-        paths.notes,
-        `${name}.lua`,
+        paths.townsIndustries,
+        `realmap_note_${name}.lua`,
         toUserdata({
           name,
           area: { ...s.area, verticalScale: f.verticalScale },
@@ -1049,16 +1065,16 @@ class Importer {
           createdAt,
         }),
       );
-      await write(paths.notes, "latest.lua", toUserdata({ name }));
+      await write(paths.townsIndustries, "realmap_latest.lua", toUserdata({ name }));
       this.exportState("files", "done", t("msg.files", { n: files.length }));
       this.setPreview(s, f, done, inputs);
       this.say(t("msg.written", { name, n: files.length, dir: s.userdata }));
       this.result = { name, sizeLabel, stats: st, towns: done.towns, dropped: done.dropped, industries: done.industries.length, files };
       // Last: the request the importcity mod picks up in the Map Editor (everything above is ready).
       const id = Date.now();
-      await write(paths.notes, "request.lua", toUserdata(requestData(name, createdAt, id)));
+      await write(paths.townsIndustries, "realmap_request.lua", toUserdata(requestData(name, createdAt, id)));
       this.say(t("msg.sent"));
-      const answer = await this.watchGame(joinPath(paths.notes, "status.lua"), id, sizeLabel, 0.6, 0.4);
+      const answer = await this.watchGame(s.userdata, { name, createdAt, id }, sizeLabel, 0.6, 0.4);
       for (const line of answer.report) this.say(line);
       this.say(t("msg.generated", { name }));
       this.exportKey = optionsKeyOf(s) + "|" + s.name;
@@ -1067,19 +1083,28 @@ class Importer {
   }
 
   /**
-   * Follow the importcity mod's answer (`status.lua`) to request `id`: stages in `gameSteps`, the
-   * progress bar, an explicit error when the game does not answer or the mod reports one.
+   * Follow the importcity mod's answer (`status.lua`) to `request`: stages in `gameSteps`, the
+   * progress bar, an explicit error when the mod reports one. The mod's sign of life (`alive.lua`,
+   * DECISION-024) says why it does not answer: the request is sent again once when the mod found it
+   * there at start (sent while the Map Editor was loading), else the error names the cause.
    */
-  private async watchGame(statusPath: string, id: number, sizeLabel: string, base: number, span: number): Promise<GameStatus> {
+  private async watchGame(
+    userdata: string, request: { name: string; createdAt: number; id: number }, sizeLabel: string, base: number, span: number,
+  ): Promise<GameStatus> {
     const ACK_MS = 15_000;
     const STALL_MS = 5 * 60_000;
+    const requestPath = sharedFile(userdata, "request");
+    const sendRequest = (cancelled = false) =>
+      writeText(requestPath, toUserdata(requestData(request.name, request.createdAt, id, cancelled)));
     this.gameSteps = gameSteps(null);
-    const start = Date.now();
+    let id = request.id;
+    let resent = false;
+    let start = Date.now();
     let changed = start;
     let seen = "";
     for (;;) {
       await new Promise((r) => setTimeout(r, 1000));
-      const st = parseGameStatus(await readText(statusPath));
+      const st = parseGameStatus(await readText(sharedFile(userdata, "status")));
       if (st && st.id === id) {
         const key = JSON.stringify(st);
         if (key !== seen) {
@@ -1097,16 +1122,67 @@ class Importer {
           this.step = t("msg.game");
           throw new Error(st.message);
         }
-      } else if (Date.now() - start > ACK_MS) {
-        this.gameSteps = [];
-        this.step = t("msg.game");
-        throw new Error(t("msg.noAnswer", { size: sizeLabel }));
+      } else {
+        const { alive, ageMs } = await readAlive(userdata);
+        if (!resent && shouldResend(alive, ageMs, id)) {
+          resent = true;
+          this.diag(`jeu : requête ${id} trouvée au démarrage du mod, renvoyée`);
+          id = Date.now();
+          start = changed = Date.now();
+          await sendRequest();
+          this.say(t("msg.resent"));
+        } else if (Date.now() - start > ACK_MS) {
+          // Given up: the mod must not run it later, while nobody follows it.
+          await sendRequest(true).catch(() => {});
+          this.gameSteps = [];
+          this.step = t("msg.game");
+          throw new Error(this.withBuildNote(await this.noAnswerMessage(userdata, alive, ageMs, sizeLabel)));
+        }
       }
       if (Date.now() - changed > STALL_MS) {
         this.step = t("msg.game");
         throw new Error(t("msg.stalled"));
       }
     }
+  }
+
+  /** `message`, plus a reminder when the game is a build RealMap was not tested with. */
+  private withBuildNote(message: string): string {
+    const w = buildWarning(this.gameBuild);
+    if (!w || this.gameBuild === null) return message;
+    return `${message} ${t(w === "newer" ? "export.buildNewer" : "export.buildOlder", { build: this.gameBuild, tested: testedBuildsText() })}`;
+  }
+
+  /** Why the game did not answer, from the mod's alive.lua (here, or in another game folder). */
+  private async noAnswerMessage(userdata: string, alive: GameAlive | null, ageMs: number | null, size: string): Promise<string> {
+    let appVersion: string | null = null;
+    try {
+      appVersion = await getVersion();
+    } catch {
+      /* not in Tauri (tests) */
+    }
+    const why = diagnoseNoAnswer(alive, ageMs, appVersion);
+    this.diag(`jeu muet : ${why}, alive ${alive ? JSON.stringify(alive) : "absent"}, âge ${ageMs ?? "-"} ms`);
+    const log = joinPath(userdata, "crash_dump", "stdout.txt");
+    switch (why) {
+      case "notEditor":
+        return t("msg.noAnswerNotEditor", { size });
+      case "busy":
+        return t("msg.noAnswerBusy");
+      case "oldMod":
+        return t("msg.noAnswerOldMod", { mod: alive?.version ?? "?", app: appVersion ?? "?" });
+      case "notTaken":
+        return t("msg.noAnswerNotTaken", { log });
+    }
+    // Silent here: is the mod alive in another game folder (another Steam account, say)?
+    const { candidates } = await detectUserdata();
+    const others = candidates.filter((c) => c.replace(/[\\/]+$/, "").toLowerCase() !== userdata.replace(/[\\/]+$/, "").toLowerCase());
+    await allowDirs(others);
+    for (const dir of others) {
+      const other = await readAlive(dir);
+      if (isAlive(other.alive, other.ageMs)) return t("msg.noAnswerOtherDir", { dir });
+    }
+    return t("msg.noAnswer", { size, dir: userdata });
   }
 
   /** Flat test map with channels of growing width and depth, to find what ships can use (QUESTION-009). */

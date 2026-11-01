@@ -13,6 +13,7 @@
   import { gameTownLimit } from "$lib/core/towns";
   import { defaultIndustryCount, ECONOMIES, ECONOMY_LABELS, INDUSTRIES } from "$lib/core/industries";
   import { fmtNum, i18n, LOCALES, t, tk, type Locale, type MessageKey } from "$lib/i18n/index.svelte";
+  import { buildWarning, testedBuildsText } from "$lib/core/gamebuild";
 
   type PanelTab = "data" | "advanced" | "export" | "log";
   const TAB_KEY = "importcity.panelTab";
@@ -366,6 +367,9 @@
           <label>{t("export.userdata")}
             <input bind:value={importer.settings.userdata} onchange={() => { save(); importer.readGameSettings(); }} placeholder="…\3493540\local" />
           </label>
+          {#if importer.gameBuild !== null && buildWarning(importer.gameBuild)}
+            <p class="hint">{t(buildWarning(importer.gameBuild) === "newer" ? "export.buildNewer" : "export.buildOlder", { build: importer.gameBuild, tested: testedBuildsText() })}</p>
+          {/if}
         </Section>
 
         <p class="facts">{t("export.inGame", { size: sizeText(s.area.size, s.area.format, s.area.landscape) })}</p>

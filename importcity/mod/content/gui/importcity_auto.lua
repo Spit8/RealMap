@@ -1,11 +1,11 @@
 -- RealMap automatic generation in the Map Editor (DECISION-012). The app writes the map's files,
--- then <userdata>/importcity/request.lua = { id, name, createdAt }; the pump (main_gui.handlers.lua)
+-- then <userdata>/towns_industries/realmap_request.lua = { id, name, createdAt }; the pump (main_gui.handlers.lua)
 -- hands each new request here. This module checks where we are, then builds, in this order and
 -- each step once the previous one has answered:
 --   heightmap > biomes > rail > towns (with their real sizes) > industries (with their names) > roads
 -- (the railway right after the terrain, DECISION-014: towns, industries and the game's roads adapt
 -- to the track, which the app designed around the towns' places)
--- and reports every stage in <userdata>/importcity/status.lua, which the app reads back.
+-- and reports every stage in <userdata>/towns_industries/realmap_status.lua, which the app reads back.
 -- Heightmap and biomes go through the game's own map computation, exactly like the Map Editor's
 -- import tabs (FACT-025): a `builtin.MapPreviewComp` (hosted in the mod's window) turns the import
 -- settings into a map, then `makeWorldReplaceTerrainCmd` applies it. That window is the mod's only
@@ -17,14 +17,20 @@ local builtin = ug_require "::/gui/main/builtin.lua"
 local game_react_globals = ug_require "::/gui/main/game_react_globals.tl"
 local build = ug_require "importcity::/gui/importcity_build.lua"
 local i18n = ug_require "importcity::/gui/importcity_i18n.lua"
+local VERSION = ug_require "importcity::/gui/importcity_version.lua"
 local tr = i18n.t
 local okParamUtil, scriptparamutil = pcall(ug_require, "/gui/main/script_param_util.tl")
 
 local A = {}
 
 local WINDOW_ID = "importcity.auto"
---- A request older than this (s) is not run any more: the app stops waiting after 15 s.
-local MAX_AGE_S = 20
+--- Since game build 40420/40423, app.loadUserdata / app.saveUserdata only accept `towns_industries`,
+--- `heightmaps` and `mod_presets` (FACT-034): the files shared with the app live in
+--- towns_industries, named realmap_<name> (request, status, alive, latest, note_<map>).
+A.DIR = "towns_industries"
+function A.file(name)
+	return "realmap_" .. name
+end
 
 --- The running generation: { id, name, note, stage, report = {lines}, log, preview, version }.
 local run = nil
@@ -38,13 +44,48 @@ local MAX_LINES = 12
 local function log(text)
 	print("[importcity] " .. text)
 end
+A.log = log
 
+--- Log `text` the first time `key` is seen (failures that would repeat every step).
+local logged = {}
+local function logOnce(key, text)
+	if not logged[key] then
+		logged[key] = true
+		log(text)
+	end
+end
+A.logOnce = logOnce
+
+--- Read <userdata>/<dir>/<name>.lua; an error (folder refused by the game, say) is logged once.
 local function loadUserdata(dir, name)
 	local ok, tbl = pcall(function()
 		return app.loadUserdata(dir, name)
 	end)
+	if not ok then
+		logOnce("load:" .. dir .. "/" .. name, dir .. "/" .. name .. ".lua not read: " .. tostring(tbl))
+	end
 	return ok and type(tbl) == "table" and tbl or nil
 end
+
+--- Write <userdata>/<dir>/<name>.lua; a failure is logged once per file (the app then hears nothing).
+local function saveUserdata(dir, name, tbl)
+	local ok, err = pcall(function()
+		app.saveUserdata(dir, name, tbl)
+	end)
+	if not ok then
+		logOnce("save:" .. name, name .. ".lua not saved: " .. tostring(err))
+	end
+	return ok
+end
+
+--- The userdata folder the game uses (the app must write there), "?" when the game does not say.
+local USERDATA = (function()
+	local ok, dir = pcall(function()
+		return app.getUserDataFolder()
+	end)
+	return ok and type(dir) == "string" and dir or "?"
+end)()
+log("mod " .. tostring(VERSION) .. " loaded, userdata " .. USERDATA)
 
 local function touch()
 	view.version = view.version + 1
@@ -52,11 +93,9 @@ end
 
 --- The answer the app reads: stage, message, report so far.
 local function status(stage, message, failed)
-	pcall(function()
-		app.saveUserdata("importcity", "status", {
-			id = run.id, stage = stage, message = message, failed = failed, report = run.report,
-		})
-	end)
+	saveUserdata(A.DIR, A.file("status"), {
+		id = run.id, stage = stage, message = message, failed = failed, report = run.report,
+	})
 	log(stage .. ": " .. tostring(message))
 	view.lines[#view.lines + 1] = message
 	touch()
@@ -108,6 +147,10 @@ local function renderWindow(_params)
 	local version = react.useState(-1)
 	local ready = react.useState(false)
 	react.onStep(function()
+		-- Second pump (main_gui.handlers.lua): runs it when the button's one does not tick.
+		if A.windowStep then
+			A.windowStep()
+		end
 		if version:old() ~= view.version then
 			version:set(view.version)
 		end
@@ -255,8 +298,8 @@ local function gameTowns()
 end
 
 --- `opts.applySizes()` sizes the towns of the latest import (main_gui.handlers.lua).
-function A.start(request, opts)
-	local note = loadUserdata("importcity", request.name)
+local function startRun(request, opts)
+	local note = loadUserdata(A.DIR, A.file("note_" .. request.name))
 	run = { id = request.id, name = request.name, note = note, report = {} }
 	view.title = tr("title", tostring(request.name))
 	view.lines = {}
@@ -434,26 +477,91 @@ function A.start(request, opts)
 	end)
 end
 
+--- Run a request; an error the checks did not foresee (a game API changed by an update, say) still
+--- ends in status.lua, so the app shows it instead of waiting.
+function A.start(request, opts)
+	local ok, err = pcall(startRun, request, opts)
+	if not ok then
+		log("generation failed: " .. tostring(err))
+		if run ~= nil and run.id == request.id then
+			view.preview = nil
+			status("error", tostring(err), "check")
+			run = nil
+		end
+	end
+end
+
 --- A generation is running (its commands answer later).
 function A.busy()
 	return run ~= nil
 end
 
---- The request to run, if any: new (no status answers it yet) and recent.
+--- What the mod made of request.lua, for alive.lua and the log. No clock involved (game updates
+--- may change the game's clock functions): the request found at the first look is the baseline, left alone (an old
+--- one, or sent while the editor was loading: the app then sends it again under a new id).
+local seen = { started = false, baseline = nil, id = nil, decision = nil }
+--- Last pump tick count and source, written in alive.lua.
+local beat = { ticks = 0, source = "?" }
+
+--- alive.lua: the mod's sign of life, rewritten by the pump every few seconds and on each new
+--- decision. The app judges how recent it is by the file's date, and reads where the mod stands.
+local function writeAlive()
+	return saveUserdata(A.DIR, A.file("alive"), {
+		version = VERSION, userdata = USERDATA, editor = isMapEditor(), ticks = beat.ticks, pump = beat.source,
+		busy = run ~= nil, seen = seen.id, decision = seen.decision,
+	})
+end
+
+function A.heartbeat(ticks, source)
+	beat.ticks, beat.source = ticks, source
+	return writeAlive()
+end
+
+local function decide(request, decision)
+	local id = request and request.id
+	if seen.id ~= id or seen.decision ~= decision then
+		seen.id, seen.decision = id, decision
+		log(string.format("request %s %s: %s", tostring(id), tostring(request and request.name), decision))
+		writeAlive()
+	end
+	return decision
+end
+
+--- The request to run, if any: readable, not cancelled by the app, sent after the mod started
+--- looking, not answered yet. A missing file makes the game log an error on every read, even
+--- under pcall: the first look leaves an empty request in its place (the app overwrites it).
 function A.pending()
-	local request = loadUserdata("importcity", "request")
-	if request == nil or type(request.id) ~= "number" or type(request.name) ~= "string" then
+	local request = loadUserdata(A.DIR, A.file("request"))
+	local first = not seen.started
+	seen.started = true
+	if request == nil or (request.id == nil and request.name == nil) then
+		if first then
+			saveUserdata(A.DIR, A.file("request"), {})
+		end
 		return nil
 	end
-	local st = loadUserdata("importcity", "status")
+	if type(request.id) ~= "number" or type(request.name) ~= "string" then
+		decide(request, "unreadable")
+		return nil
+	end
+	if first then
+		seen.baseline = request.id
+	end
+	if request.cancelled == true then
+		decide(request, "cancelled")
+		return nil
+	end
+	-- Before reading the status (missing until the first answer): no read for an old request.
+	if request.id == seen.baseline then
+		decide(request, "baseline")
+		return nil
+	end
+	local st = loadUserdata(A.DIR, A.file("status"))
 	if st and st.id == request.id then
+		decide(request, "answered")
 		return nil
 	end
-	-- `id` = when the app sent it (ms since 1970).
-	local okTime, now = pcall(os.time)
-	if okTime and type(now) == "number" and now - request.id / 1000 > MAX_AGE_S then
-		return nil
-	end
+	decide(request, "accepted")
 	return request
 end
 

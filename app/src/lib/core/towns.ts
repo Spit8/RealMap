@@ -451,7 +451,7 @@ export function townsIndustriesData(towns: MapTown[], industries: LuaValue[] = [
 const round1 = (v: number) => Math.round(v * 10) / 10;
 
 /**
- * Town targets for the importcity mod (the `towns` field of `<UD>/importcity/<name>.lua`): capacity,
+ * Town targets for the importcity mod (the `towns` field of `<UD>/towns_industries/realmap_note_<name>.lua`): capacity,
  * land-use shares from real areas (when known) and the goods asked for, which the mod applies with
  * `makeTownUpdateCargoNeedsCmd` (the import file only takes cargo categories, FACT-029).
  */

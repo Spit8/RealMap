@@ -1,22 +1,27 @@
 -- Handlers of main_gui: this file is ours (TFUI creates it once and never rewrites it).
 -- RealMap generates the whole map automatically in the Map Editor (DECISION-012): the app writes
--- the map's files and <userdata>/importcity/request.lua; the pump below (installed by the mod-area
+-- the map's files and <userdata>/towns_industries/realmap_request.lua; the pump below (installed by the mod-area
 -- button, it ticks even with the window closed) sees each new request and hands it to
 -- `importcity_auto.lua`, which builds heightmap > biomes > towns > industries > roads > rail and
--- answers in <userdata>/importcity/status.lua. The mod has one window (DECISION-013), opened by the
+-- answers in <userdata>/towns_industries/realmap_status.lua. The mod has one window (DECISION-013), opened by the
 -- « RealMap » button (`handlers.openWindow`) or when a generation starts; it only shows where it stands.
 -- Real town sizes (FACT-016): the towns get their target capacity (computed by the app from the
 -- population, note `towns = { { name, x, y, population, capacity } }`) right after they are built.
 -- react.onStep MUST be registered during a recipe render, on EVERY render (hooks model): the
--- button label expression calls handlers.pump(react), which installs it (as in HQminiMap).
+-- button icon expression calls handlers.pump(react), which installs it (as in HQminiMap). The
+-- mod's window ticks the same pump when the button's one does not (a game update may change how
+-- the mod-area button renders). Every step of the pump leaves a line in stdout.txt.
 
 local auto = ug_require "importcity::/gui/importcity_auto.lua"
 
 local handlers = {}
 
---- Pump: ticks counted; a request is looked for every PUMP_EVERY ticks (~0.5 s).
-local pump = { tick = 0 }
+--- Pump: ticks counted; a request is looked for every PUMP_EVERY ticks (~0.5 s), alive.lua
+--- rewritten every HEARTBEAT_EVERY ticks (~5 s), a line logged every ALIVE_LOG_EVERY (~5 min).
+local pump = { tick = 0, button = 0, lastButton = 0 }
 local PUMP_EVERY = 30
+local HEARTBEAT_EVERY = 300
+local ALIVE_LOG_EVERY = 18000
 
 --- How far (game m) a game town may be from a RealMap town of another name to match it.
 local MATCH_RADIUS = 500
@@ -53,11 +58,11 @@ end
 
 --- The last map written by the app, or nil.
 local function latestImport()
-	local latest = loadUserdata("importcity", "latest")
+	local latest = loadUserdata(auto.DIR, auto.file("latest"))
 	if latest == nil or type(latest.name) ~= "string" then
 		return nil
 	end
-	local note = loadUserdata("importcity", latest.name)
+	local note = loadUserdata(auto.DIR, auto.file("note_" .. latest.name))
 	if note == nil or type(note.towns) ~= "table" then
 		return nil
 	end
@@ -220,20 +225,50 @@ local function poll()
 	end
 end
 
---- Mod-area button label (TFUI: text = handlers.pump(react)): installs the pump.
+--- One tick of the pump, from the button (`source` = "button") or the window ("window").
+local function step(source)
+	pump.tick = pump.tick + 1
+	if pump.tick == 1 then
+		log("pump ticking (" .. source .. ")")
+	end
+	if pump.tick % PUMP_EVERY == 0 then
+		local ok, err = pcall(poll)
+		if not ok then
+			auto.logOnce("poll:" .. tostring(err), "poll failed: " .. tostring(err))
+		end
+	end
+	if pump.tick % HEARTBEAT_EVERY == 1 then
+		pcall(auto.heartbeat, pump.tick, source)
+	end
+	if pump.tick % ALIVE_LOG_EVERY == 0 then
+		log(string.format("pump alive (%d ticks, %s)", pump.tick, source))
+	end
+end
+
+--- The window's step (importcity_auto.lua): ticks the pump only if the button did not since.
+auto.windowStep = function()
+	if pump.button == pump.lastButton then
+		step("window")
+	end
+	pump.lastButton = pump.button
+end
+
+--- Mod-area button (TFUI: called by the icon expression): installs the pump, says so once.
 function handlers.pump(react)
-	if react ~= nil and type(react.onStep) == "function" then
-		pcall(function()
-			react.onStep(function()
-				pump.tick = pump.tick + 1
-				if pump.tick % PUMP_EVERY == 0 then
-					local ok, err = pcall(poll)
-					if not ok then
-						log("poll failed: " .. tostring(err))
-					end
-				end
-			end)
+	if react == nil or type(react.onStep) ~= "function" then
+		auto.logOnce("pump:missing", "pump NOT installed: react.onStep unavailable (" .. type(react) .. ")")
+		return "RealMap"
+	end
+	local ok, err = pcall(function()
+		react.onStep(function()
+			pump.button = pump.button + 1
+			step("button")
 		end)
+	end)
+	if ok then
+		auto.logOnce("pump:ok", "button pump installed")
+	else
+		auto.logOnce("pump:err", "pump NOT installed: " .. tostring(err))
 	end
 	return "RealMap"
 end

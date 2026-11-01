@@ -70,6 +70,12 @@ glossary drawn from the game's own catalogues). See [tools/i18n/README.md](../to
 
 ## Releasing
 
+After a game update: generate a map in game, then add the build (`Starting up build version` in
+`<UD>/crash_dump/stdout.txt`) to `TESTED_BUILDS` in `app/src/lib/core/gamebuild.ts`; the app shows a
+discreet note for any other build. Since build 40423 mods may only use the `towns_industries`,
+`heightmaps` and `mod_presets` userdata folders (FACT-034): the app ↔ mod files are
+`towns_industries/realmap_*.lua`.
+
 ### Update key (once)
 The automatic updates (`tauri-plugin-updater`) need signed packages. The public key is in
 `app/src-tauri/tauri.conf.json` (`plugins.updater.pubkey`), the private key and its password in the

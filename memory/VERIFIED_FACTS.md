@@ -202,3 +202,9 @@ Use one entry per durable finding. Do not mark a claim VERIFIED until its eviden
 ## FACT-033 — The Mod Manager crashes on unknown HTML in description.html (2026-11-01)
 - Status: VERIFIED (in game 2026-11-01, opening RealMap's page in the Mod Manager: « Assertion `false && "Unbound UI transformation for tag name"' failed » in `RichTextBuilder.cpp:429`, under `ModDetails` / `RichTextView`, fatal error).
 - Cause: `_metadata/description.html` used `<code>`, `<i>` and the entities `&lt;` / `&gt;`. The game renders only a subset of HTML; HQminiMap's page (working) uses `<p> <b> <h2> <ul> <ol> <li> <a>` and no entity. `app/test/modpage.test.ts` now allows only those.
+
+## FACT-034 — Since build 40420/40423, mods may only read / write three userdata folders
+- Status: VERIFIED (game build 40423, 2026-11-01)
+- Finding: `app.loadUserdata(dir, name)` / `app.saveUserdata(dir, name, tbl)` throw « The directory you trying to access is not available or invalid » for any `dir` other than **`towns_industries`, `heightmaps`, `mod_presets`** (the list sits right before that message in `TransportFever3.exe`, `app_script_util.cpp`). File names are checked too (« Forbidden file name ({}) detected, another valid version could be "{}" »): keep to letters, digits, `_`. Build 40408 accepted any folder (`importcity/` worked).
+- Evidence: local stdout.txt after updating to 40423: `[importcity] alive.lua not saved: … The directory you trying to access is not available or invalid` (mod 1.0.1 logs); a Steam player on 40425 saw the mod load but never read `importcity/request.lua`.
+- Consequence: the files shared by the app and the mod live in `towns_industries`, named `realmap_*` (DECISION-024). They also show in the Map Editor's Towns / Industries import list (as TF3 Minimap's `tf3map_*` do).

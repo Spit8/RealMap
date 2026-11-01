@@ -50,7 +50,9 @@ Track unresolved issues so they do not get mistaken for facts.
 - Status: OPEN · Date added: 2026-10-29
 
 ## QUESTION-011 — Does the automatic generation (DECISION-012) run in the game as in the simulation?
-- To see in game: the pump runs in the Map Editor and answers within 15 s; `MapPreviewComp` computes in the mod's window (does it need to be visible / docked like the editor's preview?); `getAllHeightmaps` / `getAllBiomes` entries (with or without extension); the import generator's default params; town creation then sizing; `os.time()` available for the request age check (else every request is accepted).
+- To see in game: the pump runs in the Map Editor and answers within 15 s; `MapPreviewComp` computes in the mod's window (does it need to be visible / docked like the editor's preview?); `getAllHeightmaps` / `getAllBiomes` entries (with or without extension); the import generator's default params; town creation then sizing.
+- 2026-11-01: a Steam player on build 40425 got no answer at all (mod loaded, request in the right folder, nothing logged). v1.0.1 (DECISION-024) logs every pump / request decision and drops the clock check: read the player's stdout.txt after 1.0.1.
+- 2026-11-01 (local build 40423): cause found (FACT-034, folder whitelist); with the files in `towns_industries` a full generation ran in game (check → … → done, one missing-file error at start only). Still to confirm on a player's Steam 40425 install.
 - Status: OPEN · Date added: 2026-10-31
 
 ## QUESTION-010 — How do the game-built roads and railway behave on an imported map?
