@@ -98,7 +98,8 @@ The apps read `releases/latest/download/latest.json` (written by the release wor
 Deliverables (as HQminiMap): Windows NSIS installer and MSI, Windows portable zip, Linux AppImage and
 .deb, macOS universal .dmg, and the mod zip.
 
-1. Version everywhere: `node tools/bump-version.mjs <x.y.z>` (`--check` verifies), release notes in
+1. Version everywhere: `node tools/bump-version.mjs <x.y.z>` (`--check` verifies; it also sets the mod's
+   `revision` in `importcity/mod/mod.json`: major × 10000 + minor × 100 + patch, 1.0.3 → 10003), release notes in
    `docs/release-notes/v<x.y.z>.md` (first line `title: …`).
 2. Commit, then push a tag `v<x.y.z>`: `.github/workflows/release.yml` builds the installers of the
    three systems, the portable zip and the mod zip into a **draft** release titled from the notes;
@@ -114,7 +115,7 @@ Deliverables (as HQminiMap): Windows NSIS installer and MSI, Windows portable zi
    - restart the game, Mod Manager › **My Mods** › RealMap;
    - **first upload**: the dialog must say "A new mod will be created on mod.io". The game then
      writes `_metadata/mod.io_fileid.txt`: **copy it into `importcity/mod/_metadata/` and commit it**;
-   - **updates**: raise `revision` in `importcity/mod/mod.json`, check that `mod.io_fileid.txt` is in the
+   - **updates**: `revision` already follows the version (step 1), check that `mod.io_fileid.txt` is in the
      staging copy, and upload only if the dialog says "The existing mod on mod.io will be updated"
      (otherwise the link is lost and a duplicate mod would be created).
    - The mod page uses `_metadata/modinfo.json` (name, summary, translated summaries, tags),
