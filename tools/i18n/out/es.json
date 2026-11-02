@@ -506,6 +506,6 @@
   "mod:roads_building": "Carreteras: %d conexión(es) entre localidades…",
   "mod:roads_done": "%d enlace(s) por carretera%s.",
   "mod:roads_partly": " (parcialmente rechazado)",
-  "mod:roads_simple": "%d / %d tramo(s) de carretera convertido(s) en caminos de tierra simples (2 carriles).",
+  "mod:roads_simple": "%d / %d tramo(s) de carretera reconstruido(s) como pequeñas carreteras rurales (2 carriles).",
   "mod:done": "El mapa \"%s\" ha sido generado. Guárdalo (en el menú del editor de mapas)."
 }

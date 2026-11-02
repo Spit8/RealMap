@@ -3,8 +3,8 @@
 --  - industries, built like the Map Editor does (`createIndustries` + `createIndustryProposal`) and
 --    named (`industries[i].name`, FACT-024);
 --  - roads between the town pairs the app chose (`connections`), by the game's own command (its
---    routing; it also links every industry that exists), its medium roads then replaced by simple
---    dirt roads (`simplifyRoads`);
+--    routing; it also links every industry that exists), its wider country roads then rebuilt as the
+--    small (2-lane) country road of the map's year (`simplifyRoads`);
 --  - the main railway (`rail.lines`): track segments along the points, a few at a time; a refused
 --    piece is tried segment by segment, then skipped and counted, with the game's reason.
 -- Each block calls `nextStep()` once its commands have answered (callbacks).
@@ -13,9 +13,12 @@ local i18n = ug_require "importcity::/gui/importcity_i18n.lua"
 
 local B = {}
 
---- The roads between towns: the game's connection command always lays medium country roads (4
---- lanes); they are then replaced by the old small country road (2 lanes, dirt look).
-local ROAD_SIMPLE = "::/infrastructure/street/country/country_old_small.street_template"
+--- The roads between towns: the game's connection command takes no road type and may lay medium or
+--- large country roads; they are rebuilt as the small one of the year (2 lanes): dirt until 1940,
+--- tarmac from 1940 (each template's `availability`; the old ones no longer exist after 1940).
+local ROAD_OLD_SMALL = "::/infrastructure/street/country/country_old_small.street_template"
+local ROAD_NEW_SMALL = "::/infrastructure/street/country/country_new_small.street_template"
+local ROAD_NEW_FROM = 1940
 --- Road edges replaced in one proposal.
 local ROAD_CHUNK = 20
 local TRACK_SIMPLE = "::/infrastructure/track/simple/simple.street_template"
@@ -498,21 +501,25 @@ local function edgeTemplate(base)
 	return ok and type(t) == "string" and t or nil
 end
 
---- Replace the country roads the connection command laid (medium, 4 lanes) by ROAD_SIMPLE: same
---- nodes, curves, bridges and tunnels, only the street template changes, as the game's own
---- `mission/tasks/auto_builder/electrify.tl` does for tracks (edgesToRemove + edgesToAdd).
---- Town streets and industry access roads (other templates) are left alone. ROAD_CHUNK edges per
+--- Rebuild the wider country roads the connection command laid (medium, large) as the small country
+--- road of the year: same nodes, curves, bridges and tunnels (edgesToRemove + edgesToAdd, as the
+--- game's `mission/tasks/auto_builder/electrify.tl`). The new edge is made fresh from the old one's
+--- geometry, like the rail: a copy of the old component keeps its per-lane data (`laneConfig`,
+--- `edgeDecorations`) and the engine aborts on it (« lc.segment0 not found », seen in game).
+--- Small country roads, town streets and industry access roads are left alone. ROAD_CHUNK edges per
 --- proposal; a refused one is tried edge by edge, a refused edge stays as the game built it.
 function B.simplifyRoads(ctx, nextStep)
 	local r = ctx.report
 	r.roadEdges, r.roadEdgesSimple = 0, 0
+	local roadName = year() >= ROAD_NEW_FROM and ROAD_NEW_SMALL or ROAD_OLD_SMALL
 	local okT, template = pcall(function()
-		return api.res.streetTemplateRep.get(api.res.streetTemplateRep.find(ROAD_SIMPLE))
+		return api.res.streetTemplateRep.get(api.res.streetTemplateRep.find(roadName))
 	end)
 	if not okT or template == nil then
-		ctx.log("simple road template not found: " .. ROAD_SIMPLE)
+		ctx.log("small road template not found: " .. roadName)
 		return nextStep()
 	end
+	ctx.log("country roads rebuilt as: " .. roadName)
 	-- Candidate edges: what the connection command answered, and the whole map from the octree (as
 	-- the game's `mission/name_util.tl` searches it); `forEachEntityWithComponent` refuses street
 	-- edges (« Cannot loop over this component type », seen in game).
@@ -528,7 +535,7 @@ function B.simplifyRoads(ctx, nextStep)
 			sampled = true
 			ctx.log("first road edge template: " .. name)
 		end
-		if name and name:find("/country/country_", 1, true) and name ~= ROAD_SIMPLE then
+		if name and name:find("/country/country_", 1, true) and not name:find("_small", 1, true) then
 			edges[#edges + 1] = { entity = entity, base = base }
 		end
 	end
@@ -566,10 +573,14 @@ function B.simplifyRoads(ctx, nextStep)
 			local seg = api.type.SegmentAndEntity.new()
 			seg.entity = -(i - k + 1)
 			seg.type = 0 -- street
-			e.base.laneConfigs = template.laneConfigs
-			e.base.roadTemplate = ROAD_SIMPLE
-			e.base.roadStyle = template.streetStyle
-			seg.comp = e.base
+			-- A fresh edge with the old one's geometry (its component is read-only in game anyway).
+			local old, base = e.base, seg.comp
+			for _, f in ipairs({ "node0", "node1", "position0", "position1", "tangent0", "tangent1", "type", "typeIndex", "roadType" }) do
+				base[f] = old[f]
+			end
+			base.laneConfigs = template.laneConfigs
+			base.roadTemplate = roadName
+			base.roadStyle = template.streetStyle
 			add[#add + 1] = seg
 		end
 		proposal.streetProposal.edgesToRemove = remove

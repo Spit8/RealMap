@@ -3550,8 +3550,8 @@
   },
   {
     "id": "mod:roads_simple",
-    "text": "%d / %d road segment(s) turned into simple dirt roads (2 lanes).",
-    "ref": "%d / %d tronçon(s) de route transformé(s) en chemins de terre simples (2 voies).",
+    "text": "%d / %d road segment(s) rebuilt as small country roads (2 lanes).",
+    "ref": "%d / %d tronçon(s) de route refait(s) en petites routes de campagne (2 voies).",
     "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
     "kind": "label"
   },

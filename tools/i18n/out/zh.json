@@ -506,6 +506,6 @@
   "mod:roads_building": "道路：%d 条连接城镇的线路…",
   "mod:roads_done": "%d 个公路连接%s.",
   "mod:roads_partly": " （部分已拒绝）",
-  "mod:roads_simple": "%d / %d 个道路段已转换为简单的土路（双车道）。",
+  "mod:roads_simple": "%d / %d 个道路段已重建为小型乡村道路（双车道）。",
   "mod:done": "地图“%s”已生成。请保存它（在地图编辑工具的菜单中）。"
 }

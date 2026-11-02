@@ -40,7 +40,7 @@ local STRINGS = {
 		roads_building = "Roads: %d link(s) between towns…",
 		roads_done = "%d road link(s)%s.",
 		roads_partly = " (partly refused)",
-		roads_simple = "%d / %d road segment(s) turned into simple dirt roads (2 lanes).",
+		roads_simple = "%d / %d road segment(s) rebuilt as small country roads (2 lanes).",
 		done = "Map “%s” generated. Save it (Map Editor menu).",
 	},
 	fr = {
@@ -76,7 +76,7 @@ local STRINGS = {
 		roads_building = "Routes : %d liaison(s) entre villes…",
 		roads_done = "%d liaison(s) routière(s)%s.",
 		roads_partly = " (refusées en partie)",
-		roads_simple = "%d / %d tronçon(s) de route transformé(s) en chemins de terre simples (2 voies).",
+		roads_simple = "%d / %d tronçon(s) de route refait(s) en petites routes de campagne (2 voies).",
 		done = "Carte « %s » générée. Enregistre-la (menu de l'éditeur).",
 	},
 	-- BEGIN generated de (tools/i18n/import.mts)
@@ -113,7 +113,7 @@ local STRINGS = {
 		roads_building = "Strassen: %d Verbindung(en) zwischen Städten…",
 		roads_done = "%d Strassenverbindung(en)%s.",
 		roads_partly = " (teilweise abgelehnt)",
-		roads_simple = "%d / %d Strassenabschnitt(e) wurden in einfache Feldwege (2 Fahrbahnen) umgewandelt.",
+		roads_simple = "%d / %d Strassenabschnitt(e) wurde(n) als kleine Landstrassen (2 Fahrbahnen) neu aufgebaut.",
 		done = "Die Karte „%s“ wurde erstellt. Speichere sie (im Menü des Karten-Editors).",
 	},
 	-- END generated de
@@ -151,7 +151,7 @@ local STRINGS = {
 		roads_building = "Strade: %d collegamento/i tra le cittadine…",
 		roads_done = "%d collegamento(i) stradale(i)%s.",
 		roads_partly = " (parzialmente rifiutate)",
-		roads_simple = "%d / %d tratto/i di strada trasformato/i in semplici strade sterrate (2 corsie).",
+		roads_simple = "%d / %d tratto/i di strada ricostruito/i come piccole strade di campagna (2 corsie).",
 		done = "Mappa \"%s\" generata. Salvala (nel menu dell'editor di mappe).",
 	},
 	-- END generated it
@@ -189,7 +189,7 @@ local STRINGS = {
 		roads_building = "Carreteras: %d conexión(es) entre localidades…",
 		roads_done = "%d enlace(s) por carretera%s.",
 		roads_partly = " (parcialmente rechazado)",
-		roads_simple = "%d / %d tramo(s) de carretera convertido(s) en caminos de tierra simples (2 carriles).",
+		roads_simple = "%d / %d tramo(s) de carretera reconstruido(s) como pequeñas carreteras rurales (2 carriles).",
 		done = "El mapa \"%s\" ha sido generado. Guárdalo (en el menú del editor de mapas).",
 	},
 	-- END generated es
@@ -227,7 +227,7 @@ local STRINGS = {
 		roads_building = "道路：%d 条连接城镇的线路…",
 		roads_done = "%d 个公路连接%s.",
 		roads_partly = " （部分已拒绝）",
-		roads_simple = "%d / %d 个道路段已转换为简单的土路（双车道）。",
+		roads_simple = "%d / %d 个道路段已重建为小型乡村道路（双车道）。",
 		done = "地图“%s”已生成。请保存它（在地图编辑工具的菜单中）。",
 	},
 	-- END generated zh

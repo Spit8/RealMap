@@ -63,6 +63,7 @@
     "app:why.sea": "{pct} % 海域",
     "app:msg.resultRail": "铁路：{km} 公里，最小转弯半径 {radius} 米，游戏内最大坡度 {grade} %，{bridges} 座桥梁（最高 {high} 米），{tunnels} 条隧道。",
     "app:industry.nameOf": "{town}{industry}",
-    "app:updates.mb": "{v} MB"
+    "app:updates.mb": "{v} MB",
+    "mod:roads_simple": "%d / %d 个道路段已重建为小型乡村道路（双车道）。"
   }
 }

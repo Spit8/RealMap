@@ -158,7 +158,21 @@ api = {
     Context = newRecord(), ImportExportHeightmapMode = newRecord(), ImportBiomesMode = newRecord(),
     SimpleProposal = { new = function() return { streetProposal = {} } end },
     NodeAndEntity = { new = function() return { comp = {} } end },
-    SegmentAndEntity = { new = function() return { comp = {} } end },
+    -- As in game: assigning `comp` stores a writable copy of the component (electrify.tl edits it there).
+    SegmentAndEntity = { new = function()
+      local fields = { comp = {} }
+      return setmetatable({}, {
+        __index = fields,
+        __newindex = function(_, k, v)
+          if k == "comp" and type(v) == "table" then
+            local copy = {}
+            for kk, vv in pairs(getmetatable(v) and getmetatable(v).fields or v) do copy[kk] = vv end
+            v = copy
+          end
+          fields[k] = v
+        end,
+      })
+    end },
     ComponentType = { TOWN = "TOWN", CONSTRUCTION = "CONSTRUCTION", BASE_NODE = "BASE_NODE",
                       BASE_EDGE = "BASE_EDGE", BASE_EDGE_STREET = "BASE_EDGE_STREET" },
     enum = { BaseEdgeType = { NORMAL = "NORMAL", BRIDGE = "BRIDGE", TUNNEL = "TUNNEL" }, RoadType = { TRACK = "TRACK" } },
@@ -219,7 +233,14 @@ api = {
     getComponent = function(e, ct)
       if ct == "BASE_EDGE" and SIM.streetEdges[e] then
         local s = SIM.streetEdges[e]
-        return { roadTemplate = s.roadTemplate, type = s.type, node0 = e * 10, node1 = e * 10 + 1, laneConfigs = { "old" } }
+        -- As in game: the component is read-only and carries per-lane data of its own template.
+        local fields = { roadTemplate = s.roadTemplate, type = s.type, node0 = e * 10, node1 = e * 10 + 1, laneConfigs = { "old" },
+                         laneConfig = { "old" }, edgeDecorations = { { 0, false } } }
+        return setmetatable({}, {
+          fields = fields,
+          __index = fields,
+          __newindex = function(_, k) error("cannot write to read only member '" .. tostring(k) .. "'") end,
+        })
       end
       if ct == "TOWN" and e >= 101 and e <= 199 then return { initialLandUseCapacities = { 100, 60, 40 }, sizeFactors = { 1, 1, 1 }, cargoNeeds = { { { 5, 1 } }, {}, {} } } end
       if ct == "CONSTRUCTION" and SIM.constructions[e] then return {} end
@@ -307,7 +328,9 @@ local function answer(c)
       local seg, old = sp0.edgesToAdd[i], SIM.streetEdges[e]
       if not old or seg.type ~= 0 or seg.comp.roadTemplate ~= COUNTRY .. "country_old_small.street_template"
          or seg.comp.laneConfigs[1] ~= "lanes" or seg.comp.roadStyle ~= "style" or seg.comp.type ~= old.type
-         or seg.comp.node0 ~= e * 10 then
+         or seg.comp.node0 ~= e * 10
+         -- The old edge's per-lane data makes the engine abort in game (« lc.segment0 not found »).
+         or seg.comp.laneConfig ~= nil or seg.comp.edgeDecorations ~= nil then
         SIM.malformed = true
         return false, {}
       end

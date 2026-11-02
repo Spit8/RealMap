@@ -506,5 +506,5 @@ mod:industries_missing;label;;, %d impossible;, %d impossible(s);, %d 个无法�
 mod:roads_building;label;;Roads: %d link(s) between towns…;Routes : %d liaison(s) entre villes…;道路：%d 条连接城镇的线路…;Roads: %d lines connecting towns...;
 mod:roads_done;label;;%d road link(s)%s.;%d liaison(s) routière(s)%s.;%d 个公路连接%s.;%d roads connect to %s.;
 mod:roads_partly;label;; (partly refused); (refusées en partie); （部分已拒绝）;(Partially rejected);
-mod:roads_simple;label;;%d / %d road segment(s) turned into simple dirt roads (2 lanes).;%d / %d tronçon(s) de route transformé(s) en chemins de terre simples (2 voies).;%d / %d 个道路段已转换为简单的土路（双车道）。;%d / %d road segments have been converted to simple dirt roads (two-lane).;
+mod:roads_simple;label;overridden;%d / %d road segment(s) rebuilt as small country roads (2 lanes).;%d / %d tronçon(s) de route refait(s) en petites routes de campagne (2 voies).;你已重新构建了 %d / %d 个道路段，将其转换为双车道的乡村道路。;You have rebuilt %d out of %d road segments, converting them into two-lane rural roads.;%d / %d 个道路段已重建为小型乡村道路（双车道）。
 mod:done;sentence;;Map “%s” generated. Save it (Map Editor menu).;Carte « %s » générée. Enregistre-la (menu de l'éditeur).;地图“%s”已生成。请保存它（在地图编辑工具的菜单中）。;"The map ""%s"" has been generated. Please save it (in the menu of the map editing tool).";

@@ -506,6 +506,6 @@
   "mod:roads_building": "Strade: %d collegamento/i tra le cittadine…",
   "mod:roads_done": "%d collegamento(i) stradale(i)%s.",
   "mod:roads_partly": " (parzialmente rifiutate)",
-  "mod:roads_simple": "%d / %d tratto/i di strada trasformato/i in semplici strade sterrate (2 corsie).",
+  "mod:roads_simple": "%d / %d tratto/i di strada ricostruito/i come piccole strade di campagna (2 corsie).",
   "mod:done": "Mappa \"%s\" generata. Salvala (nel menu dell'editor di mappe)."
 }
