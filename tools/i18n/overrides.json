@@ -18,7 +18,14 @@
     "app:msg.noAnswerOtherDir": "Das Spiel reagiert hier nicht, aber der RealMap-Mod läuft in einem anderen Spielordner: {dir}. Wähle diesen Ordner im Reiter „Export“ und versuche es dann erneut.",
     "app:export.buildNewer": "Spielversion {build}: neuer als die Versionen, mit denen RealMap getestet wurde ({tested}). Wenn die Erstellung fehlschlägt, prüfe, ob es ein RealMap-Update gibt, oder sende das Spielprotokoll.",
     "app:export.buildOlder": "Spielversion {build}: älter als die Versionen, mit denen RealMap getestet wurde ({tested}). Wenn die Erstellung fehlschlägt, aktualisiere das Spiel.",
-    "app:advanced.countTitle": "0 = Anzahl des Spiels für diese Dichte ({n}), mit mindestens einem Grundrohstoff jeder Produktionskette (die Summe kann dann höher sein)"
+    "app:advanced.countTitle": "0 = Anzahl des Spiels für diese Dichte ({n}), mit mindestens einem Grundrohstoff jeder Produktionskette (die Summe kann dann höher sein)",
+    "app:msg.workerTooLarge": "Gebiet zu gross für den Speicher der Berechnung: Verkleinere die Kartengrösse oder den Massstab.",
+    "app:msg.ignGaveUp": "IGN nicht erreichbar ({error}): Der Rest des Reliefs stammt von Copernicus.",
+    "app:msg.demTileFailed": "Reliefkachel {tile} ist nach mehreren Versuchen unlesbar ({error}). Versuche es erneut: Die bereits heruntergeladenen Kacheln bleiben erhalten.",
+    "app:data.rotation": "Drehung (°)",
+    "app:data.rotationTitle": "Richtung des oberen Rands der Spielkarte, in Grad im Uhrzeigersinn ab Norden. Auf der Karte: den Mittelpunkt gedrückt halten und ziehen.",
+    "app:data.rotationReset": "Norden oben",
+    "app:map.rotateTip": "Gedrückt halten und ziehen, um das Gebiet zu drehen (Umschalt: in 15°-Schritten) · Drehung {deg}°"
   },
   "it": {
     "app:lists.sharesTitle": "Commerciale / industriale (% della capacità)",
@@ -32,7 +39,14 @@
     "app:why.forest": "{pct} % bosco",
     "app:why.sea": "{pct} % mare",
     "app:msg.resultRail": "Ferrovia: {km} km, curva più stretta {radius} m, pendenza massima {grade} % nel gioco, {bridges} ponte/i (il più alto {high} m), {tunnels} tunnel.",
-    "app:industry.nameOf": "{industry} di {town}"
+    "app:industry.nameOf": "{industry} di {town}",
+    "app:msg.workerTooLarge": "Zona troppo grande per la memoria del calcolo: riduci la dimensione della mappa o la scala.",
+    "app:msg.ignGaveUp": "IGN non raggiungibile ({error}): il resto del rilievo proviene da Copernicus.",
+    "app:msg.demTileFailed": "Tessera del rilievo {tile} illeggibile dopo diversi tentativi ({error}). Riprova: le tessere già scaricate vengono conservate.",
+    "app:data.rotation": "Rotazione (°)",
+    "app:data.rotationTitle": "Direzione del lato superiore della mappa di gioco, in gradi in senso orario dal nord. Sulla mappa: tieni premuto il punto centrale e trascina.",
+    "app:data.rotationReset": "Nord in alto",
+    "app:map.rotateTip": "Tieni premuto e trascina per ruotare la zona (Maiusc: a passi di 15°) · rotazione {deg}°"
   },
   "es": {
     "app:lists.sharesTitle": "Comercial / industrial (% de la capacidad)",
@@ -50,7 +64,14 @@
     "app:why.sea": "{pct} % mar",
     "app:msg.resultRail": "Ferrocarril: {km} km, curva más cerrada {radius} m, pendiente máxima {grade} % en el juego, {bridges} puente(s) (el más alto {high} m), {tunnels} túnel(es).",
     "app:net.rateLimit": "{server}: límite de solicitudes",
-    "app:industry.nameOf": "{industry} de {town}"
+    "app:industry.nameOf": "{industry} de {town}",
+    "app:msg.workerTooLarge": "Zona demasiado grande para la memoria del cálculo: reduce el tamaño del mapa o la escala.",
+    "app:msg.ignGaveUp": "IGN no disponible ({error}): el resto del relieve procede de Copernicus.",
+    "app:msg.demTileFailed": "Baldosa de relieve {tile} ilegible tras varios intentos ({error}). Vuelve a intentarlo: las baldosas ya descargadas se conservan.",
+    "app:data.rotation": "Rotación (°)",
+    "app:data.rotationTitle": "Dirección del borde superior del mapa del juego, en grados en sentido horario desde el norte. En el mapa: mantén pulsado el punto central y arrastra.",
+    "app:data.rotationReset": "Norte arriba",
+    "app:map.rotateTip": "Mantén pulsado y arrastra para girar la zona (Mayús: en pasos de 15°) · rotación {deg}°"
   },
   "zh": {
     "app:lists.sharesTitle": "商业 / 工业（占容量的 %）",
@@ -64,6 +85,13 @@
     "app:msg.resultRail": "铁路：{km} 公里，最小转弯半径 {radius} 米，游戏内最大坡度 {grade} %，{bridges} 座桥梁（最高 {high} 米），{tunnels} 条隧道。",
     "app:industry.nameOf": "{town}{industry}",
     "app:updates.mb": "{v} MB",
-    "mod:roads_simple": "%d / %d 个道路段已重建为小型乡村道路（双车道）。"
+    "mod:roads_simple": "%d / %d 个道路段已重建为小型乡村道路（双车道）。",
+    "app:msg.workerTooLarge": "区域过大，超出计算内存：请减小地图大小或比例。",
+    "app:msg.ignGaveUp": "无法连接 IGN（{error}）：其余地形数据来自 Copernicus。",
+    "app:msg.demTileFailed": "地形瓦片 {tile} 多次尝试后仍无法读取（{error}）。请重试：已下载的瓦片会保留。",
+    "app:data.rotation": "旋转（°）",
+    "app:data.rotationTitle": "游戏地图上边的朝向，以正北为起点按顺时针计算的度数。在地图上：按住中心点并拖动。",
+    "app:data.rotationReset": "北向朝上",
+    "app:map.rotateTip": "按住并拖动以旋转区域（Shift：每次 15°）· 旋转 {deg}°"
   }
 }

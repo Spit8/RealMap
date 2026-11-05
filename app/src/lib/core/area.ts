@@ -27,6 +27,8 @@ export interface Area {
   scale: number;
   /** Game metres per real metre of height; null = default 1/√scale. */
   verticalScale: number | null;
+  /** Where the top of the game map points, degrees clockwise from north (0 = north up). */
+  rotation?: number;
 }
 
 export interface Frame {
@@ -35,6 +37,8 @@ export interface Frame {
   tilesY: number;
   scale: number;
   verticalScale: number;
+  /** Rotation of the game axes (radians, clockwise from north; 0 = north up). */
+  rot: number;
   /** proj4 definition of the local projection (transverse Mercator centred on the area, real metres). */
   proj: string;
   /** UTM zone of the centre (proj4 definition, EPSG code), for the IGN WMS. */
@@ -55,6 +59,17 @@ export function utmZone(lon: number, lat: number): { zone: number; south: boolea
   return { zone, south: lat < 0 };
 }
 
+/** A rotation in degrees brought into [0, 360). */
+export function normalizeRotation(deg: number | undefined): number {
+  const d = Number.isFinite(deg) ? (deg as number) % 360 : 0;
+  return d < 0 ? d + 360 : d;
+}
+
+/** A rotation in [0, 360) to the tenth of a degree (the precision offered). */
+export function roundRotation(deg: number | undefined): number {
+  return normalizeRotation(Math.round(normalizeRotation(deg) * 10) / 10);
+}
+
 export function defaultVerticalScale(scale: number): number {
   return 1 / Math.sqrt(Math.max(1, scale));
 }
@@ -71,6 +86,7 @@ export function makeFrame(area: Area): Frame {
     tilesY,
     scale,
     verticalScale: area.verticalScale ?? defaultVerticalScale(scale),
+    rot: (normalizeRotation(area.rotation) * Math.PI) / 180,
     proj,
     utm,
     epsg: (south ? 32700 : 32600) + zone,
@@ -83,20 +99,27 @@ export function makeFrame(area: Area): Frame {
   };
 }
 
-/** Converters between game metres, the local projection (real metres) and WGS84 lon/lat. */
+/**
+ * Converters between game metres, the local projection (real metres) and WGS84 lon/lat. With a
+ * rotation θ the game's y axis (top of the map) points θ clockwise from north:
+ * east = x·cosθ + y·sinθ, north = −x·sinθ + y·cosθ (real metres = game metres × scale).
+ */
 export function frameProjection(f: Frame) {
   const conv = proj4("WGS84", f.proj);
+  const rot = f.rot ?? 0;
+  const c = Math.cos(rot);
+  const s = Math.sin(rot);
+  const toLocal = (x: number, y: number): [number, number] =>
+    rot ? [(x * c + y * s) * f.scale, (-x * s + y * c) * f.scale] : [x * f.scale, y * f.scale];
   return {
-    toLocal(x: number, y: number): [number, number] {
-      return [x * f.scale, y * f.scale];
-    },
+    toLocal,
     toLonLat(x: number, y: number): [number, number] {
-      const [lon, lat] = conv.inverse([x * f.scale, y * f.scale]);
+      const [lon, lat] = conv.inverse(toLocal(x, y));
       return [lon, lat];
     },
     toWorld(lon: number, lat: number): [number, number] {
       const [e, n] = conv.forward([lon, lat]);
-      return [e / f.scale, n / f.scale];
+      return rot ? [(e * c - n * s) / f.scale, (e * s + n * c) / f.scale] : [e / f.scale, n / f.scale];
     },
   };
 }

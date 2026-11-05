@@ -507,5 +507,12 @@
   "mod:roads_done": "%d enlace(s) por carretera%s.",
   "mod:roads_partly": " (parcialmente rechazado)",
   "mod:roads_simple": "%d / %d tramo(s) de carretera reconstruido(s) como pequeñas carreteras rurales (2 carriles).",
-  "mod:done": "El mapa \"%s\" ha sido generado. Guárdalo (en el menú del editor de mapas)."
+  "mod:done": "El mapa \"%s\" ha sido generado. Guárdalo (en el menú del editor de mapas).",
+  "app:msg.workerTooLarge": "Zona demasiado grande para la memoria del cálculo: reduce el tamaño del mapa o la escala.",
+  "app:msg.ignGaveUp": "IGN no disponible ({error}): el resto del relieve procede de Copernicus.",
+  "app:msg.demTileFailed": "Baldosa de relieve {tile} ilegible tras varios intentos ({error}). Vuelve a intentarlo: las baldosas ya descargadas se conservan.",
+  "app:data.rotation": "Rotación (°)",
+  "app:data.rotationTitle": "Dirección del borde superior del mapa del juego, en grados en sentido horario desde el norte. En el mapa: mantén pulsado el punto central y arrastra.",
+  "app:data.rotationReset": "Norte arriba",
+  "app:map.rotateTip": "Mantén pulsado y arrastra para girar la zona (Mayús: en pasos de 15°) · rotación {deg}°"
 }

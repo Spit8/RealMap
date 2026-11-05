@@ -40,12 +40,14 @@ import {
   type DroppedTown, type MapTown, type OsmPlace, type PlaceFilter, type TownCandidate, type TownPicks, type TownsOptions,
 } from "$lib/core/towns";
 import { loadBathymetry, loadDemTile, loadIgnGrid, loadLandcover, overpass } from "$lib/platform/download";
+import type { RetryNotice } from "$lib/platform/fetchbytes";
 import { getVersion } from "@tauri-apps/api/app";
 import { buildWarning, parseGameBuild, testedBuildsText } from "$lib/core/gamebuild";
 import { appCacheDir } from "@tauri-apps/api/path";
 import { ensureDir, fileStat, joinPath, readText, writeBytes, writeText } from "$lib/platform/fsx";
 import { allowDirs, detectUserdata, gamePaths, sharedFile } from "$lib/platform/paths";
 import type { TerrainMessage, TerrainRequest, TerrainStats } from "$lib/workers/terrain.worker";
+import { requestMessages } from "$lib/workers/transport";
 import { MsgError } from "$lib/core/msg";
 import { fmtNum, i18n, t, tk, tm, type MessageKey } from "$lib/i18n/index.svelte";
 import { TILE_M } from "$lib/core/area";
@@ -103,7 +105,7 @@ export interface Settings {
 const DEFAULTS: Settings = {
   version: SETTINGS_VERSION,
   name: "RealMap",
-  area: { lon: 4.8357, lat: 45.764, size: 3, format: 0, landscape: false, scale: 3, verticalScale: null },
+  area: { lon: 4.8357, lat: 45.764, size: 3, format: 0, landscape: false, scale: 3, verticalScale: null, rotation: 0 },
   userdata: "",
   source: "auto",
   terrain: { ...DEFAULT_TERRAIN },
@@ -300,7 +302,7 @@ async function appendJournal(line: string): Promise<void> {
 /** What the real data depends on (phase 1): the area and the sources. */
 function dataKeyOf(s: Settings): string {
   const a = s.area;
-  return JSON.stringify([a.lon, a.lat, a.size, a.format, a.landscape, a.scale, s.source, s.useCover]);
+  return JSON.stringify([a.lon, a.lat, a.size, a.format, a.landscape, a.scale, a.rotation ?? 0, s.source, s.useCover]);
 }
 
 /** Phase 1 summary for the panel. */
@@ -609,6 +611,16 @@ class Importer {
     if (st && state === "run") this.step = tk(`step.data.${id}`);
   }
 
+  /** Countdown before a new download try in a step's detail, and one journal line per new try. */
+  private retryNotice(what: string, show: (detail: string) => void): RetryNotice {
+    let prev = 0;
+    return (s, reason) => {
+      if (s > prev) this.diag(`téléchargement ${what} : ${reason}, nouvel essai dans ${s} s`);
+      prev = s;
+      show(t("msg.retryIn", { reason, s }));
+    };
+  }
+
   private snapshot(): Settings {
     return $state.snapshot(this.settings) as Settings;
   }
@@ -637,10 +649,16 @@ class Importer {
     let source = "Copernicus GLO-30";
     this.exportState("relief", "run");
     if (s.source === "ign" || (s.source === "auto" && inIgnCoverage(s.area.lon, s.area.lat))) {
-      ign = await loadIgnGrid(f, g, (d, n) => {
-        at(0.2 + (0.5 * d) / n);
-        this.exportState("relief", "run", t("msg.ignBlocks", { d, n }));
-      });
+      ign = await loadIgnGrid(
+        f,
+        g,
+        (d, n) => {
+          at(0.2 + (0.5 * d) / n);
+          this.exportState("relief", "run", t("msg.ignBlocks", { d, n }));
+        },
+        this.retryNotice("IGN", (x) => this.exportState("relief", "run", x)),
+        (error) => this.warn(t("msg.ignGaveUp", { error })),
+      );
       if (ign) source = "IGN RGE ALTI";
     }
     let rasters = phase1.rasters;
@@ -648,7 +666,7 @@ class Importer {
       // The preview had full IGN cover but the 4 m grid has holes: Copernicus fills them.
       rasters = [];
       for (const tile of copernicusTilesFor(frameBBox(f, 200))) {
-        if (!this.demCache.has(tile)) this.demCache.set(tile, await loadDemTile(tile));
+        if (!this.demCache.has(tile)) this.demCache.set(tile, await loadDemTile(tile, this.retryNotice(tile, (x) => this.exportState("relief", "run", x))));
         const r = this.demCache.get(tile);
         if (r) rasters.push(r);
       }
@@ -659,7 +677,12 @@ class Importer {
     if (s.useCover) {
       this.exportState("cover", "run");
       try {
-        cover = await loadLandcover(roundBbox(frameBBox(f)), worldcoverLevel(g.step * f.scale), (d, n) => at(0.7 + (0.3 * d) / Math.max(1, n)));
+        cover = await loadLandcover(
+          roundBbox(frameBBox(f)),
+          worldcoverLevel(g.step * f.scale),
+          (d, n) => at(0.7 + (0.3 * d) / Math.max(1, n)),
+          this.retryNotice("WorldCover", (x) => this.exportState("cover", "run", x)),
+        );
         this.exportState("cover", "done", t("msg.windows", { n: cover.length }));
       } catch (e) {
         this.exportState("cover", "fail", errorText(e));
@@ -716,10 +739,16 @@ class Importer {
     let source = "Copernicus GLO-30";
     if (wantIgn) {
       this.stepState("ign", "run");
-      ign = await loadIgnGrid(f, g, (d, n) => {
-        at((0.4 * d) / n);
-        this.stepState("ign", "run", t("msg.blocks", { d, n }));
-      });
+      ign = await loadIgnGrid(
+        f,
+        g,
+        (d, n) => {
+          at((0.4 * d) / n);
+          this.stepState("ign", "run", t("msg.blocks", { d, n }));
+        },
+        this.retryNotice("IGN", (x) => this.stepState("ign", "run", x)),
+        (error) => this.warn(t("msg.ignGaveUp", { error })),
+      );
       if (ign) {
         source = "IGN RGE ALTI";
         this.stepState("ign", "done");
@@ -734,7 +763,10 @@ class Importer {
       const tiles = copernicusTilesFor(frameBBox(f, 200));
       for (const [i, tile] of tiles.entries()) {
         this.stepState("dem", "run", t("msg.tiles", { d: i + 1, n: tiles.length }));
-        if (!this.demCache.has(tile)) this.demCache.set(tile, await loadDemTile(tile));
+        if (!this.demCache.has(tile)) {
+          const notice = this.retryNotice(tile, (x) => this.stepState("dem", "run", `${t("msg.tiles", { d: i + 1, n: tiles.length })} · ${x}`));
+          this.demCache.set(tile, await loadDemTile(tile, notice));
+        }
         const r = this.demCache.get(tile);
         if (r) rasters.push(r);
         at(0.4 + (0.2 * (i + 1)) / tiles.length);
@@ -745,7 +777,12 @@ class Importer {
     if (s.useCover) {
       this.stepState("cover", "run");
       try {
-        cover = await loadLandcover(bbox, worldcoverLevel(g.step * f.scale), (d, n) => at(0.6 + (0.1 * d) / Math.max(1, n)));
+        cover = await loadLandcover(
+          bbox,
+          worldcoverLevel(g.step * f.scale),
+          (d, n) => at(0.6 + (0.1 * d) / Math.max(1, n)),
+          this.retryNotice("WorldCover", (x) => this.stepState("cover", "run", x)),
+        );
         this.stepState("cover", "done", t("msg.windows", { n: cover.length }));
       } catch (e) {
         this.stepState("cover", "fail", errorText(e));
@@ -851,8 +888,27 @@ class Importer {
         w.terminate();
         reject(new Error(e.message || (e.filename ? t("msg.workerFailedAt", { file: e.filename, line: e.lineno }) : t("msg.workerFailed"))));
       };
-      // The IGN grid is used once; DEM rasters stay cached here (copied, not transferred).
-      w.postMessage(req, req.ign ? [req.ign.buffer] : []);
+      // In pieces (one message is capped near 1.8 GiB): each DEM tile cut to the frame and its
+      // sampling margin, copied and transferred (the cache keeps the original), OSM in batches.
+      const f = makeFrame(req.area);
+      const g = req.mode === "full" ? fullGrid(f) : previewGrid(f);
+      const crop = frameBBox(f, 200 + g.step * f.scale);
+      const sent = { rasters: 0, cover: 0, osm: 0 };
+      try {
+        for (const { msg, transfer, bytes } of requestMessages(req, crop)) {
+          if (msg.kind === "part") {
+            const key = msg.field === "rasters" || msg.field === "bathy" ? "rasters" : msg.field === "cover" ? "cover" : "osm";
+            sent[key] += bytes;
+          }
+          w.postMessage(msg, transfer);
+        }
+      } catch (e) {
+        w.terminate();
+        reject(e instanceof DOMException && e.name === "DataCloneError" ? new Error(t("msg.workerTooLarge")) : e);
+        return;
+      }
+      const mib = (b: number) => Math.round(b / 2 ** 20);
+      this.diag(`calcul : envoyé au worker ${mib(sent.rasters)} Mio de relief, ${mib(sent.cover)} Mio d'occupation du sol, ~${mib(sent.osm)} Mio d'OSM`);
     });
   }
 

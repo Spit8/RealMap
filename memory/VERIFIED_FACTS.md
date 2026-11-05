@@ -214,3 +214,15 @@ Use one entry per durable finding. Do not mark a claim VERIFIED until its eviden
 - `api.engine.getComponent(edge, BASE_EDGE)` is **read-only** in game: writing a member throws « cannot write to read only member 'laneConfigs' » (the sim used to hand back a plain table and hid it).
 - A copy of an old edge's component sent with another template (`seg.comp = old` then new `laneConfigs`, as `electrify.tl` does between two tracks of the same lanes) makes the engine abort with a fatal, uncatchable assertion « lc.segment0 not found » (`StreetShapeFactory.cpp`, inside `makeWorldBuildProposalCmd`) when the lane count changes (country `*_small` 4 lanes, `*_medium` 6): `BaseEdge` also carries per-lane `laneConfig` and `edgeDecorations` (`api/tealdef/api/engine.d.tl`). Fix: fill the new `SegmentAndEntity.comp` field by field from the old geometry (`node0/1`, `position0/1`, `tangent0/1`, `type`, `typeIndex`, `roadType`) and the new template's `laneConfigs` / `roadTemplate` / `roadStyle`, like a new edge.
 - `makeTownConnectWithIndustriesCmd(townEntities, connections, keep)` takes no road type (`api/tealdef/api/cmd.d.tl` l.819; the Map Editor calls it the same way, `gui/map_editor/map_editor.tl` l.2632); the engine picks among the `simBuildable` country templates of the year (old_* until 1940, new_* from 1940). `country_old_*` no longer exist from 1940.
+
+## FACT-036 — One postMessage is capped near 1.83 GiB in Chromium / WebView2
+- Status: VERIFIED (Chromium of the Claude browser pane, 2026-11-05; a player's report on a ~300 × 300 km map)
+- A structured clone is serialized into one buffer: an object of Float32Arrays of 1879 MiB fails with « DataCloneError: Failed to execute 'postMessage' on 'Worker': Data cannot be cloned, out of memory », 1483 MiB passes (bisected: ~1875 MiB). RAM and the V8 heap are not the limit. The same 2.2 GiB sent one tile per message, or in one message with the buffers transferred, passes.
+- « on 'Worker' » = the page sending to the worker (the request), not the worker's answer (that would say 'DedicatedWorkerGlobalScope').
+- Consequence: the terrain request goes in pieces (`workers/transport.ts`): settings, then each DEM tile cut to the frame (`cropDem`) and transferred, then OSM in batches of ~200 000 points, then « run ».
+
+## FACT-037 — The Tauri http plugin can hand back a body short of a chunk without any error
+- Status: VERIFIED (user's cache, 2026-11-05)
+- `Copernicus_DSM_COG_10_N48_00_W002_00_DEM.tif` cached at 40 074 731 bytes, `Content-Length` 40 091 115 (16 KiB missing), no error raised; geotiff then fails « incorrect data check » on every later run (cache hit). Dropped connections also show as `TypeError: Failed to fetch` in the plugin's `readChunk`.
+- IGN WMS answers HTTP 400 (XML) for a block outside its coverage, 200 with no-data BIL in the sea.
+- Consequence: DECISION-030.

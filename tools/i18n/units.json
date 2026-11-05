@@ -91,6 +91,27 @@
     "kind": "tooltip"
   },
   {
+    "id": "app:data.rotation",
+    "text": "Rotation (°)",
+    "ref": "Rotation (°)",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.rotationTitle",
+    "text": "Direction of the top of the game map, in degrees clockwise from north. On the map: hold the centre point and drag.",
+    "ref": "Direction du haut de la carte de jeu, en degrés depuis le nord dans le sens horaire. Sur la carte : maintenir le point central et faire glisser.",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:data.rotationReset",
+    "text": "North up",
+    "ref": "Nord en haut",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
     "id": "app:data.scaleReal",
     "text": "(real)",
     "ref": "(réelle)",
@@ -1137,6 +1158,13 @@
     "id": "app:map.placeHere",
     "text": "Click: put the area here",
     "ref": "Clic : placer la zone ici",
+    "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
+    "kind": "label"
+  },
+  {
+    "id": "app:map.rotateTip",
+    "text": "Hold and drag to turn the area (Shift: 15° steps) · rotation {deg}°",
+    "ref": "Maintenir et faire glisser pour tourner la zone (Maj : par pas de 15°) · rotation {deg}°",
     "context": "Map next to the panel: toolbar, hover tooltips (what is under the mouse), road and railway names, banner while picking the end of a new road or railway line.",
     "kind": "label"
   },
@@ -2835,6 +2863,20 @@
     "kind": "label"
   },
   {
+    "id": "app:msg.ignGaveUp",
+    "text": "IGN unreachable ({error}): the rest of the relief comes from Copernicus.",
+    "ref": "IGN injoignable ({error}) : le reste du relief vient de Copernicus.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.demTileFailed",
+    "text": "Relief tile {tile} unreadable after several tries ({error}). Try again: the tiles already downloaded are kept.",
+    "ref": "Tuile de relief {tile} illisible après plusieurs essais ({error}). Relance : les tuiles déjà téléchargées sont gardées.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
     "id": "app:msg.demSkipped",
     "text": "not needed (IGN covers everything)",
     "ref": "inutile (IGN complet)",
@@ -2910,6 +2952,13 @@
     "ref": "le calcul a échoué dans {file}:{line}",
     "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
     "kind": "label"
+  },
+  {
+    "id": "app:msg.workerTooLarge",
+    "text": "Area too large for the computation memory: reduce the map size or the scale.",
+    "ref": "Zone trop grande pour la mémoire du calcul : réduisez la taille de la carte ou l'échelle.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
   },
   {
     "id": "app:msg.resultTerrain",

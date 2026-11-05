@@ -139,6 +139,7 @@ Télécharge le fichier de ton système sur la page [Releases](https://github.co
 - Relief : IGN RGE ALTI® (Licence Ouverte Etalab), Copernicus DEM GLO-30 © DLR / Airbus, ESA.
 - Fonds marins : EMODnet Bathymetry, NOAA ETOPO.
 - Occupation du sol : © ESA WorldCover project 2021 (CC BY 4.0).
+- Icône de rotation : Lucide `rotate-cw` (licence ISC, © Lucide Contributors).
 - Eau, lieux, sites industriels, routes et voies ferrées : © contributeurs OpenStreetMap (ODbL), via
   l'API Overpass.
 

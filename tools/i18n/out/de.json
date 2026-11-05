@@ -507,5 +507,12 @@
   "mod:roads_done": "%d Straßenverbindung(en)%s.",
   "mod:roads_partly": " (teilweise abgelehnt)",
   "mod:roads_simple": "%d / %d Strassenabschnitt(e) wurde(n) als kleine Landstrassen (2 Fahrbahnen) neu aufgebaut.",
-  "mod:done": "Die Karte „%s“ wurde erstellt. Speichere sie (im Menü des Karten-Editors)."
+  "mod:done": "Die Karte „%s“ wurde erstellt. Speichere sie (im Menü des Karten-Editors).",
+  "app:msg.workerTooLarge": "Gebiet zu gross für den Speicher der Berechnung: Verkleinere die Kartengrösse oder den Massstab.",
+  "app:msg.ignGaveUp": "IGN nicht erreichbar ({error}): Der Rest des Reliefs stammt von Copernicus.",
+  "app:msg.demTileFailed": "Reliefkachel {tile} ist nach mehreren Versuchen unlesbar ({error}). Versuche es erneut: Die bereits heruntergeladenen Kacheln bleiben erhalten.",
+  "app:data.rotation": "Drehung (°)",
+  "app:data.rotationTitle": "Richtung des oberen Rands der Spielkarte, in Grad im Uhrzeigersinn ab Norden. Auf der Karte: den Mittelpunkt gedrückt halten und ziehen.",
+  "app:data.rotationReset": "Norden oben",
+  "app:map.rotateTip": "Gedrückt halten und ziehen, um das Gebiet zu drehen (Umschalt: in 15°-Schritten) · Drehung {deg}°"
 }

@@ -507,5 +507,12 @@
   "mod:roads_done": "%d collegamento(i) stradale(i)%s.",
   "mod:roads_partly": " (parzialmente rifiutate)",
   "mod:roads_simple": "%d / %d tratto/i di strada ricostruito/i come piccole strade di campagna (2 corsie).",
-  "mod:done": "Mappa \"%s\" generata. Salvala (nel menu dell'editor di mappe)."
+  "mod:done": "Mappa \"%s\" generata. Salvala (nel menu dell'editor di mappe).",
+  "app:msg.workerTooLarge": "Zona troppo grande per la memoria del calcolo: riduci la dimensione della mappa o la scala.",
+  "app:msg.ignGaveUp": "IGN non raggiungibile ({error}): il resto del rilievo proviene da Copernicus.",
+  "app:msg.demTileFailed": "Tessera del rilievo {tile} illeggibile dopo diversi tentativi ({error}). Riprova: le tessere già scaricate vengono conservate.",
+  "app:data.rotation": "Rotazione (°)",
+  "app:data.rotationTitle": "Direzione del lato superiore della mappa di gioco, in gradi in senso orario dal nord. Sulla mappa: tieni premuto il punto centrale e trascina.",
+  "app:data.rotationReset": "Nord in alto",
+  "app:map.rotateTip": "Tieni premuto e trascina per ruotare la zona (Maiusc: a passi di 15°) · rotazione {deg}°"
 }

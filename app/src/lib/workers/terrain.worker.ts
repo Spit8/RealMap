@@ -27,6 +27,7 @@ import {
   placesInFrame, placeTowns, selectTowns, townCandidates,
   type DroppedTown, type MapTown, type OsmPlace, type PlaceFilter, type TownCandidate, type TownPicks, type TownsOptions,
 } from "../core/towns";
+import { addPart, type WorkerInput } from "./transport";
 
 export interface TerrainRequest {
   area: Area;
@@ -109,10 +110,31 @@ export type TerrainMessage =
     }
   | { kind: "error"; message: string };
 
-self.onmessage = (ev: MessageEvent<TerrainRequest>) => {
-  const post = (m: TerrainMessage, transfer: Transferable[] = []) => self.postMessage(m, transfer);
+const post = (m: TerrainMessage, transfer: Transferable[] = []) => self.postMessage(m, transfer);
+
+/** The request being received in pieces (`transport.ts`): settings, then parts, then "run". */
+let pending: TerrainRequest | null = null;
+
+self.onmessage = (ev: MessageEvent<WorkerInput>) => {
+  const m = ev.data;
   try {
-    const req = ev.data;
+    if (m.kind === "begin") pending = m.req;
+    else if (!pending) throw new Error(`terrain worker: "${m.kind}" before "begin"`);
+    else if (m.kind === "part") addPart(pending, m.field, m.items);
+    else if (m.kind === "ign") pending.ign = m.ign;
+    else {
+      const req = pending;
+      pending = null;
+      build(req);
+    }
+  } catch (e) {
+    pending = null;
+    post({ kind: "error", message: e instanceof Error ? e.message : String(e) });
+  }
+};
+
+function build(req: TerrainRequest): void {
+  try {
     const f = makeFrame(req.area);
     const g = req.mode === "full" ? fullGrid(f) : previewGrid(f);
     post({ kind: "progress", value: 0.05, label: "progress.cover" });
@@ -219,4 +241,4 @@ self.onmessage = (ev: MessageEvent<TerrainRequest>) => {
   } catch (e) {
     post({ kind: "error", message: e instanceof Error ? e.message : String(e) });
   }
-};
+}

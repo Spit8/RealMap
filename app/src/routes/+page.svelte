@@ -8,7 +8,7 @@
   import UpdatesPanel from "$lib/ui/UpdatesPanel.svelte";
   import { updates } from "$lib/state/updates.svelte";
   import { errorText, importer, type ReliefSource } from "$lib/state/importer.svelte";
-  import { defaultVerticalScale, TILE_M, type Area } from "$lib/core/area";
+  import { defaultVerticalScale, roundRotation, TILE_M, type Area } from "$lib/core/area";
   import { MAP_FORMATS, MAP_SIZES, availableFormats, availableSizes, mapTiles } from "$lib/core/mapsizes";
   import { gameTownLimit } from "$lib/core/towns";
   import { defaultIndustryCount, ECONOMIES, ECONOMY_LABELS, INDUSTRIES } from "$lib/core/industries";
@@ -200,6 +200,13 @@
                 <option value={0}>{t("data.scaleOther")}</option>
               </select>
               <input type="number" min="0.25" step="0.25" value={s.area.scale} onchange={(e) => setArea({ scale: Math.max(0.25, num(e.currentTarget.value, 1)) })} />
+            </div>
+          </label>
+          <label title={t("data.rotationTitle")}>{t("data.rotation")}
+            <div class="row tight">
+              <input type="number" min="0" max="359.9" step="0.1" value={roundRotation(s.area.rotation)}
+                onchange={(e) => setArea({ rotation: roundRotation(num(e.currentTarget.value, 0)) })} />
+              <button class="small" disabled={!s.area.rotation} onclick={() => setArea({ rotation: 0 })}>{t("data.rotationReset")}</button>
             </div>
           </label>
           <p class="facts">{t("data.facts", { size: sizeText(s.area.size, s.area.format, s.area.landscape), w: km(f.widthM * f.scale), h: km(f.heightM * f.scale), km2: fmtNum(Math.round(realKm2)) })}</p>
@@ -425,6 +432,7 @@
         linkPicks={s.linkPicks}
         {industryTypes}
         onPick={(lon, lat) => setArea({ lon, lat })}
+        onRotate={(rotation) => setArea({ rotation })}
         onToggleTown={(k) => importer.toggleTown(k)}
         onToggleIndustry={(k) => importer.toggleIndustry(k)}
         onAddIndustry={(tag, lon, lat) => importer.addIndustry(tag, lon, lat)}

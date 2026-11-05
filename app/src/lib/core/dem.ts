@@ -41,6 +41,29 @@ export interface DemRaster {
 }
 
 /**
+ * The part of a raster over a lon/lat box (plus `pad` pixels for the bilinear neighbours), as a
+ * new raster with its own copy of the pixels; the raster itself when the box covers it all, null
+ * when they do not overlap. Heights sampled inside the box are the same as on the whole raster.
+ */
+export function cropDem(
+  r: DemRaster,
+  b: { west: number; south: number; east: number; north: number },
+  pad = 2,
+): DemRaster | null {
+  const c0 = Math.max(0, Math.floor((b.west - r.west) / r.resLon) - pad);
+  const c1 = Math.min(r.width, Math.ceil((b.east - r.west) / r.resLon) + pad);
+  const r0 = Math.max(0, Math.floor((r.north - b.north) / r.resLat) - pad);
+  const r1 = Math.min(r.height, Math.ceil((r.north - b.south) / r.resLat) + pad);
+  if (c1 <= c0 || r1 <= r0) return null;
+  if (c0 === 0 && r0 === 0 && c1 === r.width && r1 === r.height) return r;
+  const width = c1 - c0;
+  const height = r1 - r0;
+  const data = new Float32Array(width * height);
+  for (let y = 0; y < height; y++) data.set(r.data.subarray((r0 + y) * r.width + c0, (r0 + y) * r.width + c1), y * width);
+  return { ...r, west: r.west + c0 * r.resLon, north: r.north - r0 * r.resLat, width, height, data };
+}
+
+/**
  * Mean height over a square footprint of `sizeDeg` degrees around lon/lat (k×k bilinear taps),
  * so a sample spaced wider than the DEM pixels averages them instead of picking one (aliasing).
  */

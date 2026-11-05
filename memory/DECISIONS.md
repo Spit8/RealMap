@@ -238,3 +238,13 @@ Record decisions that future work should preserve unless new evidence or an expl
 - Status: ACTIVE · Date: 2026-11-02 (a player's crash « cannot write to read only member 'laneConfigs' »; user: « avant 1940 routes de terre 2 voies, après 1940 routes goudronnées 2 voies, toujours »; « le mod ne doit plus du tout intervenir en dehors de l'éditeur de cartes »)
 - Replaces the road part of DECISION-025. The game's connection command stays (its routing, industries); `simplifyRoads` then rebuilds every `/country/country_*` edge that is not `*_small` as `country_old_small` before 1940, `country_new_small` from 1940 (`api.engine.util.getYear()`), each new edge filled from the old geometry, never a copy of the old component (FACT-035). No change to street templates (a `loadStreetTemplate` modifier would act outside the editor too).
 - Checked: sim (read-only components, stale per-lane data refused), in game on 40423 by the user: maps before 1940, from 1940 and exactly 1940, no crash, 2-lane roads.
+
+## DECISION-030 — Downloads checked and tried again; the cache only holds whole files (1.1.0)
+- Status: ACTIVE · Date: 2026-11-05 (user: « on n'a pas de fallback alors qu'un retry règle le problème »)
+- `platform/fetchbytes.ts` `fetchBytes`: 4 tries (pauses 2, 5, 15 s, countdown in the step), on network errors, timeouts, 429 / 5xx, a body shorter than `Content-Length`, or a failed content check; other 4xx at once; listed statuses (403 / 404 sea tile, 400 IGN outside coverage) handed back.
+- Copernicus tiles written to `.part` then renamed (`fs:allow-rename`); a cached tile that does not decode is deleted and downloaded once more; still unreadable → stop with the tile's name (`msg.demTileFailed`), no map with a flat hole. IGN: after a block fails every try the service is taken as down and Copernicus fills the rest (`msg.ignGaveUp`). WorldCover range requests go through the same tries (FACT-037).
+
+## DECISION-031 — The area can be turned (1.1.0)
+- Status: ACTIVE · Date: 2026-11-05 (user: « pouvoir faire une rotation du cadran de sélection … click maintenu sur le centre + glissement », « au dixième »)
+- `Area.rotation`: degrees clockwise from north of the game map's top, to 0.1° (`roundRotation`). Applied in `frameProjection` only (east = x·cosθ + y·sinθ, north = −x·sinθ + y·cosθ), which every computation already goes through; 0° gives exactly the former results. The game preview image is drawn in an OpenLayers projection of the game coordinates (`gameProjection`), not proj4's tmerc. The mod is not concerned (game coordinates only).
+- UI: centre handle with Lucide `rotate-cw` (ISC, credited in the READMEs), drag = top towards the mouse, Shift = 15° steps, tooltip on hover; field « Rotation (°) » + « North up » in the Data tab.

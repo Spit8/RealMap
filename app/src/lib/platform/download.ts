@@ -14,7 +14,8 @@ import {
   coverRasterFor, worldcoverTilesFor, worldcoverTileUrl, worldcoverWindow, type CoverRaster,
 } from "../core/landcover";
 import { parseOverpassStatus, type Bbox, type OverpassStatus } from "../core/osm";
-import { ensureDir, fileExists, fileStat, joinPath, readBytes, readText, writeBytes, writeText } from "./fsx";
+import { ensureDir, fileExists, fileStat, joinPath, readBytes, readText, removeFile, renamePath, writeBytes, writeText } from "./fsx";
+import { fetchBytes, looksLikeTiff, type RetryNotice } from "./fetchbytes";
 import { t } from "../i18n/index.svelte";
 
 /**
@@ -218,57 +219,81 @@ async function cacheDir(sub: string): Promise<string> {
   return dir;
 }
 
-/** Copernicus tile bytes, from the cache or downloaded; null when the tile does not exist (sea). */
-async function demTileBytes(name: string): Promise<ArrayBuffer | null> {
+/**
+ * Copernicus tile bytes, from the cache (unless `fresh`) or downloaded with new tries; null when
+ * the tile does not exist (sea). Written to `.part` then renamed: never a half-written tile.
+ */
+async function demTileBytes(name: string, fresh: boolean, onRetry?: RetryNotice): Promise<{ buf: ArrayBuffer; cached: boolean } | null> {
   const dir = await cacheDir("dem");
   const file = joinPath(dir, `${name}.tif`);
   const missing = joinPath(dir, `${name}.missing`);
   if (await fileExists(missing)) return null;
-  if (await fileExists(file)) return (await readBytes(file)).buffer;
-  const res = await fetch(copernicusTileUrl(name));
-  if (res.status === 404 || res.status === 403) {
+  if (!fresh && (await fileExists(file))) return { buf: (await readBytes(file)).buffer, cached: true };
+  const got = await fetchBytes(copernicusTileUrl(name), {
+    passStatuses: [403, 404],
+    check: looksLikeTiff,
+    timeoutMs: 300_000,
+    onRetry,
+  });
+  if (!got.bytes) {
     await writeBytes(missing, new Uint8Array());
     return null;
   }
-  if (!res.ok) throw new Error(`Copernicus ${name}: HTTP ${res.status}`);
-  const buf = await res.arrayBuffer();
-  await writeBytes(file, new Uint8Array(buf));
-  return buf;
+  const part = `${file}.part`;
+  await writeBytes(part, got.bytes);
+  await removeFile(file);
+  await renamePath(part, file);
+  return { buf: got.bytes.buffer, cached: false };
 }
 
-export async function loadDemTile(name: string): Promise<DemRaster | null> {
-  const buf = await demTileBytes(name);
-  if (!buf) return null;
-  const tiff = await fromArrayBuffer(buf);
-  const img = await tiff.getImage();
-  const [west, north] = img.getOrigin();
-  const [resLon, resLat] = img.getResolution();
-  const rasters = await img.readRasters({ samples: [0], interleave: true });
-  const data = rasters instanceof Float32Array ? rasters : Float32Array.from(rasters as ArrayLike<number>);
-  const nd = img.getGDALNoData();
-  return {
-    west,
-    north,
-    resLon: Math.abs(resLon),
-    resLat: Math.abs(resLat),
-    width: img.getWidth(),
-    height: img.getHeight(),
-    data,
-    noData: nd ?? undefined,
-  };
+/**
+ * A Copernicus tile (null in the sea). A tile that does not decode (cut short by an earlier
+ * download) is deleted and downloaded again; still unreadable after that, the error names it.
+ */
+export async function loadDemTile(name: string, onRetry?: RetryNotice): Promise<DemRaster | null> {
+  let last: unknown = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let got: Awaited<ReturnType<typeof demTileBytes>>;
+    try {
+      got = await demTileBytes(name, attempt > 0, onRetry);
+    } catch (e) {
+      last = e;
+      break;
+    }
+    if (!got) return null;
+    try {
+      return await tiffRaster(got.buf);
+    } catch (e) {
+      last = e;
+      await removeFile(joinPath(await cacheDir("dem"), `${name}.tif`));
+    }
+  }
+  throw new Error(t("msg.demTileFailed", { tile: name, error: last instanceof Error ? last.message : String(last) }));
 }
 
 /**
  * geotiff range requests through the Tauri http plugin (the S3 bucket sends no CORS headers).
  * Duck-typed: geotiff's generated typings for BaseClient / BaseResponse do not allow overriding.
  */
-function tauriRangeClient(url: string): BaseClient {
+function tauriRangeClient(url: string, onRetry?: RetryNotice): BaseClient {
   const client = {
     url,
-    async request({ headers, signal }: { headers?: Record<string, string>; signal?: AbortSignal } = {}) {
-      const res = await fetch(url, { headers: { ...headers, "User-Agent": USER_AGENT }, signal });
-      const data = await res.arrayBuffer();
-      return { ok: res.ok, status: res.status, getHeader: (name: string) => res.headers.get(name) ?? "", getData: async () => data };
+    async request({ headers }: { headers?: Record<string, string>; signal?: AbortSignal } = {}) {
+      // New tries on a dropped or short answer (fetchBytes checks the length against Content-Length).
+      let resHeaders: Headers | null = null;
+      const got = await fetchBytes(url, {
+        headers: { ...headers, "User-Agent": USER_AGENT },
+        timeoutMs: 120_000,
+        onRetry,
+        fetchImpl: async (u, init) => {
+          const res = await fetch(u, init);
+          resHeaders = res.headers;
+          return res;
+        },
+      });
+      const data = got.bytes!.buffer;
+      const h = resHeaders as Headers | null;
+      return { ok: true, status: got.status, getHeader: (name: string) => h?.get(name) ?? "", getData: async () => data };
     },
   };
   return client as unknown as BaseClient;
@@ -278,7 +303,12 @@ function tauriRangeClient(url: string): BaseClient {
  * WorldCover class codes over a lon/lat box at the given overview level: only the window is read
  * (range requests), and cached on disk per tile window. Tiles that do not exist (open sea) are skipped.
  */
-export async function loadLandcover(b: Bbox, level: number, onTile?: (done: number, total: number) => void): Promise<CoverRaster[]> {
+export async function loadLandcover(
+  b: Bbox,
+  level: number,
+  onTile?: (done: number, total: number) => void,
+  onRetry?: RetryNotice,
+): Promise<CoverRaster[]> {
   const dir = await cacheDir("worldcover");
   const tiles = worldcoverTilesFor(b);
   const out: CoverRaster[] = [];
@@ -298,7 +328,7 @@ export async function loadLandcover(b: Bbox, level: number, onTile?: (done: numb
         continue;
       }
       if (!head.ok) throw new Error(`WorldCover ${tile.name}: HTTP ${head.status}`);
-      const tiff = await fromCustomClient(tauriRangeClient(url));
+      const tiff = await fromCustomClient(tauriRangeClient(url, onRetry));
       const img = await tiff.getImage(level);
       const r = await img.readRasters({ window: win, samples: [0], interleave: true });
       data = r instanceof Uint8Array ? r : Uint8Array.from(r as ArrayLike<number>);
@@ -377,22 +407,42 @@ function hashKey(s: string): string {
  * IGN RGE ALTI heights on the grid (NaN = no data), block by block with a disk cache.
  * Returns null when the service gives nothing usable (outside France, service down).
  */
-export async function loadIgnGrid(f: Frame, g: Grid, onBlock?: (done: number, total: number) => void): Promise<Float32Array | null> {
+export async function loadIgnGrid(
+  f: Frame,
+  g: Grid,
+  onBlock?: (done: number, total: number) => void,
+  onRetry?: RetryNotice,
+  onGiveUp?: (error: string) => void,
+): Promise<Float32Array | null> {
   const dir = await cacheDir("ign");
   const r = ignRaster(f, g);
   const raster = new Float32Array(r.w * r.h).fill(NaN);
   const blocks = ignBlocks(r);
   let any = false;
+  // After a block failed every try the service is taken as down: the remaining blocks are not
+  // asked (Copernicus fills what IGN leaves empty).
+  let down = false;
   for (const [k, b] of blocks.entries()) {
     const url = ignBlockUrl(f, b);
     const file = joinPath(dir, `${hashKey(url)}.bil`);
     let bytes: Uint8Array | null = null;
     if (await fileExists(file)) bytes = await readBytes(file);
-    else {
-      const res = await fetch(url, { headers: { "User-Agent": USER_AGENT } });
-      if (res.ok) {
-        bytes = new Uint8Array(await res.arrayBuffer());
-        if (decodeBil(bytes, b.w, b.h)) await writeBytes(file, bytes);
+    else if (!down) {
+      try {
+        bytes = (
+          await fetchBytes(url, {
+            headers: { "User-Agent": USER_AGENT },
+            timeoutMs: 60_000,
+            // 400: the block lies outside the IGN coverage (XML error), nothing to retry.
+            passStatuses: [400, 404],
+            check: (x) => decodeBil(x, b.w, b.h) !== null,
+            onRetry,
+          })
+        ).bytes;
+        if (bytes) await writeBytes(file, bytes);
+      } catch (e) {
+        down = true;
+        onGiveUp?.(e instanceof Error ? e.message : String(e));
       }
     }
     const data = bytes ? decodeBil(bytes, b.w, b.h) : null;

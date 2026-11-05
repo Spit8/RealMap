@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { decode } from "fast-png";
-import { frameBBox, frameProjection, makeFrame, utmZone, type Area } from "../src/lib/core/area";
+import { frameBBox, frameProjection, makeFrame, normalizeRotation, roundRotation, utmZone, type Area } from "../src/lib/core/area";
 import {
   biomeByte, biomeImage, DEFAULT_BIOMES, COVER_FOREST, COVER_OPEN, COVER_ROCK, COVER_SCRUB,
   riverTestPattern,
@@ -33,7 +33,7 @@ import {
 import {
   DEFAULT_TOWNS, gameTownLimit, overpassTownsQuery, parsePopulation, placeKey, placeTowns, selectTowns, targetCapacity, townCandidates,
   townsIndustriesData, townSizesData, type RankedPlace, type TownPicks,
-  type OsmPlace, type PlaceKind,
+  placesInFrame, type OsmPlace, type PlaceKind,
 } from "../src/lib/core/towns";
 
 const area = (patch: Partial<Area> = {}): Area => ({
@@ -206,6 +206,43 @@ describe("area", () => {
     const hy = f.heightM / 2;
     expect(Math.abs(p.toLonLat(-hx, hy)[1] - p.toLonLat(hx, hy)[1])).toBeLessThan(0.01);
     expect(Math.abs(p.toLonLat(-hx, hy)[0] - p.toLonLat(-hx, -hy)[0])).toBeLessThan(0.01);
+  });
+
+  it("turned: round-trips, and the top of the map points the chosen way", () => {
+    for (const rotation of [30, 135, 270]) {
+      const p = frameProjection(makeFrame(area({ rotation })));
+      const [lon, lat] = p.toLonLat(5000, -3000);
+      const [x, y] = p.toWorld(lon, lat);
+      expect(x).toBeCloseTo(5000, 3);
+      expect(y).toBeCloseTo(-3000, 3);
+    }
+    // 90°: the top of the game map is to the east, its right side to the south.
+    const p = frameProjection(makeFrame(area({ rotation: 90 })));
+    const [eLon, eLat] = p.toLonLat(0, 5000);
+    expect(eLon).toBeGreaterThan(LYON.lon + 0.05);
+    expect(Math.abs(eLat - LYON.lat)).toBeLessThan(0.005);
+    expect(p.toLonLat(5000, 0)[1]).toBeLessThan(LYON.lat - 0.03);
+  });
+
+  it("no rotation and a full turn give the same frame as before", () => {
+    const p0 = frameProjection(makeFrame(LYON));
+    for (const rotation of [0, 360, -360]) {
+      const p = frameProjection(makeFrame(area({ rotation })));
+      expect(p.toLonLat(4000, 2500)[0]).toBeCloseTo(p0.toLonLat(4000, 2500)[0], 9);
+      expect(p.toLonLat(4000, 2500)[1]).toBeCloseTo(p0.toLonLat(4000, 2500)[1], 9);
+    }
+    expect(normalizeRotation(-30)).toBe(330);
+    expect(normalizeRotation(undefined)).toBe(0);
+    expect(roundRotation(12.345)).toBe(12.3);
+    expect(roundRotation(359.96)).toBe(0);
+    expect(roundRotation(-0.04)).toBe(0);
+  });
+
+  it("a square turned 45° needs a box about √2 wider", () => {
+    const b0 = frameBBox(makeFrame(LYON));
+    const b45 = frameBBox(makeFrame(area({ rotation: 45 })));
+    expect((b45.east - b45.west) / (b0.east - b0.west)).toBeCloseTo(Math.SQRT2, 1);
+    expect(placesInFrame(makeFrame(area({ rotation: 45 })), [{ name: "corner", lon: b0.east - 0.001, lat: b0.north - 0.001, place: "town" }])).toEqual([]);
   });
 
   it("utm zones", () => {

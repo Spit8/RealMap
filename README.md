@@ -136,6 +136,7 @@ Download the file for your system from the [Releases](https://github.com/Spit8/R
 - Relief: IGN RGE ALTI® (Licence Ouverte Etalab), Copernicus DEM GLO-30 © DLR / Airbus, ESA.
 - Sea floor: EMODnet Bathymetry, NOAA ETOPO.
 - Land cover: © ESA WorldCover project 2021 (CC BY 4.0).
+- Rotation icon: Lucide `rotate-cw` (ISC License, © Lucide Contributors).
 - Water, places, industrial sites, roads and railways: © OpenStreetMap contributors (ODbL), through the
   Overpass API.
 

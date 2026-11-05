@@ -8,7 +8,9 @@
    *    own projection), the chosen towns plus the 10 most populous others (green = town, orange =
    *    not chosen, grey = not placed), moved towns linked to their OSM position, the industries,
    *    the planned road links (brown) and railway (black).
-   * Ctrl held: a ghost of the area follows the mouse; Ctrl + click moves the area there. Click on a
+   * Ctrl held: a ghost of the area follows the mouse; Ctrl + click moves the area there. The centre
+   * is a handle: pressed and dragged, it turns the area (its top points to the mouse; Shift: 15°
+   * steps). Click on a
    * town / industry: its sheet. Right click: a menu (add / remove a town or an industry, add an
    * industry here, a road to another town, a railway line to another point; the next click picks
    * the other end, Escape cancels). Hover: what is under the cursor in the game (height, water,
@@ -27,11 +29,11 @@
   import OSM from "ol/source/OSM";
   import Feature from "ol/Feature";
   import { LineString, Point, Polygon } from "ol/geom";
-  import { fromLonLat, toLonLat } from "ol/proj";
-  import { register } from "ol/proj/proj4";
-  import proj4 from "proj4";
-  import { Fill, RegularShape, Stroke, Style, Circle as CircleStyle } from "ol/style";
-  import { frameOutline, frameProjection, makeFrame, TILE_M, type Frame } from "$lib/core/area";
+  import { addCoordinateTransforms, addProjection, fromLonLat, get as getProjection, toLonLat } from "ol/proj";
+  import Projection from "ol/proj/Projection";
+  import PointerInteraction from "ol/interaction/Pointer";
+  import { Fill, Icon, RegularShape, Stroke, Style, Circle as CircleStyle } from "ol/style";
+  import { frameOutline, frameProjection, makeFrame, roundRotation, TILE_M, type Frame } from "$lib/core/area";
   import { b64ToBytes, b64ToFloats } from "$lib/core/b64";
   import { fmtNum, t, tk } from "$lib/i18n/index.svelte";
   import { COVER_RGB, WATER_RGB } from "$lib/core/preview";
@@ -59,6 +61,7 @@
     onAddRoad,
     onAddRail,
     onLink,
+    onRotate,
   }: {
     frame: Frame;
     preview: PreviewState | null;
@@ -81,6 +84,8 @@
     onAddRail?: (from: [number, number], to: [number, number]) => void;
     /** Remove a road link / railway line (or put it back when it was left out). */
     onLink?: (key: string) => void;
+    /** The area turned with the centre handle (degrees clockwise from north). */
+    onRotate?: (deg: number) => void;
   } = $props();
 
   /** The right-click menu: where (pixel in the map), what is there (lon / lat, town, industry). */
@@ -121,15 +126,67 @@
   const ghostLayer = new VectorLayer({ source: ghostSource });
   let ctrl = false;
   let lastPixel: number[] | null = null;
+  /** While the handle is dragged: the angle shown (degrees) and where to show it. */
+  let turning = $state<{ deg: number; x: number; y: number } | null>(null);
+
+  function onHandle(pixel: number[]): boolean {
+    if (!map) return false;
+    const c = map.getPixelFromCoordinate(fromLonLat([frame.area.lon, frame.area.lat]));
+    return !!c && Math.hypot(pixel[0] - c[0], pixel[1] - c[1]) <= HANDLE_PX;
+  }
+
+  /** Bearing (degrees clockwise from north) from the centre to a pixel, to the tenth; Shift: 15° steps. */
+  function bearingTo(pixel: number[], shift: boolean): number {
+    const c = map!.getPixelFromCoordinate(fromLonLat([frame.area.lon, frame.area.lat]));
+    const deg = (Math.atan2(pixel[0] - c[0], c[1] - pixel[1]) * 180) / Math.PI;
+    const step = shift ? 150 : 1;
+    return roundRotation(Math.round((deg * 10) / step) * step / 10);
+  }
+
+  const rotateInteraction = new PointerInteraction({
+    handleDownEvent: (ev) => {
+      const e = ev.originalEvent as PointerEvent;
+      if (e.ctrlKey || e.button !== 0 || pending || !onRotate || !onHandle(ev.pixel)) return false;
+      closeMenu();
+      el.style.cursor = "grabbing";
+      return true;
+    },
+    handleDragEvent: (ev) => {
+      const deg = bearingTo(ev.pixel, (ev.originalEvent as PointerEvent).shiftKey);
+      turning = { deg, x: ev.pixel[0], y: ev.pixel[1] };
+      draw(makeFrame({ ...frame.area, rotation: deg }));
+    },
+    handleUpEvent: () => {
+      el.style.cursor = "";
+      if (turning) onRotate?.(turning.deg);
+      turning = null;
+      return false;
+    },
+  });
 
   const outlineStyle = new Style({
     stroke: new Stroke({ color: "#FD9401", width: 2 }),
     fill: new Fill({ color: "rgba(253, 148, 1, 0.06)" }),
   });
   const gridStyle = new Style({ stroke: new Stroke({ color: "rgba(253, 148, 1, 0.3)", width: 1 }) });
-  const centreStyle = new Style({
-    image: new CircleStyle({ radius: 5, fill: new Fill({ color: "#FD9401" }), stroke: new Stroke({ color: "#fff", width: 2 }) }),
-  });
+  /**
+   * The centre handle: an orange disc with a turning arrow, its notch on the map's top edge side.
+   * The arrow is Lucide's `rotate-cw` (lucide-static 0.460.0, ISC License, © Lucide Contributors).
+   */
+  const HANDLE_SVG =
+    "<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'>" +
+    "<path d='M16 0.8 L20.5 6.5 L11.5 6.5 Z' fill='#FD9401' stroke='#fff' stroke-width='1.3' stroke-linejoin='round'/>" +
+    "<circle cx='16' cy='18' r='11.5' fill='#FD9401' stroke='#fff' stroke-width='2'/>" +
+    "<g transform='translate(9.25 11.25) scale(0.5625)' fill='none' stroke='#fff' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'>" +
+    "<path d='M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8'/><path d='M21 3v5h-5'/></g>" +
+    "</svg>";
+  const handleStyle = (rot: number) =>
+    new Style({
+      image: new Icon({ src: `data:image/svg+xml;utf8,${encodeURIComponent(HANDLE_SVG)}`, anchor: [0.5, 18 / 32], rotation: rot }),
+      zIndex: 10,
+    });
+  /** Within this many pixels of the centre, the pointer is on the handle. */
+  const HANDLE_PX = 15;
   const shiftStyle = new Style({ stroke: new Stroke({ color: "#c82828", width: 2, lineDash: [6, 4] }) });
   const rawWater = new Style({ stroke: new Stroke({ color: "#1565c0", width: 2 }), fill: new Fill({ color: "rgba(21, 101, 192, 0.35)" }), zIndex: 1 });
   const rawPlace = new Style({ image: new CircleStyle({ radius: 3, fill: new Fill({ color: "#2e9d4a" }), stroke: new Stroke({ color: "#fff", width: 1 }) }) });
@@ -183,8 +240,28 @@
       for (let j = 1; j < f.tilesY; j++) add([-hx, -hy + j * TILE_M], [hx, -hy + j * TILE_M]);
     }
     const centre = new Feature(new Point(fromLonLat([f.area.lon, f.area.lat])));
-    centre.setStyle(centreStyle);
+    centre.setStyle(handleStyle(f.rot));
     source.addFeature(centre);
+  }
+
+  /**
+   * The game map's own coordinates (game metres, possibly turned) as an OpenLayers projection, so
+   * the preview image is reprojected onto the background map; registered once per frame.
+   */
+  function gameProjection(f: Frame): Projection {
+    const code = `ICITY:${f.area.lon},${f.area.lat},${f.rot},${f.scale},${f.widthM},${f.heightM}`;
+    const known = getProjection(code);
+    if (known) return known;
+    const proj = new Projection({ code, units: "m", extent: [-f.widthM / 2, -f.heightM / 2, f.widthM / 2, f.heightM / 2] });
+    addProjection(proj);
+    const fp = frameProjection(f);
+    addCoordinateTransforms(
+      proj,
+      "EPSG:3857",
+      (c) => fromLonLat(fp.toLonLat(c[0], c[1])),
+      (c) => fp.toWorld(...(toLonLat(c) as [number, number])),
+    );
+    return proj;
   }
 
   function showPreview(p: PreviewState | null, hide: boolean): void {
@@ -194,15 +271,9 @@
       return;
     }
     const f = p.frame;
-    // The map's own projection (transverse Mercator centred on the area), registered once per centre.
-    const code = `ICITY:${f.area.lon},${f.area.lat}`;
-    if (!proj4.defs(code)) {
-      proj4.defs(code, f.proj);
-      register(proj4);
-    }
-    const hx = (f.widthM / 2) * f.scale;
-    const hy = (f.heightM / 2) * f.scale;
-    imageLayer.setSource(new ImageStatic({ url: p.url, projection: code, imageExtent: [-hx, -hy, hx, hy], interpolate: true }));
+    const hx = f.widthM / 2;
+    const hy = f.heightM / 2;
+    imageLayer.setSource(new ImageStatic({ url: p.url, projection: gameProjection(f), imageExtent: [-hx, -hy, hx, hy], interpolate: true }));
     // Placed towns / industries at their final (possibly moved) position, the others where they were found.
     const towns = new globalThis.Map((p.towns ?? []).map((t) => [t.key, t]));
     const shown = shownTownKeys(p.candidates ?? []);
@@ -403,6 +474,7 @@
       overlays: [popup],
       view: new View({ center: fromLonLat([frame.area.lon, frame.area.lat]), zoom: 10 }),
     });
+    map.addInteraction(rotateInteraction);
     map.on("singleclick", (ev) => {
       // Ctrl + click: the area moves there.
       if ((ev.originalEvent as MouseEvent).ctrlKey) {
@@ -485,6 +557,11 @@
         tip = `${pending.kind === "road" ? t("map.roadFrom", { name: pending.name }) : t("map.railFrom")} ${t("map.escape")}`;
         return;
       }
+      if (onRotate && onHandle(ev.pixel)) {
+        tip = t("map.rotateTip", { deg: fmtNum(roundRotation(frame.area.rotation), 1) });
+        el.style.cursor = "grab";
+        return;
+      }
       const k = keyAt(ev.pixel);
       const town = k.town ? preview?.candidates?.find((x) => x.key === k.town) : undefined;
       const ind = k.industry ? preview?.industryCandidates?.find((x) => x.key === k.industry) : undefined;
@@ -543,6 +620,7 @@
     {/if}
   </div>
   {#if tip}<div class="tip">{tip}</div>{/if}
+  {#if turning}<div class="angle" style:left="{turning.x + 14}px" style:top="{turning.y - 28}px">{fmtNum(turning.deg, 1)}°</div>{/if}
   {#if pending}
     <div class="banner">
       {pending.kind === "road" ? t("map.roadFrom", { name: pending.name }) : t("map.railFrom")}
@@ -630,6 +708,17 @@
     border-radius: 4px;
     font-size: 12px;
     pointer-events: none;
+  }
+  .angle {
+    position: absolute;
+    z-index: 6;
+    background: #1d2329;
+    color: #fff;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 12px;
+    pointer-events: none;
+    white-space: nowrap;
   }
   .banner {
     position: absolute;
