@@ -22,7 +22,7 @@ import { renderPreview } from "../src/lib/core/preview";
 import { buildTerrain, DEFAULT_TERRAIN } from "../src/lib/core/terrain";
 import { DEFAULT_TOWNS, parseOverpassPlaces, placesInFrame, placeTowns, selectTowns } from "../src/lib/core/towns";
 import { DEFAULT_INDUSTRIES, overpassIndustryQuery, parseIndustrySites, planIndustries } from "../src/lib/core/industries";
-import { overpassNetworkQuery, parseNetwork, planNetwork, resample } from "../src/lib/core/network";
+import { overpassNetworkQuery, parseNetwork, planNetwork, resample, roadNetworks } from "../src/lib/core/network";
 import { alignHorizontal, corridorPath, DEFAULT_RAIL, designRail, gameGrade, sampler } from "../src/lib/core/railway";
 import { worldToCell } from "../src/lib/core/grid";
 import { distanceTo } from "../src/lib/core/raster";
@@ -234,9 +234,14 @@ const nJson = existsSync(nFile) ? JSON.parse(readFileSync(nFile, "utf8")) : awai
 if (!existsSync(nFile)) writeFileSync(nFile, JSON.stringify(nJson));
 const ways = parseNetwork(nJson);
 t = Date.now();
-const net = planNetwork(f, ways, towns);
+const landIndustries = plan.industries.filter((m) => !m.onWater).map((m) => ({ key: m.key, name: m.name, x: m.x, y: m.y }));
+const net = planNetwork(f, ways, towns, {}, undefined, [], null, landIndustries);
 console.log(`network: ${ways.filter((w) => w.kind === "road").length} roads, ${ways.filter((w) => w.kind === "rail").length} railways (${Date.now() - t} ms)`);
-console.log("  links:", net.links.map((l) => `${l.a}–${l.b}${l.real ? "" : " (direct)"}`).join(", "));
+const townLinks = net.links.filter((l) => l.kind === "town");
+console.log("  links:", townLinks.map((l) => `${l.a}–${l.b}${l.real ? "" : " (direct)"}`).join(", "));
+console.log(`  ${roadNetworks(towns.map((x) => x.name), townLinks)} road networks for ${towns.length} towns; ${net.links.length - townLinks.length} / ${landIndustries.length} industries linked`);
+const lone = towns.filter((x) => !net.links.some((l) => l.a === x.name || l.b === x.name)).map((x) => x.name);
+console.log(`  lone towns: ${lone.length ? lone.join(", ") : "none"}`);
 console.log("  guide rail:", net.rail.map((r) => `${r.pts.length} points`).join(", "));
 // The designed alignment (DECISION-014), drawn on the preview: black track, blue bridge, grey tunnel.
 t = Date.now();

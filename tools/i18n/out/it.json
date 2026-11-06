@@ -97,7 +97,7 @@
   "app:advanced.townClearance": "Distanza dalle cittadine (m)",
   "app:advanced.rail": "Ferrovia",
   "app:advanced.roads": "Strade",
-  "app:roads.auto": "Strade selezionate automaticamente: ogni cittadina è collegata a 1 o 2 altre; il gioco crea le strade e vi collega le industrie. Clicca con il tasto destro sulla mappa per aggiungere o eliminare un collegamento.",
+  "app:roads.auto": "Strade scelte automaticamente: diverse piccole reti di città (mai una città isolata), e ogni industria collegata alla città più vicina; il gioco traccia le strade. Fai clic destro sulla mappa per aggiungere o rimuovere un collegamento.",
   "app:roads.manual": "Strade modificate manualmente: nessuna strada verrà più aggiunta automaticamente tra le cittadine.",
   "app:roads.reset": "Applica le impostazioni predefinite",
   "app:roads.resetTitle": "Torna all'impostazione automatica delle strade tra le cittadine",
@@ -514,5 +514,15 @@
   "app:data.rotation": "Rotazione (°)",
   "app:data.rotationTitle": "Direzione del lato superiore della mappa di gioco, in gradi in senso orario dal nord. Sulla mappa: tieni premuto il punto centrale e trascina.",
   "app:data.rotationReset": "Nord in alto",
-  "app:map.rotateTip": "Tieni premuto e trascina per ruotare la zona (Maiusc: a passi di 15°) · rotazione {deg}°"
+  "app:map.rotateTip": "Tieni premuto e trascina per ruotare la zona (Maiusc: a passi di 15°) · rotazione {deg}°",
+  "app:advanced.inlandWater": "Fiumi e laghi",
+  "app:advanced.inlandWaterTitle": "Non spuntato: niente fiumi, canali né laghi, solo il mare. Il gioco ha un solo livello dell'acqua (0 m): senza quest'acqua, gli alvei dei fiumi e i fondali dei laghi mantengono il rilievo reale invece di essere scavati",
+  "app:msg.inlandWaterOff": "Fiumi e laghi: disattivati, rilievo reale mantenuto.",
+  "app:roads.maxNetwork": "Città per rete all'inizio",
+  "app:roads.maxNetworkTitle": "All'inizio della partita, una rete stradale collega al massimo questo numero di città: la mappa ha diverse reti da unire durante il gioco. Una città senza altre città né industrie riceve comunque un collegamento.",
+  "app:legend.access": "Accesso dell'industria previsto (verso la città più vicina)",
+  "app:msg.resultRoads": "Strade: {networks} rete/i separata/e, {linked} / {industries} industrie collegate a una città.",
+  "mod:roads_access": "Industrie collegate dal gioco: %d / %d hanno una strada%s.",
+  "mod:roads_access_missing": "; senza strada nelle vicinanze: %s",
+  "mod:rail_crossings": "Ferrovia: %d incrocio/i con strade superato/i sotto in galleria."
 }

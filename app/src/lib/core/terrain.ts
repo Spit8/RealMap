@@ -17,6 +17,8 @@
  *    canyon; mountains further away and rivers already low are untouched);
  *  - banks: land near water may not rise faster than `bankSlope` (sea, lakes) or
  *    `riverBankSlope` (rivers, gentler), and the surface is smoothed across the waterline.
+ * With `inlandWater` off, there are no rivers, canals or lakes at all: only the sea stays, and
+ * river beds and lake floors keep their real height.
  */
 import { frameProjection, type Frame } from "./area";
 import { sampleDem, sampleDemBox, type DemRaster } from "./dem";
@@ -83,6 +85,11 @@ export interface TerrainOptions {
   wetlandMinHa: number;
   /** Deepest point of those marsh lakes (game m). */
   marshDepth: number;
+  /**
+   * Rivers, canals and lakes (OSM water and marshes). Off: only the sea stays, and their beds keep
+   * the real relief instead of being dug down to the game's single water level.
+   */
+  inlandWater: boolean;
 }
 
 export const DEFAULT_TERRAIN: Omit<TerrainOptions, "verticalScale"> = {
@@ -110,6 +117,7 @@ export const DEFAULT_TERRAIN: Omit<TerrainOptions, "verticalScale"> = {
   wetlandLakes: true,
   wetlandMinHa: 5,
   marshDepth: 20,
+  inlandWater: true,
 };
 
 /**
@@ -732,12 +740,17 @@ export function buildTerrain(f: Frame, g: Grid, src: TerrainSources, o: TerrainO
     flattenCanopy(raw, fromDsm, src.forest, o.canopyM);
   }
   const real = smoothHeights(raw, g, o.smoothM);
-  const net = o.repairRivers ? { real, joinM: o.riverJoinM, taperM: o.sourceTaperM } : undefined;
-  const wm = waterMask(f, g, src.shapes, o.riverMinWidth, net);
+  // Without inland water (one game water level for all of it), only the sea is left: river beds
+  // and lake floors keep their real height (no carving, no lowered valley, no capped bank).
+  const inland = o.inlandWater !== false;
+  const net = inland && o.repairRivers ? { real, joinM: o.riverJoinM, taperM: o.sourceTaperM } : undefined;
+  const wm: WaterMask = inland
+    ? waterMask(f, g, src.shapes, o.riverMinWidth, net)
+    : { mask: new Uint8Array(g.nx * g.ny), joined: 0, routed: 0, tapered: 0, mouths: 0 };
   const water = wm.mask;
   const cells = (ha: number) => (ha * 10_000) / (g.step * g.step);
-  const marsh = o.wetlandLakes && src.wetland ? marshLakes(water, g, src.wetland, cells(o.wetlandMinHa)) : null;
-  const waterBridged = bridgeWater(water, g, real, o.waterJoinM, o.riverMinWidth, cells(o.minLakeHa));
+  const marsh = inland && o.wetlandLakes && src.wetland ? marshLakes(water, g, src.wetland, cells(o.wetlandMinHa)) : null;
+  const waterBridged = inland ? bridgeWater(water, g, real, o.waterJoinM, o.riverMinWidth, cells(o.minLakeHa)) : 0;
   const lakesDropped = dropSmallWater(water, g, cells(o.minLakeHa));
   const riverPieces = countRiverPieces(water, g);
   const seaFloor = seaFloorGrid(f, g, raw, src.bathy);

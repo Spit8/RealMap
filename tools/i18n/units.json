@@ -364,6 +364,20 @@
     "kind": "tooltip"
   },
   {
+    "id": "app:advanced.inlandWater",
+    "text": "Rivers and lakes",
+    "ref": "Rivières et lacs",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "label"
+  },
+  {
+    "id": "app:advanced.inlandWaterTitle",
+    "text": "Unticked: no rivers, canals or lakes, only the sea. The game has a single water level (0 m): without this water, river beds and lake floors keep their real relief instead of being dug down",
+    "ref": "Décoché : ni rivière, ni canal, ni lac, seulement la mer. Le jeu n'a qu'un niveau d'eau (0 m) : sans cette eau, le lit des rivières et le fond des lacs gardent leur relief réel au lieu d'être creusés",
+    "context": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
+    "kind": "tooltip"
+  },
+  {
     "id": "app:advanced.marshLakes",
     "text": "Marshes → lakes",
     "ref": "Marais → lacs",
@@ -708,8 +722,8 @@
   },
   {
     "id": "app:roads.auto",
-    "text": "Roads chosen automatically: each town is linked to 1 or 2 others; the game lays the roads and links the industries to them. Right-click the map to add or delete a link.",
-    "ref": "Routes choisies automatiquement : chaque ville est reliée à 1 ou 2 autres ; le jeu trace les routes et y raccorde les industries. Clic droit sur la carte pour ajouter ou supprimer une liaison.",
+    "text": "Roads chosen automatically: several small networks of towns (never a lone town), and each industry linked to its nearest town; the game lays the roads. Right-click the map to add or delete a link.",
+    "ref": "Routes choisies automatiquement : plusieurs petits réseaux de villes (jamais une ville seule), et chaque industrie reliée à la ville la plus proche ; le jeu trace les routes. Clic droit sur la carte pour ajouter ou supprimer une liaison.",
     "context": "Roads section of the Advanced options tab: whether the roads between towns are chosen automatically or were changed by hand, and the button (with a confirmation) that goes back to the automatic choice, forgetting the user's changes.",
     "kind": "sentence"
   },
@@ -726,6 +740,20 @@
     "ref": "Appliquer les paramètres par défaut",
     "context": "Roads section of the Advanced options tab: whether the roads between towns are chosen automatically or were changed by hand, and the button (with a confirmation) that goes back to the automatic choice, forgetting the user's changes.",
     "kind": "label"
+  },
+  {
+    "id": "app:roads.maxNetwork",
+    "text": "Towns per network at the start",
+    "ref": "Villes par réseau au départ",
+    "context": "Roads section of the Advanced options tab: whether the roads between towns are chosen automatically or were changed by hand, and the button (with a confirmation) that goes back to the automatic choice, forgetting the user's changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:roads.maxNetworkTitle",
+    "text": "At the start of the game, one road network links at most this many towns: the map has several networks to join in game. A town with neither another town nor an industry still gets a link.",
+    "ref": "Au début de la partie, un réseau routier relie au plus ce nombre de villes : la carte compte plusieurs réseaux à relier en jeu. Une ville sans autre ville ni industrie reçoit quand même une liaison.",
+    "context": "Roads section of the Advanced options tab: whether the roads between towns are chosen automatically or were changed by hand, and the button (with a confirmation) that goes back to the automatic choice, forgetting the user's changes.",
+    "kind": "tooltip"
   },
   {
     "id": "app:roads.resetTitle",
@@ -1869,6 +1897,13 @@
     "kind": "label"
   },
   {
+    "id": "app:legend.access",
+    "text": "Planned industry access (to the nearest town)",
+    "ref": "Accès d'industrie prévu (vers la ville la plus proche)",
+    "context": "Map legend: colours and symbols of the result shown on the map.",
+    "kind": "label"
+  },
+  {
     "id": "app:legend.rail",
     "text": "Railway line",
     "ref": "Voie ferrée",
@@ -2982,6 +3017,13 @@
     "kind": "label"
   },
   {
+    "id": "app:msg.inlandWaterOff",
+    "text": "Rivers and lakes: off, real relief kept.",
+    "ref": "Rivières et lacs : désactivés, relief réel conservé.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
     "id": "app:msg.resultRivers",
     "text": "Rivers: {networks}, {joined} junctions, {routed} led to the water, {channels} channels, {marsh} marshes turned into lakes, {ponds} ponds filled in, {beach} beach cells without trees.",
     "ref": "Rivières : {networks}, {joined} jonctions, {routed} tracés jusqu'à l'eau, {channels} chenaux, {marsh} marais en lacs, {ponds} étangs comblés, {beach} cellules de plage sans arbres.",
@@ -2992,6 +3034,13 @@
     "id": "app:msg.resultCounts",
     "text": "{towns} towns, {industries} industries, {links} links between towns, {rails} railway line(s).",
     "ref": "{towns} villes, {industries} industries, {links} liaisons entre villes, {rails} voie(s) ferrée(s).",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.resultRoads",
+    "text": "Roads: {networks} separate network(s), {linked} / {industries} industries linked to a town.",
+    "ref": "Routes : {networks} réseau(x) séparé(s), {linked} / {industries} industries reliées à une ville.",
     "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
     "kind": "sentence"
   },
@@ -3601,6 +3650,27 @@
     "id": "mod:roads_simple",
     "text": "%d / %d road segment(s) rebuilt as small country roads (2 lanes).",
     "ref": "%d / %d tronçon(s) de route refait(s) en petites routes de campagne (2 voies).",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:roads_access",
+    "text": "Industries linked by the game: %d / %d reach a road%s.",
+    "ref": "Industries reliées par le jeu : %d / %d ont une route%s.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:rail_crossings",
+    "text": "Railway: %d road crossing(s) passed under in a tunnel.",
+    "ref": "Voie ferrée : %d croisement(s) de route passé(s) dessous en tunnel.",
+    "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
+    "kind": "label"
+  },
+  {
+    "id": "mod:roads_access_missing",
+    "text": "; without a road nearby: %s",
+    "ref": " ; sans route à proximité : %s",
     "context": "In-game window of the RealMap mod inside Transport Fever 3's Map Editor, and the report lines it sends back to the app.",
     "kind": "label"
   },

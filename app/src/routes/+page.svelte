@@ -115,6 +115,11 @@
   const SCALES = [1, 2, 3, 4, 5, 6, 8];
 
   function setArea(patch: Partial<Area>): void {
+    // Another place, size or orientation: the town roads changed by hand belonged to the old map.
+    const moved = (["lon", "lat", "size", "format", "landscape", "scale", "rotation"] as const).some(
+      (k) => k in patch && patch[k] !== importer.settings.area[k],
+    );
+    if (moved && importer.settings.roadsFrozen) importer.forgetTownRoads();
     importer.settings.area = { ...importer.settings.area, ...patch };
     importer.save();
   }
@@ -249,33 +254,42 @@
         </Section>
 
         <Section id="transform.water" title={t("advanced.water")} open>
-          <div class="row">
-            <label title={t("advanced.riverWidthTitle")}>{t("advanced.riverWidth")} <input type="number" step="8" min="0" bind:value={importer.settings.terrain.riverMinWidth} onchange={save} /></label>
-            <label title={t("advanced.riverDepthTitle")}>{t("advanced.riverDepth")} <input type="number" min="1" bind:value={importer.settings.terrain.riverDepth} onchange={save} /></label>
-          </div>
+          <label class="check" title={t("advanced.inlandWaterTitle")}><input type="checkbox" bind:checked={importer.settings.terrain.inlandWater} onchange={save} /> {t("advanced.inlandWater")}</label>
+          {#if s.terrain.inlandWater}
+            <div class="row">
+              <label title={t("advanced.riverWidthTitle")}>{t("advanced.riverWidth")} <input type="number" step="8" min="0" bind:value={importer.settings.terrain.riverMinWidth} onchange={save} /></label>
+              <label title={t("advanced.riverDepthTitle")}>{t("advanced.riverDepth")} <input type="number" min="1" bind:value={importer.settings.terrain.riverDepth} onchange={save} /></label>
+            </div>
+          {/if}
           <div class="row">
             <label title={t("advanced.coastDepthTitle")}>{t("advanced.coastDepth")} <input type="number" min="1" bind:value={importer.settings.terrain.coastDepth} onchange={save} /></label>
-            <label title={t("advanced.minPondTitle")}>{t("advanced.minPond")} <input type="number" step="0.5" min="0" bind:value={importer.settings.terrain.minLakeHa} onchange={save} /></label>
+            {#if s.terrain.inlandWater}
+              <label title={t("advanced.minPondTitle")}>{t("advanced.minPond")} <input type="number" step="0.5" min="0" bind:value={importer.settings.terrain.minLakeHa} onchange={save} /></label>
+            {/if}
           </div>
-          <label title={t("advanced.waterJoinTitle")}>{t("advanced.waterJoin")} <input type="number" step="8" min="0" bind:value={importer.settings.terrain.waterJoinM} onchange={save} /></label>
-          <label class="check"><input type="checkbox" bind:checked={importer.settings.terrain.wetlandLakes} onchange={save} /> {t("advanced.marshLakes")}</label>
-          {#if s.terrain.wetlandLakes}
-            <div class="row">
-              <label>{t("advanced.marshArea")} <input type="number" step="1" min="0" bind:value={importer.settings.terrain.wetlandMinHa} onchange={save} /></label>
-              <label>{t("advanced.marshDepth")} <input type="number" step="1" min="1" bind:value={importer.settings.terrain.marshDepth} onchange={save} /></label>
-            </div>
+          {#if s.terrain.inlandWater}
+            <label title={t("advanced.waterJoinTitle")}>{t("advanced.waterJoin")} <input type="number" step="8" min="0" bind:value={importer.settings.terrain.waterJoinM} onchange={save} /></label>
+            <label class="check"><input type="checkbox" bind:checked={importer.settings.terrain.wetlandLakes} onchange={save} /> {t("advanced.marshLakes")}</label>
+            {#if s.terrain.wetlandLakes}
+              <div class="row">
+                <label>{t("advanced.marshArea")} <input type="number" step="1" min="0" bind:value={importer.settings.terrain.wetlandMinHa} onchange={save} /></label>
+                <label>{t("advanced.marshDepth")} <input type="number" step="1" min="1" bind:value={importer.settings.terrain.marshDepth} onchange={save} /></label>
+              </div>
+            {/if}
           {/if}
           <details>
             <summary>{t("advanced.network")}</summary>
-            <label class="check" title={t("advanced.repairTitle")}><input type="checkbox" bind:checked={importer.settings.terrain.repairRivers} onchange={save} /> {t("advanced.repair")}</label>
-            <div class="row">
-              <label title={t("advanced.endJoinTitle")}>{t("advanced.endJoin")} <input type="number" step="25" min="0" bind:value={importer.settings.terrain.riverJoinM} onchange={save} /></label>
-              <label title={t("advanced.taperTitle")}>{t("advanced.taper")} <input type="number" step="100" min="0" bind:value={importer.settings.terrain.sourceTaperM} onchange={save} /></label>
-            </div>
-            <div class="row">
-              <label title={t("advanced.valleySlopeTitle")}>{t("advanced.valleySlope")} <input type="number" step="0.02" min="0.02" bind:value={importer.settings.terrain.valleySlope} onchange={save} /></label>
-              <label>{t("advanced.riverBank")} <input type="number" step="0.05" min="0.02" bind:value={importer.settings.terrain.riverBankSlope} onchange={save} /></label>
-            </div>
+            {#if s.terrain.inlandWater}
+              <label class="check" title={t("advanced.repairTitle")}><input type="checkbox" bind:checked={importer.settings.terrain.repairRivers} onchange={save} /> {t("advanced.repair")}</label>
+              <div class="row">
+                <label title={t("advanced.endJoinTitle")}>{t("advanced.endJoin")} <input type="number" step="25" min="0" bind:value={importer.settings.terrain.riverJoinM} onchange={save} /></label>
+                <label title={t("advanced.taperTitle")}>{t("advanced.taper")} <input type="number" step="100" min="0" bind:value={importer.settings.terrain.sourceTaperM} onchange={save} /></label>
+              </div>
+              <div class="row">
+                <label title={t("advanced.valleySlopeTitle")}>{t("advanced.valleySlope")} <input type="number" step="0.02" min="0.02" bind:value={importer.settings.terrain.valleySlope} onchange={save} /></label>
+                <label>{t("advanced.riverBank")} <input type="number" step="0.05" min="0.02" bind:value={importer.settings.terrain.riverBankSlope} onchange={save} /></label>
+              </div>
+            {/if}
             <div class="row">
               <label>{t("advanced.seaBank")} <input type="number" step="0.05" min="0.05" bind:value={importer.settings.terrain.bankSlope} onchange={save} /></label>
               <label>{t("advanced.bankWidth")} <input type="number" step="50" min="0" bind:value={importer.settings.terrain.bankWidthM} onchange={save} /></label>
@@ -288,7 +302,9 @@
               <label>{t("advanced.seaDepth")} <input type="number" min="1" bind:value={importer.settings.terrain.seaDepth} onchange={save} /></label>
               <label>{t("advanced.seaMax")} <input type="number" min="1" bind:value={importer.settings.terrain.seaMaxDepth} onchange={save} /></label>
             </div>
-            <label title={t("advanced.maxCarveTitle")}>{t("advanced.maxCarve")} <input type="number" min="0" bind:value={importer.settings.terrain.maxCarve} onchange={save} /></label>
+            {#if s.terrain.inlandWater}
+              <label title={t("advanced.maxCarveTitle")}>{t("advanced.maxCarve")} <input type="number" min="0" bind:value={importer.settings.terrain.maxCarve} onchange={save} /></label>
+            {/if}
             <button class="small" disabled={!!importer.running} onclick={() => importer.writeRiverTest()}>{t("advanced.riverTest")}</button>
           </details>
         </Section>
@@ -344,6 +360,10 @@
 
         <Section id="transform.roads" title={t("advanced.roads")}>
           {#if !s.roadsFrozen}<p class="hint">{t("roads.auto")}</p>{/if}
+          <label title={t("roads.maxNetworkTitle")}>{t("roads.maxNetwork")}
+            <input type="number" step="1" min="2" bind:value={importer.settings.roads.maxNetworkTowns}
+              onchange={() => { importer.settings.roads.maxNetworkTowns = Math.max(2, Math.round(num(String(importer.settings.roads.maxNetworkTowns), 3))); save(); }} />
+          </label>
           <ResetRoads />
         </Section>
 
@@ -363,7 +383,7 @@
       {:else}
         {#if pv}
           <div class="summary">
-            <span>{t("export.summary", { towns: placedTowns, industries: (pv.industries ?? []).length, links: pv.network.links.filter((l) => s.linkPicks[l.key] !== false).length, rails: pv.network.rail.length })}</span>
+            <span>{t("export.summary", { towns: placedTowns, industries: (pv.industries ?? []).length, links: pv.network.links.filter((l) => l.kind === "town" && s.linkPicks[l.key] !== false).length, rails: pv.network.rail.length })}</span>
             <button class="secondary" onclick={() => (listsOpen = true)}>{t("export.showLists")}</button>
           </div>
           <p class="hint">{t("export.mapHint")}</p>

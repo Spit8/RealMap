@@ -31,21 +31,25 @@ Map Editor.
   the area picked on a map.
 - **Real relief and water**: elevation from IGN RGE ALTI in France and Copernicus GLO-30 elsewhere,
   sea floor from EMODnet (Europe) or ETOPO; continuous, navigable rivers with gentle banks; lakes;
-  marshes turned into shallow lakes; adjustable river, marsh and coast depths.
+  marshes turned into shallow lakes; adjustable river, marsh and coast depths. Rivers and lakes can be
+  turned off (*Water › Rivers and lakes*): only the sea stays and the real relief is kept, since the game
+  has a single water level.
 - **Biomes** from ESA WorldCover: forests, fields, scrub, rock; no trees on the beaches.
 - **Towns at their real size** (population from OpenStreetMap), with commercial and industrial
   shares from the real business areas, and starting goods drawn far from the factories that make
   them, as the game does.
 - **Industries** from the real industrial sites and the land cover, named after the real ones, in
   the number the game's density and economy ask for.
-- **Road links** between towns: chosen automatically (each town linked to 1 or 2 others along the
-  real roads), then yours to change. The game lays the roads with its own routing.
+- **Road links** between towns: chosen automatically along the real roads, in several small
+  networks (3 towns at most by default, *Advanced options › Roads*) for you to join in game, never a
+  lone town, and each industry linked to its nearest town; then yours to change. The game lays the
+  roads with its own routing.
 - **A railway** following the real main line, adjusted to the game's relief (along the banks rather
   than across the rivers), with its curves, gradients, bridges and tunnels designed in the app.
 - **Your choices**: right-click the map to add or remove towns, industries, road links and railway
   lines; lists of everything in a panel over the map.
-- **One click in the game**: the app writes the files, the mod builds relief, biomes, railway, towns,
-  industries and roads in order, and the app shows each step.
+- **One click in the game**: the app writes the files, the mod builds relief, biomes, towns, industries,
+  roads and railway in order (the track goes under the roads in short tunnels), and the app shows each step.
 
 ![Choose starting towns, industries, roads and rails](captures/slides/Concept_2.png)
 
@@ -122,7 +126,7 @@ Download the file for your system from the [Releases](https://github.com/Spit8/R
 - **Towns** are capped by the game's limit for the map size; towns too close to each other or to the
   water are moved or left out (the lists say why).
 - **Roads**: the map shows the planned links only; the game lays the roads with its own routing and
-  links the industries to them.
+  links the industries to them (the report counts the industries with a road nearby).
 - **Railway**: the main real line, plus the lines you add, without stations or trains. Very steep or
   built-up places can leave short gaps (listed in the mod's report).
 - **Relief precision** depends on the source: up to 1 m (IGN, France only) or 30 m (Copernicus);

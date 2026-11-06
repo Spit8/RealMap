@@ -60,6 +60,7 @@ Track unresolved issues so they do not get mistaken for facts.
 - 2026-10-31: in game the roads were built; every railway segment was refused (missing edge fields, FACT-027, fixed in v0.10: to check in game, with the bridges over water).
 - 2026-10-31 (v0.10 in game): segments built but the line was discontinuous, too tight, through towns → designed in the app (DECISION-014). To check in game: whole line laid without cuts, bridges / tunnels accepted with the app's heights and tangents, towns and roads built around the track.
 - Next: generate a map with v0.11 and read the report's rail line.
+- 2026-11-06 (DECISION-032 / 033): to see in game — the connection command sent with no town pair still links the industries? Read the report line « Industries reliées par le jeu : x / y ».
 - Status: OPEN · Date added: 2026-10-31
 
 ## QUESTION-012 — Do the town shares and goods hold in game (DECISION-015)?

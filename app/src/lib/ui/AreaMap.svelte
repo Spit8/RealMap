@@ -199,6 +199,8 @@
   // A planned link, straight from town to town (the game routes the road): pale and dashed when off.
   const linkStyle = (on: boolean) =>
     new Style({ stroke: new Stroke({ color: on ? "#8b5a2b" : "rgba(139, 90, 43, 0.35)", width: on ? 3 : 2, lineDash: on ? undefined : [6, 5] }) });
+  // An industry's planned access to its town: thinner, dotted (the game or the mod lays it).
+  const accessStyle = new Style({ stroke: new Stroke({ color: "#8b5a2b", width: 1.5, lineDash: [4, 4] }) });
   const railStyle = (on: boolean) => [
     new Style({ stroke: new Stroke({ color: on ? "#1d2329" : "rgba(29, 35, 41, 0.35)", width: 4 }) }),
     new Style({ stroke: new Stroke({ color: "#fff", width: 2, lineDash: [8, 8] }) }),
@@ -303,6 +305,12 @@
       const ll = net.ll[l.key];
       if (!ll) continue;
       const feat = new Feature(new LineString([fromLonLat(ll[0]), fromLonLat(ll[ll.length - 1])]));
+      if (l.kind === "industry") {
+        // Always built (each industry reaches a town): not a link the user turns on or off.
+        feat.setStyle(accessStyle);
+        networkSource.addFeature(feat);
+        continue;
+      }
       feat.setStyle(linkStyle(picks[l.key] !== false));
       feat.set("linkKey", l.key);
       feat.set("linkRoad", [l.a, l.b]);
@@ -678,6 +686,7 @@
           <li><i class="sq" style:background={INDUSTRY_COLORS.factory}></i>{t("legend.factory")}</li>
           <li><i class="sq" style:background={INDUSTRY_COLORS.water}></i>{t("legend.onWater")}</li>
           <li><i class="line road"></i>{t("legend.road")}</li>
+          <li><i class="line access"></i>{t("legend.access")}</li>
           <li><svg width="28" height="12" aria-hidden="true"><line x1="0" y1="6" x2="28" y2="6" stroke="#1d2329" stroke-width="4" /><line x1="0" y1="6" x2="28" y2="6" stroke="#fff" stroke-width="2" stroke-dasharray="5 5" /></svg>{t("legend.rail")}</li>
           <li><svg width="28" height="12" aria-hidden="true"><line x1="0" y1="6" x2="28" y2="6" stroke="#1d2329" stroke-width="12" /><line x1="0" y1="6" x2="28" y2="6" stroke="#fff" stroke-width="8" /><line x1="0" y1="6" x2="28" y2="6" stroke="#1d2329" stroke-width="3" /></svg>{t("legend.bridge")}</li>
           <li><svg width="28" height="12" aria-hidden="true"><rect x="0" y="1" width="28" height="10" fill="#e9ecef" /><line x1="0" y1="6" x2="28" y2="6" stroke="#3d4851" stroke-width="3" stroke-dasharray="3 5" /></svg>{t("legend.tunnel")}</li>
@@ -857,6 +866,9 @@
   }
   .legend i.line.road {
     border-top: 3px solid #8b5a2b;
+  }
+  .legend i.line.access {
+    border-top: 2px dashed #8b5a2b;
   }
   .legend svg {
     flex: none;

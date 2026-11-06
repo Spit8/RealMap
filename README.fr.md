@@ -31,21 +31,25 @@ RealMap** la construit tout seul dans l'éditeur de cartes du jeu.
   à 1:8, zone choisie sur une carte.
 - **Relief et eau réels** : altitudes IGN RGE ALTI en France et Copernicus GLO-30 ailleurs, fonds marins
   EMODnet (Europe) ou ETOPO ; rivières continues et navigables aux berges douces ; lacs ; marais
-  transformés en lacs peu profonds ; profondeur des rivières, des marais et des côtes réglable.
+  transformés en lacs peu profonds ; profondeur des rivières, des marais et des côtes réglable. Les
+  rivières et les lacs peuvent être désactivés (*Eau › Rivières et lacs*) : seule la mer reste et le
+  relief réel est conservé, le jeu n'ayant qu'un niveau d'eau.
 - **Biomes** d'après ESA WorldCover : forêts, champs, broussailles, roche ; pas d'arbres sur les plages.
 - **Villes à leur taille réelle** (population OpenStreetMap), avec leurs parts de quartiers commerciaux
   et industriels tirées des vraies zones d'activité, et des besoins de départ choisis loin des usines
   qui les produisent, comme le fait le jeu.
 - **Industries** tirées des vrais sites industriels et de l'occupation du sol, avec leur vrai nom, en
   nombre fixé par la densité et l'économie du jeu.
-- **Liaisons routières** entre les villes : choisies automatiquement (chaque ville reliée à 1 ou 2
-  autres le long des vraies routes), puis modifiables à volonté. Le jeu trace les routes lui-même.
+- **Liaisons routières** entre les villes : choisies automatiquement le long des vraies routes, en
+  plusieurs petits réseaux (3 villes au plus par défaut, *Options avancées › Routes*) à relier en jeu,
+  jamais une ville seule, et chaque industrie reliée à la ville la plus proche ; puis modifiables à
+  volonté. Le jeu trace les routes lui-même.
 - **Une voie ferrée** qui suit la vraie ligne principale, adaptée au relief du jeu (le long des berges
   plutôt qu'en traversant les rivières), avec courbes, pentes, ponts et tunnels calculés par l'appli.
 - **Tes choix** : clic droit sur la carte pour ajouter ou retirer villes, industries, liaisons
   routières et voies ferrées ; toutes les listes dans un panneau sur la carte.
 - **Un clic dans le jeu** : l'application écrit les fichiers, le mod construit dans l'ordre relief,
-  biomes, voie ferrée, villes, industries et routes, et l'application affiche chaque étape.
+  biomes, villes, industries, routes et voie ferrée (la voie passe sous les routes en courts tunnels), et l'application affiche chaque étape.
 
 ![Choisir les villes, industries, routes et voies de départ](captures/slides/Concept_2.png)
 
@@ -125,7 +129,7 @@ Télécharge le fichier de ton système sur la page [Releases](https://github.co
 - Le nombre de **villes** est plafonné par la limite du jeu pour la taille de carte ; les villes trop
   proches les unes des autres ou de l'eau sont déplacées ou écartées (les listes disent pourquoi).
 - **Routes** : la carte montre seulement les liaisons prévues ; le jeu trace les routes à sa façon et y
-  raccorde les industries.
+  raccorde les industries (le rapport compte celles qui ont une route à proximité).
 - **Voie ferrée** : la ligne principale réelle, plus celles que tu ajoutes, sans gares ni trains. Les
   endroits très pentus ou très bâtis peuvent laisser de courtes coupures (indiquées dans le rapport du mod).
 - La **précision du relief** dépend de la source : jusqu'à 1 m (IGN, France seulement) ou 30 m

@@ -71,8 +71,8 @@ end
 
   it("shows the stages in order: done, running, waiting; an error on its stage", () => {
     const run = gameSteps({ id: 1, stage: "towns", message: "Villes", report: [] });
-    expect(run.map((s) => s.state)).toEqual(["done", "done", "done", "run", "wait", "wait"]);
-    expect(run[3].detail).toBe("Villes");
+    expect(run.map((s) => s.state)).toEqual(["done", "done", "run", "wait", "wait", "wait"]);
+    expect(run[2].detail).toBe("Villes");
     const err = gameSteps({ id: 1, stage: "error", failed: "biomes", message: "Fichier absent", report: [] });
     expect(err.map((s) => s.state)).toEqual(["done", "fail", "wait", "wait", "wait", "wait"]);
     expect(gameSteps({ id: 1, stage: "done", message: "", report: [] }).every((s) => s.state === "done")).toBe(true);

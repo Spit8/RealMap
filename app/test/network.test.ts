@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { frameProjection, makeFrame } from "../src/lib/core/area";
 import {
+  DEFAULT_NETWORK,
   networkData,
   overpassNetworkQuery,
   parseNetwork,
   planNetwork,
+  planRoads,
+  roadNetworks,
   resample,
   userRail,
   type NetworkWay,
@@ -43,20 +46,62 @@ describe("network", () => {
     expect(q).toContain('["usage"!~"^(tourism|military|industrial|test)$"]["service"!~"^(yard|siding|spur)$"]');
   });
 
-  it("links each town to 1 or 2 others along the real roads, never a full mesh", () => {
-    // Five towns on a line along one road, 1.5 km apart.
+  it("links towns along the real roads in small separate networks, never a full mesh", () => {
+    // Five towns on a line along one road, 1.5 km apart; at most 3 towns per network.
     const xs = [-3000, -1500, 0, 1500, 3000];
     const road = way("road", "primary", xs.map((x) => [x, 0] as [number, number]));
     const towns = xs.map((x, k) => ({ name: `T${k}`, x, y: 0 }));
     const plan = planNetwork(f, [road], towns);
     const town = plan.links.filter((l) => l.kind === "town");
-    // Neighbours only: T0–T1, T1–T2, T2–T3, T3–T4.
-    expect(town.map((l) => `${l.a}-${l.b}`).sort()).toEqual(["T0-T1", "T1-T2", "T2-T3", "T3-T4"]);
+    // Neighbours only, cut after three towns: T0–T1–T2 and T3–T4.
+    expect(town.map((l) => `${l.a}-${l.b}`).sort()).toEqual(["T0-T1", "T1-T2", "T3-T4"]);
     expect(town.every((l) => l.real)).toBe(true);
+    expect(roadNetworks(towns.map((t) => t.name), town)).toBe(2);
     const deg = new Map<string, number>();
     for (const l of town) for (const n of [l.a, l.b]) deg.set(n, (deg.get(n) ?? 0) + 1);
     for (const t of towns) expect(deg.get(t.name)).toBeGreaterThanOrEqual(1);
     for (const t of towns) expect(deg.get(t.name)).toBeLessThanOrEqual(2);
+  });
+
+  it("splits eight towns into networks of at most maxNetworkTowns", () => {
+    const xs = [-7000, -5000, -3000, -1000, 1000, 3000, 5000, 7000];
+    const road = way("road", "primary", xs.map((x) => [x, 3000] as [number, number]));
+    const towns = xs.map((x, k) => ({ name: `E${k}`, x, y: 3000 }));
+    for (const max of [2, 3, 4]) {
+      const links = planRoads(f, [road], towns, [], {}, { ...DEFAULT_NETWORK, maxNetworkTowns: max });
+      const names = towns.map((t) => t.name);
+      expect(roadNetworks(names, links)).toBeGreaterThanOrEqual(Math.ceil(towns.length / max));
+      // No lone town: every town has a link.
+      for (const n of names) expect(links.some((l) => l.a === n || l.b === n)).toBe(true);
+    }
+  });
+
+  it("links each industry to its nearest town; a town with an industry may stay off the town roads", () => {
+    // Three towns, the third far away with an industry next to it.
+    const road = way("road", "primary", [[-2000, -6000], [0, -6000]]);
+    const towns = [{ name: "A", x: -2000, y: -6000 }, { name: "B", x: 0, y: -6000 }, { name: "C", x: 6000, y: 6000 }];
+    const industries = [{ key: "i1", name: "Mine", x: 6300, y: 6000 }, { key: "i2", name: "Ferme", x: -1800, y: -6100 }];
+    const o = { ...DEFAULT_NETWORK, maxNetworkTowns: 2 };
+    const links = planRoads(f, [road], towns, industries, {}, o);
+    const access = links.filter((l) => l.kind === "industry");
+    expect(access.map((l) => `${l.a}>${l.b}`).sort()).toEqual(["Ferme>A", "Mine>C"]);
+    // C has its mine: not linked to another town (the network of A and B is full).
+    expect(links.filter((l) => l.kind === "town").map((l) => `${l.a}-${l.b}`)).toEqual(["A-B"]);
+    // Without its industry, C is never left alone.
+    const alone = planRoads(f, [road], towns, [industries[1]], {}, o);
+    expect(alone.some((l) => l.kind === "town" && (l.a === "C" || l.b === "C"))).toBe(true);
+    // Only the town pairs go to the note (the game links the industries itself).
+    expect(networkData({ links, rail: [] }, {}).connections).toEqual([{ a: "A", b: "B" }]);
+  });
+
+  it("ignores roads frozen on another map, or frozen empty", () => {
+    const xs = [-3000, -1500, 0];
+    const road = way("road", "primary", xs.map((x) => [x, 7000] as [number, number]));
+    const towns = xs.map((x, k) => ({ name: `F${k}`, x, y: 7000 }));
+    const auto = planRoads(f, [road], towns).map((l) => l.key);
+    expect(auto.length).toBeGreaterThan(0);
+    expect(planRoads(f, [road], towns, [], {}, DEFAULT_NETWORK, ["town:Lyon|Vienne"]).map((l) => l.key)).toEqual(auto);
+    expect(planRoads(f, [road], towns, [], {}, DEFAULT_NETWORK, []).map((l) => l.key)).toEqual(auto);
   });
 
   it("writes only the town pairs left in, and the rail lines", () => {

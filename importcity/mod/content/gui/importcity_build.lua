@@ -3,8 +3,9 @@
 --  - industries, built like the Map Editor does (`createIndustries` + `createIndustryProposal`) and
 --    named (`industries[i].name`, FACT-024);
 --  - roads between the town pairs the app chose (`connections`), by the game's own command (its
---    routing; it also links every industry that exists), its wider country roads then rebuilt as the
---    small (2-lane) country road of the map's year (`simplifyRoads`);
+--    routing; it also links the industries), its wider country roads then rebuilt as the small
+--    (2-lane) country road of the map's year (`simplifyRoads`);
+--  - the industries the command linked, counted for the report (`industryAccess`);
 --  - the main railway (`rail.lines`): track segments along the points, a few at a time; a refused
 --    piece is tried segment by segment, then skipped and counted, with the game's reason.
 -- Each block calls `nextStep()` once its commands have answered (callbacks).
@@ -207,6 +208,9 @@ function B.industries(ctx, list, nextStep)
 		api.cmd.sendCommand(api.cmd.makeWorldBuildProposalCmd(job.proposal, context, true, false), function(_, success, entities)
 			if success then
 				ctx.report.industries = ctx.report.industries + 1
+				if job.item then
+					ctx.built[#ctx.built + 1] = { name = job.item.name, x = job.item.x, y = job.item.y, onWater = job.item.onWater == true }
+				end
 				if job.item and job.item.name and rename(entities, job.item.name, ctx.log) then
 					ctx.report.renamed = ctx.report.renamed + 1
 				end
@@ -222,9 +226,11 @@ function B.industries(ctx, list, nextStep)
 	end
 end
 
---- The game's town connection command (its routing; it also links every existing industry).
+--- The game's town connection command (its routing; it also links the existing industries). Sent
+--- even without a town pair (separate networks, a town with only its industry): the industries
+--- still get their roads.
 function B.connect(ctx, nextStep)
-	if #ctx.conns == 0 then
+	if #ctx.townEntities == 0 then
 		return nextStep()
 	end
 	api.cmd.sendCommand(api.cmd.makeTownConnectWithIndustriesCmd(ctx.townEntities, ctx.conns, false), function(_, success, entities)
@@ -464,8 +470,10 @@ function B.context(note, log)
 		log = log,
 		townEntities = {},
 		conns = {},
+		built = {},
 		report = {
 			roadsOk = true, connections = 0, industries = 0, industriesMissing = 0, renamed = 0,
+			accessOk = 0, accessMissing = 0,
 			railBuilt = 0, railSegments = 0, railFailed = 0, railReason = nil, railGaps = {},
 			railBridgeEdges = 0, railTunnelEdges = 0,
 		},
@@ -499,6 +507,218 @@ local function edgeTemplate(base)
 		return base.roadTemplate
 	end)
 	return ok and type(t) == "string" and t or nil
+end
+
+--- An industry with a public road (not only its own `ind_*` access) this close (game m) counts as
+--- linked by the game's connection command.
+local ACCESS_NEAR_M = 250
+
+--- Road edges (not track) within `r` of x, y: { base, template } (searched like `simplifyRoads`,
+--- by both component types).
+local function roadEdgesNear(x, y, r)
+	local out, seen = {}, {}
+	for _, ct in ipairs({ "BASE_EDGE_STREET", "BASE_EDGE" }) do
+		local ok, list = pcall(function()
+			return api.engine.util.octree.findEntitiesInCircle(vec2(x, y), r, api.type.ComponentType[ct])
+		end)
+		for _, e in ipairs(ok and type(list) == "table" and list or {}) do
+			if not seen[e] then
+				seen[e] = true
+				local base = comp(e, "BASE_EDGE")
+				local name = base and edgeTemplate(base)
+				if name and name:find("/street/", 1, true) then
+					out[#out + 1] = { base = base, template = name }
+				end
+			end
+		end
+	end
+	return out
+end
+
+--- True when a node of a public road (not an industry's own access) is within `r` of x, y.
+local function publicRoadNear(x, y, r)
+	for _, e in ipairs(roadEdgesNear(x, y, r)) do
+		if not e.template:find("/ind_", 1, true) then
+			for _, n in ipairs({ e.base.node0, e.base.node1 }) do
+				local c = type(n) == "number" and comp(n, "BASE_NODE") or nil
+				local p = c and c.position
+				if p and math.sqrt((p.x - x) ^ 2 + (p.y - y) ^ 2) <= r then
+					return true
+				end
+			end
+		end
+	end
+	return false
+end
+
+--- Under a road (DECISION-035): the track at least this far (game m) below the road at the
+--- crossing, in a tunnel over the road's width plus this on each side.
+local CROSS_DEPTH_M = 15
+local CROSS_HALF_M = 80
+--- The line's steepest game grade when the note does not give it.
+local CROSS_GRADE = 0.025
+--- Two crossings closer than this (game m) along the line are one.
+local CROSS_MERGE_M = 30
+
+--- Where segments a→b and c→d cross: t along a→b, u along c→d (0..1), or nil.
+local function segmentHit(ax, ay, bx, by, cx, cy, dx, dy)
+	local rx, ry, sx, sy = bx - ax, by - ay, dx - cx, dy - cy
+	local den = rx * sy - ry * sx
+	if math.abs(den) < 1e-9 then
+		return nil
+	end
+	local t = ((cx - ax) * sy - (cy - ay) * sx) / den
+	local u = ((cx - ax) * ry - (cy - ay) * rx) / den
+	if t < 0 or t > 1 or u < 0 or u > 1 then
+		return nil
+	end
+	return t, u
+end
+
+--- The roads are built before the railway (DECISION-035) and the game's track proposal does not
+--- cross them: find where the designed line `pts` crosses an existing street, lower the profile
+--- there to CROSS_DEPTH_M under the road, rising back at most `grade` (the line's steepest game
+--- grade) on both sides, and make the edges around the road a tunnel. `pts` is changed in place
+--- (heights, kinds, tangents) before `B.line` lays it.
+function B.railCrossings(ctx, pts, grade)
+	grade = (type(grade) == "number" and grade > 0) and grade or CROSS_GRADE
+	if #pts < 2 then
+		return
+	end
+	local along = { 0 }
+	for i = 2, #pts do
+		local a, b = pts[i - 1], pts[i]
+		along[i] = along[i - 1] + math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2)
+		if a.z == nil then
+			a.z = height(a.x, a.y)
+		end
+	end
+	if pts[#pts].z == nil then
+		pts[#pts].z = height(pts[#pts].x, pts[#pts].y)
+	end
+	-- Every crossing with an existing street (the edge between its two nodes, taken straight).
+	local crossings = {}
+	for i = 1, #pts - 1 do
+		local a, b = pts[i], pts[i + 1]
+		local len = along[i + 1] - along[i]
+		for _, e in ipairs(roadEdgesNear((a.x + b.x) / 2, (a.y + b.y) / 2, len / 2 + 80)) do
+			local n0 = type(e.base.node0) == "number" and comp(e.base.node0, "BASE_NODE") or nil
+			local n1 = type(e.base.node1) == "number" and comp(e.base.node1, "BASE_NODE") or nil
+			local p, q = n0 and n0.position, n1 and n1.position
+			if p and q then
+				local t, u = segmentHit(a.x, a.y, b.x, b.y, p.x, p.y, q.x, q.y)
+				if t then
+					local s = along[i] + t * len
+					local z = (p.z or height(p.x, p.y)) + u * ((q.z or height(q.x, q.y)) - (p.z or height(p.x, p.y)))
+					local merged = false
+					for _, c in ipairs(crossings) do
+						if math.abs(c.s - s) < CROSS_MERGE_M then
+							c.z = math.min(c.z, z)
+							merged = true
+						end
+					end
+					if not merged then
+						crossings[#crossings + 1] = { s = s, z = z, x = a.x + t * (b.x - a.x), y = a.y + t * (b.y - a.y) }
+					end
+				end
+			end
+		end
+	end
+	if #crossings == 0 then
+		return
+	end
+	-- Lowered profile: under each crossing, rising back at the line's grade (never raised). A road
+	-- met on a bridge (over water or a valley) already passes under the track: left alone.
+	local changed = {}
+	local kept = {}
+	for _, c in ipairs(crossings) do
+		local onBridge = false
+		for i = 1, #pts - 1 do
+			if pts[i].kind == "b" and along[i + 1] >= c.s - CROSS_HALF_M and along[i] <= c.s + CROSS_HALF_M then
+				onBridge = true
+			end
+		end
+		if onBridge then
+			ctx.log(string.format("rail over the road on a bridge at %d, %d", math.floor(c.x), math.floor(c.y)))
+		else
+			kept[#kept + 1] = c
+		end
+	end
+	crossings = kept
+	if #crossings == 0 then
+		return
+	end
+	-- A node right under each road (the app's nodes are ~100 m apart): the deepest point is there.
+	table.sort(crossings, function(p, q)
+		return p.s > q.s
+	end)
+	for _, c in ipairs(crossings) do
+		for i = 1, #pts - 1 do
+			if along[i] + 5 < c.s and c.s < along[i + 1] - 5 then
+				local a, b = pts[i], pts[i + 1]
+				local t = (c.s - along[i]) / (along[i + 1] - along[i])
+				table.insert(pts, i + 1, { x = c.x, y = c.y, z = a.z + t * (b.z - a.z), tx = a.tx, ty = a.ty, tz = a.tz, kind = a.kind })
+				ctx.report.railSegments = ctx.report.railSegments + 1
+				break
+			end
+		end
+	end
+	along = { 0 }
+	for i = 2, #pts do
+		along[i] = along[i - 1] + math.sqrt((pts[i].x - pts[i - 1].x) ^ 2 + (pts[i].y - pts[i - 1].y) ^ 2)
+	end
+	for _, c in ipairs(crossings) do
+		local bottom = c.z - CROSS_DEPTH_M
+		for i = 1, #pts do
+			local limit = bottom + grade * math.max(0, math.abs(along[i] - c.s) - CROSS_HALF_M)
+			if pts[i].z > limit then
+				pts[i].z = limit
+				changed[i] = true
+			end
+		end
+		-- The edges over the road and CROSS_HALF_M on each side: a tunnel.
+		for i = 1, #pts - 1 do
+			if along[i + 1] >= c.s - CROSS_HALF_M and along[i] <= c.s + CROSS_HALF_M then
+				pts[i].kind = "t"
+			end
+		end
+		ctx.log(string.format("rail under the road at %d, %d (road %.1f m, track %.1f m)", math.floor(c.x), math.floor(c.y), c.z, bottom))
+	end
+	-- Tangents of the lowered nodes from their neighbours (unit vector, as the app's).
+	local around = {}
+	for i in pairs(changed) do
+		around[i], around[math.max(1, i - 1)], around[math.min(#pts, i + 1)] = true, true, true
+	end
+	for i in pairs(around) do
+		local a, b = pts[math.max(1, i - 1)], pts[math.min(#pts, i + 1)]
+		local dx, dy, dz = b.x - a.x, b.y - a.y, b.z - a.z
+		local d = math.sqrt(dx * dx + dy * dy + dz * dz)
+		if d > 0 then
+			pts[i].tx, pts[i].ty, pts[i].tz = dx / d, dy / d, dz / d
+		end
+	end
+	ctx.report.railCrossings = (ctx.report.railCrossings or 0) + #crossings
+end
+
+--- Count the built land industries the game's command linked (a public road within
+--- ACCESS_NEAR_M), naming the others for the report; nothing is laid (DECISION-033). Water
+--- industries are never linked by the game (« Street targets empty »): left out.
+function B.industryAccess(ctx, nextStep)
+	local r = ctx.report
+	r.accessLand, r.accessNames = 0, {}
+	for _, ind in ipairs(ctx.built) do
+		if not ind.onWater then
+			r.accessLand = r.accessLand + 1
+			if publicRoadNear(ind.x, ind.y, ACCESS_NEAR_M) then
+				r.accessOk = r.accessOk + 1
+			else
+				r.accessMissing = r.accessMissing + 1
+				r.accessNames[#r.accessNames + 1] = tostring(ind.name)
+				ctx.log("industry without a road nearby: " .. tostring(ind.name))
+			end
+		end
+	end
+	nextStep()
 end
 
 --- Rebuild the wider country roads the connection command laid (medium, large) as the small country

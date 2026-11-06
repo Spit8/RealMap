@@ -19,7 +19,7 @@ import { coverOfClass, landcoverCodes, WC_MANGROVE, WC_WETLAND, type CoverRaster
 import type { OsmShape } from "../core/osm";
 import { builtAround, businessAround, clearBeaches, rasterizeBeaches, townLandRadiusM, townShares, type LandUse } from "../core/landuse";
 import { townNeeds } from "../core/townneeds";
-import { planNetwork, type CustomRail, type LinkPicks, type NetworkPlan, type NetworkWay } from "../core/network";
+import { DEFAULT_NETWORK, planRail, planRoads, type CustomRail, type LinkPicks, type NetworkOptions, type NetworkPlan, type NetworkWay } from "../core/network";
 import { DEFAULT_RAIL, designRail, type RailOptions } from "../core/railway";
 import { hoverGrid, renderPreview, type HoverGrid } from "../core/preview";
 import { buildTerrain, type TerrainOptions } from "../core/terrain";
@@ -59,6 +59,8 @@ export interface TerrainRequest {
   naming?: IndustryNaming;
   /** Town roads kept from the automatic choice once changed by hand (null: automatic). */
   roadsFrozen?: string[] | null;
+  /** Road network settings (`maxNetworkTowns`). */
+  network?: Partial<NetworkOptions>;
   /** Railway alignment settings (`railway.ts`). */
   rail: RailOptions;
   /** Beaches and business areas (OSM); empty without them. */
@@ -165,15 +167,9 @@ function build(req: TerrainRequest): void {
     const candidates = townCandidates(places, req.picks, towns, dropped, selected);
     // Railway before the industries (they keep off it), designed on the game terrain around the towns.
     post({ kind: "progress", value: 0.68, label: "progress.network" });
-    const network = planNetwork(
-      f,
-      req.roads ?? [],
-      towns.map((x) => ({ name: x.name, x: x.x, y: x.y })),
-      req.linkPicks ?? {},
-      undefined,
-      req.customRails ?? [],
-      req.roadsFrozen ?? null,
-    );
+    const netTowns = towns.map((x) => ({ name: x.name, x: x.x, y: x.y }));
+    const netOptions = { ...DEFAULT_NETWORK, ...(req.network ?? {}) };
+    const network: NetworkPlan = { links: [], rail: planRail(f, req.roads ?? [], netTowns, req.customRails ?? [], netOptions) };
     const railTowns = towns.map((x) => ({ x: x.x, y: x.y, capacity: x.capacity }));
     network.rail = network.rail.flatMap((guide, k) =>
       designRail(f, g, t, guide.pts, railTowns, req.rail ?? DEFAULT_RAIL).map((d, j) => {
@@ -191,6 +187,16 @@ function build(req: TerrainRequest): void {
       f, g, t, codes, req.sites ?? [], towns, req.industryPicks ?? {}, req.industries, named, network.rail.map((r) => r.pts),
       req.customIndustries ?? [],
       req.naming,
+    );
+    // Town roads once the industries are placed: a town with an industry is never alone.
+    network.links = planRoads(
+      f,
+      req.roads ?? [],
+      netTowns,
+      ind.industries.filter((m) => !m.onWater).map((m) => ({ key: m.key, name: m.name, x: m.x, y: m.y })),
+      req.linkPicks ?? {},
+      netOptions,
+      req.roadsFrozen ?? null,
     );
     // Land-use shares from the real business areas, then the goods each town asks for.
     const lands = towns.map((town) => {

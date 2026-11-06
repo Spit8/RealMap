@@ -31,9 +31,9 @@ import {
   diagnoseNoAnswer, gameProgress, gameSteps, isAlive, parseAlive, parseGameStatus, requestData, shouldResend,
   type GameAlive, type GameStatus,
 } from "$lib/core/gamelink";
-import { DEFAULT_RAIL, type RailOptions } from "$lib/core/railway";
+import { DEFAULT_RAIL, gameGrade, type RailOptions } from "$lib/core/railway";
 import {
-  networkData, overpassNetworkQuery, parseNetwork, type CustomRail, type LinkPicks, type NetworkPlan, type NetworkWay,
+  DEFAULT_NETWORK, networkData, overpassNetworkQuery, roadNetworks, parseNetwork, type CustomRail, type LinkPicks, type NetworkPlan, type NetworkWay,
 } from "$lib/core/network";
 import {
   DEFAULT_TOWNS, parseOverpassPlaces, townsIndustriesData, townSizesData,
@@ -94,6 +94,8 @@ export interface Settings {
    * the automatic links of that moment, kept as they are: no road is added for the user any more.
    */
   roadsFrozen: string[] | null;
+  /** Start road networks: most towns in one network (`network.ts`). */
+  roads: { maxNetworkTowns: number };
   /** Railway alignment (`railway.ts`). */
   rail: RailOptions;
   /** Industries added by hand on the map (right click). */
@@ -118,6 +120,7 @@ const DEFAULTS: Settings = {
   industryPicks: {},
   linkPicks: {},
   roadsFrozen: null,
+  roads: { maxNetworkTowns: DEFAULT_NETWORK.maxNetworkTowns },
   rail: { ...DEFAULT_RAIL },
   customIndustries: [],
   customRails: [],
@@ -165,6 +168,7 @@ function loadSettings(): Settings {
       industryPicks: saved.industryPicks ?? {},
       linkPicks: saved.linkPicks ?? {},
       roadsFrozen: saved.roadsFrozen ?? null,
+      roads: { ...d.roads, ...saved.roads },
       rail: { ...d.rail, ...saved.rail },
       customIndustries: saved.customIndustries ?? [],
       customRails: saved.customRails ?? [],
@@ -345,7 +349,7 @@ function summarize(i: Inputs): DataSummary {
 
 /** Options that change the map (not the file name or folder): the preview is stale when they differ. */
 function optionsKeyOf(s: Settings): string {
-  return JSON.stringify([s.area, s.source, s.terrain, s.useCover, s.biomes, s.places, s.towns, s.townPicks, s.industries, s.industryPicks, s.linkPicks, s.roadsFrozen, s.rail, s.customIndustries, s.customRails]);
+  return JSON.stringify([s.area, s.source, s.terrain, s.useCover, s.biomes, s.places, s.towns, s.townPicks, s.industries, s.industryPicks, s.linkPicks, s.roadsFrozen, s.roads, s.rail, s.customIndustries, s.customRails]);
 }
 
 class Importer {
@@ -444,18 +448,28 @@ class Importer {
   private freezeRoads(key: string): void {
     if (!key.startsWith("town:") || this.settings.roadsFrozen) return;
     const picks = this.settings.linkPicks;
-    this.settings.roadsFrozen = (this.preview?.network.links ?? [])
-      .filter((l) => picks[l.key] === undefined)
+    const auto = (this.preview?.network.links ?? [])
+      .filter((l) => l.kind === "town" && picks[l.key] === undefined)
       .map((l) => l.key);
+    // Nothing to keep: stay automatic (an empty list would leave the map without any road).
+    this.settings.roadsFrozen = auto.length ? auto : null;
   }
 
   /** Town roads back to the automatic choice: the roads added, removed or kept by hand are forgotten. */
   resetRoads(): void {
+    this.forgetTownRoads();
+    this.refresh();
+  }
+
+  /**
+   * Forget the town roads changed by hand (railway picks kept). Also done when the area moves: those
+   * roads belong to the old map, and kept they would leave the new one without any road.
+   */
+  forgetTownRoads(): void {
     const picks = { ...this.settings.linkPicks };
     for (const k of Object.keys(picks)) if (k.startsWith("town:")) delete picks[k];
     this.settings.linkPicks = picks;
     this.settings.roadsFrozen = null;
-    this.refresh();
   }
 
   /** A road link or railway line left out by hand, or back in (the map redraws; the result is stale). */
@@ -862,6 +876,7 @@ class Importer {
       roads: inputs.roads,
       linkPicks: s.linkPicks,
       roadsFrozen: s.roadsFrozen,
+      network: s.roads,
       naming: industryNaming(),
       rail: s.rail,
       land: inputs.land,
@@ -950,10 +965,10 @@ class Importer {
   private reportResult(done: Extract<TerrainMessage, { kind: "done" }>): void {
     const st = done.stats;
     const pct = (x: number) => `${Math.round(x * 100)} %`;
-    const links = done.network?.links ?? [];
+    const links = (done.network?.links ?? []).filter((l) => l.kind === "town");
     const lines = [
       t("msg.resultTerrain", { ref: Math.round(st.refHeight), min: st.minM, max: st.maxM, water: pct(st.waterShare), slope: pct(st.maxSlope) }),
-      t("msg.resultRivers", {
+      this.settings.terrain.inlandWater === false ? t("msg.inlandWaterOff") : t("msg.resultRivers", {
         networks: st.riverPieces <= 1 ? t("msg.resultRiversOne") : t("msg.resultRiversMany", { n: st.riverPieces }),
         joined: st.riversJoined,
         routed: st.riversRouted,
@@ -963,6 +978,11 @@ class Importer {
         beach: st.beachCells ?? 0,
       }),
       t("msg.resultCounts", { towns: done.towns.length, industries: done.industries.length, links: links.length, rails: done.network?.rail.length ?? 0 }),
+      t("msg.resultRoads", {
+        networks: roadNetworks(done.towns.map((x) => x.name), links, this.settings.linkPicks),
+        linked: (done.network?.links ?? []).filter((l) => l.kind === "industry").length,
+        industries: done.industries.filter((m) => !m.onWater).length,
+      }),
       ...(done.network?.rail ?? [])
         .filter((r) => r.design)
         .map((r) => {
@@ -1110,7 +1130,7 @@ class Importer {
           // Industries the mod builds and names (the towns_industries import has no names, FACT-024).
           industries: industryNoteData(done.industries),
           // Town pairs and railway points the mod has the game build (DECISION-012).
-          ...networkData(done.network ?? { links: [], rail: [] }, s.linkPicks),
+          ...networkData(done.network ?? { links: [], rail: [] }, s.linkPicks, gameGrade(s.rail.maxGrade, f.scale, f.verticalScale)),
           sources: {
             relief: inputs.source,
             water: "OpenStreetMap (ODbL)",

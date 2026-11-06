@@ -97,7 +97,7 @@
   "app:advanced.townClearance": "与城镇的距离 (米)",
   "app:advanced.rail": "铁路",
   "app:advanced.roads": "道路",
-  "app:roads.auto": "道路自动选择：每个城镇与1个或2个其他城镇相连；游戏会自动生成道路，并将产业连接到这些道路上。右键单击地图以添加或删除连接。",
+  "app:roads.auto": "自动选择的道路：多个小型城镇网络（绝不会有孤立的城镇），每个工业都连接到最近的城镇；道路由游戏铺设。在地图上点击右键可添加或删除连接。",
   "app:roads.manual": "手动修改的道路：现在，城镇之间的道路将不再自动添加。",
   "app:roads.reset": "应用默认设置",
   "app:roads.resetTitle": "恢复自动选择城镇之间的道路",
@@ -514,5 +514,15 @@
   "app:data.rotation": "旋转（°）",
   "app:data.rotationTitle": "游戏地图上边的朝向，以正北为起点按顺时针计算的度数。在地图上：按住中心点并拖动。",
   "app:data.rotationReset": "北向朝上",
-  "app:map.rotateTip": "按住并拖动以旋转区域（Shift：每次 15°）· 旋转 {deg}°"
+  "app:map.rotateTip": "按住并拖动以旋转区域（Shift：每次 15°）· 旋转 {deg}°",
+  "app:advanced.inlandWater": "河流和湖泊",
+  "app:advanced.inlandWaterTitle": "取消勾选：没有河流、运河或湖泊，只保留海洋。游戏只有一个水位（0 米）：没有这些水体，河床和湖底将保留真实地形，而不会被向下挖掘",
+  "app:msg.inlandWaterOff": "河流和湖泊：已关闭，保留真实地形。",
+  "app:roads.maxNetwork": "开局时每个网络的城镇数",
+  "app:roads.maxNetworkTitle": "游戏开始时，一个道路网络最多连接这么多城镇：地图上有多个网络，需在游戏中连接起来。没有其他城镇也没有工业的城镇仍会获得一条连接。",
+  "app:legend.access": "计划中的工业通道（通往最近的城镇）",
+  "app:msg.resultRoads": "道路：{networks} 个独立网络，{linked} / {industries} 个工业已连接到城镇。",
+  "mod:roads_access": "游戏已连接的工业：%d / %d 个有道路%s。",
+  "mod:roads_access_missing": "；附近没有道路：%s",
+  "mod:rail_crossings": "铁路：%d 处道路交叉以隧道从下方穿过。"
 }

@@ -39,7 +39,8 @@
     return all.filter((c) => keys.has(c.key));
   });
   const townByKey = $derived(new Map((pv?.towns ?? []).map((x) => [x.key, x])));
-  // Towns of the map with no road left (the user removed them all: DECISION-018).
+  // Towns of the map with no road left (the user removed them all: DECISION-018); an industry's
+  // access counts as a road for its town.
   const roadless = $derived.by(() => {
     const linked = new Set<string>();
     for (const l of pv?.network.links ?? []) {
@@ -145,7 +146,7 @@
     {@const net = pv.network}
     <ResetRoads />
     <ul class="rows">
-      {#each net.links as l (l.key)}
+      {#each net.links.filter((x) => x.kind === "town") as l (l.key)}
         <li class={s.linkPicks[l.key] === false ? "off" : "placed"} title={l.real ? t("lists.realRoad") : t("lists.directRoad")}>
           <input type="checkbox" checked={s.linkPicks[l.key] !== false} disabled={!!importer.running} onchange={() => importer.toggleLink(l.key)} />
           <span class="name">{l.a} – {l.b}{s.linkPicks[l.key] === true ? ` · ${t("lists.added")}` : ""}</span>

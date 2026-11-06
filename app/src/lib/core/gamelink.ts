@@ -10,11 +10,11 @@ import { parseUserdata } from "./luadata";
 export const GAME_STAGES: { id: GameStage; label: string }[] = [
   { id: "heightmap", label: "Relief (heightmap)" },
   { id: "biomes", label: "Biomes" },
-  // Before towns, industries and roads (DECISION-014): they adapt to the track, not the reverse.
-  { id: "rail", label: "Voie ferrée" },
   { id: "towns", label: "Villes et tailles" },
   { id: "industries", label: "Industries et noms" },
   { id: "roads", label: "Routes entre villes" },
+  // Last (DECISION-035): the game's roads give up on a track; the track dips under the roads.
+  { id: "rail", label: "Voie ferrée" },
 ];
 
 export type GameStage = "heightmap" | "biomes" | "towns" | "industries" | "roads" | "rail";

@@ -41,6 +41,9 @@ local STRINGS = {
 		roads_done = "%d road link(s)%s.",
 		roads_partly = " (partly refused)",
 		roads_simple = "%d / %d road segment(s) rebuilt as small country roads (2 lanes).",
+		roads_access = "Industries linked by the game: %d / %d reach a road%s.",
+		rail_crossings = "Railway: %d road crossing(s) passed under in a tunnel.",
+		roads_access_missing = "; without a road nearby: %s",
 		done = "Map “%s” generated. Save it (Map Editor menu).",
 	},
 	fr = {
@@ -77,6 +80,9 @@ local STRINGS = {
 		roads_done = "%d liaison(s) routière(s)%s.",
 		roads_partly = " (refusées en partie)",
 		roads_simple = "%d / %d tronçon(s) de route refait(s) en petites routes de campagne (2 voies).",
+		roads_access = "Industries reliées par le jeu : %d / %d ont une route%s.",
+		rail_crossings = "Voie ferrée : %d croisement(s) de route passé(s) dessous en tunnel.",
+		roads_access_missing = " ; sans route à proximité : %s",
 		done = "Carte « %s » générée. Enregistre-la (menu de l'éditeur).",
 	},
 	-- BEGIN generated de (tools/i18n/import.mts)
@@ -115,6 +121,9 @@ local STRINGS = {
 		roads_partly = " (teilweise abgelehnt)",
 		roads_simple = "%d / %d Strassenabschnitt(e) wurde(n) als kleine Landstrassen (2 Fahrbahnen) neu aufgebaut.",
 		done = "Die Karte „%s“ wurde erstellt. Speichere sie (im Menü des Karten-Editors).",
+		roads_access = "Vom Spiel verbundene Industrien: %d / %d haben eine Strasse%s.",
+		roads_access_missing = "; ohne Strasse in der Nähe: %s",
+		rail_crossings = "Bahnstrecke: %d Strassenkreuzung(en) im Tunnel unterquert.",
 	},
 	-- END generated de
 	-- BEGIN generated it (tools/i18n/import.mts)
@@ -153,6 +162,9 @@ local STRINGS = {
 		roads_partly = " (parzialmente rifiutate)",
 		roads_simple = "%d / %d tratto/i di strada ricostruito/i come piccole strade di campagna (2 corsie).",
 		done = "Mappa \"%s\" generata. Salvala (nel menu dell'editor di mappe).",
+		roads_access = "Industrie collegate dal gioco: %d / %d hanno una strada%s.",
+		roads_access_missing = "; senza strada nelle vicinanze: %s",
+		rail_crossings = "Ferrovia: %d incrocio/i con strade superato/i sotto in galleria.",
 	},
 	-- END generated it
 	-- BEGIN generated es (tools/i18n/import.mts)
@@ -191,6 +203,9 @@ local STRINGS = {
 		roads_partly = " (parcialmente rechazado)",
 		roads_simple = "%d / %d tramo(s) de carretera reconstruido(s) como pequeñas carreteras rurales (2 carriles).",
 		done = "El mapa \"%s\" ha sido generado. Guárdalo (en el menú del editor de mapas).",
+		roads_access = "Industrias conectadas por el juego: %d / %d tienen carretera%s.",
+		roads_access_missing = "; sin carretera cercana: %s",
+		rail_crossings = "Vía férrea: %d cruce(s) con carretera pasado(s) por debajo en túnel.",
 	},
 	-- END generated es
 	-- BEGIN generated zh (tools/i18n/import.mts)
@@ -229,6 +244,9 @@ local STRINGS = {
 		roads_partly = " （部分已拒绝）",
 		roads_simple = "%d / %d 个道路段已重建为小型乡村道路（双车道）。",
 		done = "地图“%s”已生成。请保存它（在地图编辑工具的菜单中）。",
+		roads_access = "游戏已连接的工业：%d / %d 个有道路%s。",
+		roads_access_missing = "；附近没有道路：%s",
+		rail_crossings = "铁路：%d 处道路交叉以隧道从下方穿过。",
 	},
 	-- END generated zh
 }

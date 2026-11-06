@@ -175,7 +175,7 @@ api = {
     end },
     ComponentType = { TOWN = "TOWN", CONSTRUCTION = "CONSTRUCTION", BASE_NODE = "BASE_NODE",
                       BASE_EDGE = "BASE_EDGE", BASE_EDGE_STREET = "BASE_EDGE_STREET" },
-    enum = { BaseEdgeType = { NORMAL = "NORMAL", BRIDGE = "BRIDGE", TUNNEL = "TUNNEL" }, RoadType = { TRACK = "TRACK" } },
+    enum = { BaseEdgeType = { NORMAL = "NORMAL", BRIDGE = "BRIDGE", TUNNEL = "TUNNEL" }, RoadType = { TRACK = "TRACK", STREET = "STREET" } },
   },
   gui = {
     game = { isMapEditor = function() return SIM.editor end },
@@ -212,9 +212,13 @@ api = {
     },
     util = {
       -- Street edges (the town connection command lays them), found by the octree.
-      octree = { findEntitiesInCircle = function(_, _, ct)
+      octree = { findEntitiesInCircle = function(c, r, ct)
         local ids = {}
-        if ct == "BASE_EDGE_STREET" then for e in pairs(SIM.streetEdges) do ids[#ids + 1] = e end end
+        if ct == "BASE_EDGE_STREET" or ct == "BASE_EDGE" then
+          for e, s in pairs(SIM.streetEdges) do
+            if not s.at or math.sqrt((s.at[1] - c.x) ^ 2 + (s.at[2] - c.y) ^ 2) <= r then ids[#ids + 1] = e end
+          end
+        end
         table.sort(ids)
         return ids
       end },
@@ -304,13 +308,23 @@ local COUNTRY = "::/infrastructure/street/country/"
 local function answer(c)
   if c.kind == "makeTownConnectWithIndustriesCmd" then
     -- The game's roads: medium country roads (one over a bridge), a town street, an industry access.
+    -- The quarry has a country road beside it; the farm only its own access stub.
     SIM.streetEdges = {
-      [9001] = { roadTemplate = COUNTRY .. "country_old_medium.street_template", type = "NORMAL" },
-      [9002] = { roadTemplate = COUNTRY .. "country_old_medium.street_template", type = "BRIDGE" },
-      [9003] = { roadTemplate = "::/infrastructure/street/town/town_old_small.street_template", type = "NORMAL" },
-      [9004] = { roadTemplate = COUNTRY .. "ind_country_old_small.street_template", type = "NORMAL" },
-      [9005] = { roadTemplate = COUNTRY .. "country_new_medium.street_template", type = "NORMAL" },
+      [9001] = { roadTemplate = COUNTRY .. "country_old_medium.street_template", type = "NORMAL", at = { 3600, 850 } },
+      [9002] = { roadTemplate = COUNTRY .. "country_old_medium.street_template", type = "BRIDGE", at = { 1500, 0 } },
+      [9003] = { roadTemplate = "::/infrastructure/street/town/town_old_small.street_template", type = "NORMAL", at = { 150, 0 } },
+      [9004] = { roadTemplate = COUNTRY .. "ind_country_old_small.street_template", type = "NORMAL", at = { 3450, 750 } },
+      [9005] = { roadTemplate = COUNTRY .. "country_new_medium.street_template", type = "NORMAL", at = { 2500, 0 } },
+      [9006] = { roadTemplate = COUNTRY .. "ind_country_old_small.street_template", type = "NORMAL", at = { -1850, 1350 } },
     }
+    for e, s in pairs(SIM.streetEdges) do
+      SIM.nodes[e * 10] = { x = s.at[1], y = s.at[2], z = 20 }
+      SIM.nodes[e * 10 + 1] = { x = s.at[1] + 50, y = s.at[2], z = 20 }
+    end
+    -- A road across the railway's line (y = 100) at x = -500, laid before the track (DECISION-035).
+    SIM.streetEdges[9007] = { roadTemplate = "::/infrastructure/street/town/town_old_small.street_template", type = "NORMAL", at = { -500, 100 } }
+    SIM.nodes[90070] = { x = -500, y = -200, z = 30 }
+    SIM.nodes[90071] = { x = -500, y = 400, z = 30 }
     return true, { { 9005, 1 }, { 9001, 1 } }
   end
   if c.kind == "makeWorldReplaceTerrainCmd" then SIM.replaced = (SIM.replaced or {}); SIM.replaced[#SIM.replaced + 1] = c.args[1].computed; return true, {} end
@@ -347,6 +361,20 @@ local function answer(c)
       return true, { { SIM.nextEntity, 0 } }
     end
     local sp = p.streetProposal
+    if sp.edgesToAdd and sp.edgesToAdd[1] and sp.edgesToAdd[1].type == 0 then
+      local first, lastE = sp.edgesToAdd[1].comp, sp.edgesToAdd[#sp.edgesToAdd].comp
+      for _, e in ipairs(sp.edgesToAdd) do
+        local c = e.comp
+        if c.roadType ~= "STREET" or c.roadTemplate ~= COUNTRY .. "country_old_small.street_template"
+           or c.laneConfigs[1] ~= "lanes" or c.position0 == nil or c.type == nil then
+          SIM.malformed = true
+          return false, {}
+        end
+      end
+      SIM.accessRoads = SIM.accessRoads or {}
+      SIM.accessRoads[#SIM.accessRoads + 1] = { from = first.node0, to = lastE.node1, edges = #sp.edgesToAdd }
+      return true, {}
+    end
     local bridges, tunnels = 0, 0
     local pos = {}
     for _, n in ipairs(sp.nodesToAdd or {}) do pos[n.entity] = n.comp.position end
@@ -361,9 +389,11 @@ local function answer(c)
       end
       local a, b = pos[c.node0], pos[c.node1]
       local x0 = a.x
-      -- The app's design laid as is: its heights, its tangents scaled to the edge length.
+      -- The app's design laid as is (heights at 30, or lowered under the road: never raised), its
+      -- unit tangents scaled to the edge length.
       local len = math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2 + (b.z - a.z) ^ 2)
-      if a.z ~= 30 or math.abs(c.tangent0.x - len) > 1e-6 or math.abs(c.tangent1.x - len) > 1e-6 then
+      local norm = function(t) return math.sqrt(t.x ^ 2 + t.y ^ 2 + t.z ^ 2) end
+      if a.z > 30 + 1e-6 or a.z < 14.9 or math.abs(norm(c.tangent0) - len) > 1e-6 or math.abs(norm(c.tangent1) - len) > 1e-6 then
         SIM.malformed = true
         return false, {}
       end
@@ -455,7 +485,7 @@ SIM.request = { id = now() * 1000 + 2, name = "Test", createdAt = 42 }
 SIM.play(pumpStep)
 local seq = table.concat(SIM.stages, " ")
 _print("stages: " .. seq)
-assert(seq == "check heightmap biomes rail towns industries roads done", "stage order: " .. seq)
+assert(seq == "check heightmap biomes towns industries roads rail done", "stage order: " .. seq)
 assert(#SIM.replaced == 2, "two terrain replacements")
 local hm, bm = SIM.replaced[1], SIM.replaced[2]
 assert(hm.import == true and hm.minH == -9 and hm.maxH == 439 and hm.fileName == "Test", "heightmap import settings")
@@ -470,11 +500,16 @@ for _, c in ipairs(SIM.cmds) do
   elseif c.kind == "makeWorldBuildProposalCmd" and c.args[1].industry then order[#order + 1] = "industry"
   elseif c.kind == "makeTownConnectWithIndustriesCmd" then order[#order + 1] = "roads"
   elseif c.kind == "makeWorldBuildProposalCmd" and #(c.args[1].streetProposal.edgesToRemove or {}) > 0 then order[#order + 1] = "simplify"
+  elseif c.kind == "makeWorldBuildProposalCmd" and (c.args[1].streetProposal.edgesToAdd or {})[1] and c.args[1].streetProposal.edgesToAdd[1].type == 0 then order[#order + 1] = "access"
   elseif c.kind == "makeWorldBuildProposalCmd" then order[#order + 1] = "rail" end
 end
 local cmdSeq = table.concat(order, " ")
 _print("commands: " .. cmdSeq)
-assert(cmdSeq:match("^terrain terrain rail[ rail]* towns size size size industry industry roads simplify simplify simplify simplify$"), "command order: " .. cmdSeq)
+assert(cmdSeq:match("^terrain terrain towns size size size industry industry roads simplify simplify simplify simplify rail[ rail]*$"), "command order: " .. cmdSeq)
+-- Industries linked by the game: the quarry has a road beside it, the farm only its own stub;
+-- nothing is laid by the mod.
+assert(SIM.accessRoads == nil, "no road laid by the mod")
+assert(table.concat(last().report, " "):match("Industries reliées par le jeu : 1 / 2 ont une route ; sans route à proximité : Ferme de Lyon"), "access report")
 -- Medium country roads (4 lanes) replaced by the simple old one, in one proposal; the edge refused
 -- (SIM.refuseRoad) fails the batch, then each edge alone: it stays, the others pass.
 for e, want in pairs({ [9001] = "country_old_small", [9002] = "country_old_small", [9003] = "town/town_old_small",
@@ -490,10 +525,16 @@ assert(conn.args[3] == false, "fresh roads")
 table.sort(SIM.names)
 assert(table.concat(SIM.names, "|") == "Carrière de Bron|Ferme de Lyon", "names")
 assert(not SIM.malformed, "every track segment is filled like the game's")
-assert(SIM.segments == 7 and SIM.bridges == 1 and SIM.tunnels == 1, "7 of 8 railway edges, the river one a bridge, one tunnel")
+-- 9 edges once a node is added under the road at x = -500: the two edges around it in a tunnel,
+-- the track 15 m under the road there (15 m), back to its height within the grade.
+assert(SIM.segments == 8 and SIM.bridges == 1 and SIM.tunnels == 3, "8 of 9 railway edges, the river one a bridge, three tunnels: " .. SIM.segments .. " " .. SIM.tunnels)
+local under = false
+for _, p in pairs(SIM.nodes) do if math.abs(p.x + 500) < 1e-6 and math.abs(p.y - 100) < 1e-6 and math.abs(p.z - 15) < 1e-6 then under = true end end
+assert(under, "a track node 15 m under the road")
 local report = table.concat(last().report, " | ")
 _print("report: " .. report)
-assert(report:match("7 / 8") and report:match("1 en pont") and report:match("1 en tunnel") and report:match("1 refusé")
+assert(report:match("8 / 9") and report:match("1 en pont") and report:match("3 en tunnel") and report:match("1 refusé")
+       and report:match("Voie ferrée : 1 croisement%(s%) de route passé%(s%) dessous en tunnel")
        and report:match("Trop pentu") and report:match("coupures vers 3000, 100"), "rail report")
 assert(SIM.window.name == "RealmapWindow", "still one window")
 -- Lyon: the real shares (900 × 0.4 / 0.35 / 0.25), then its goods; the others: the game's split, no goods.

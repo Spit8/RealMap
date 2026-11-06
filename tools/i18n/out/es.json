@@ -97,7 +97,7 @@
   "app:advanced.townClearance": "Distancia a las localidades (m)",
   "app:advanced.rail": "Ferrocarril",
   "app:advanced.roads": "Carreteras",
-  "app:roads.auto": "Carreteras seleccionadas automáticamente: cada localidad está conectada a 1 o 2 otras; el juego crea las carreteras y las conecta con las industrias. Haz clic derecho en el mapa para añadir o eliminar una conexión.",
+  "app:roads.auto": "Carreteras elegidas automáticamente: varias pequeñas redes de localidades (nunca una localidad sola), y cada industria conectada a la localidad más cercana; el juego traza las carreteras. Haz clic derecho en el mapa para añadir o eliminar una conexión.",
   "app:roads.manual": "Carreteras modificadas manualmente: ya no se añade automáticamente ninguna carretera entre las localidades.",
   "app:roads.reset": "Aplicar la configuración predeterminada",
   "app:roads.resetTitle": "Vuelve a la selección automática de carreteras entre localidades",
@@ -514,5 +514,15 @@
   "app:data.rotation": "Rotación (°)",
   "app:data.rotationTitle": "Dirección del borde superior del mapa del juego, en grados en sentido horario desde el norte. En el mapa: mantén pulsado el punto central y arrastra.",
   "app:data.rotationReset": "Norte arriba",
-  "app:map.rotateTip": "Mantén pulsado y arrastra para girar la zona (Mayús: en pasos de 15°) · rotación {deg}°"
+  "app:map.rotateTip": "Mantén pulsado y arrastra para girar la zona (Mayús: en pasos de 15°) · rotación {deg}°",
+  "app:advanced.inlandWater": "Ríos y lagos",
+  "app:advanced.inlandWaterTitle": "Desmarcado: sin ríos, canales ni lagos, solo el mar. El juego tiene un único nivel del agua (0 m): sin esta agua, los cauces de los ríos y el fondo de los lagos conservan su relieve real en lugar de excavarse",
+  "app:msg.inlandWaterOff": "Ríos y lagos: desactivados, se conserva el relieve real.",
+  "app:roads.maxNetwork": "Localidades por red al inicio",
+  "app:roads.maxNetworkTitle": "Al inicio de la partida, una red de carreteras conecta como máximo este número de localidades: el mapa tiene varias redes que unir durante la partida. Una localidad sin otra localidad ni industria recibe igualmente una conexión.",
+  "app:legend.access": "Acceso de industria previsto (a la localidad más cercana)",
+  "app:msg.resultRoads": "Carreteras: {networks} red(es) separada(s), {linked} / {industries} industrias conectadas a una localidad.",
+  "mod:roads_access": "Industrias conectadas por el juego: %d / %d tienen carretera%s.",
+  "mod:roads_access_missing": "; sin carretera cercana: %s",
+  "mod:rail_crossings": "Vía férrea: %d cruce(s) con carretera pasado(s) por debajo en túnel."
 }

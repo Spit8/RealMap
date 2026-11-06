@@ -1,10 +1,12 @@
 /**
  * Start-of-game roads and railway. Phase 1: the real main roads and railways (OSM). Phase 2:
- * which towns the game should link by road — each town to 1 or 2 others along the real network,
- * never a full mesh, or only the user's links once changed by hand (DECISION-019) — and the real
- * main railway line. The game builds the roads itself in the Map Editor (the importcity mod): its
- * own routing and road type for the year, and it links every industry while doing so (FACT-024),
- * so only the town pairs and the rail points are written in the note.
+ * which towns the game should link by road — small separate networks of at most
+ * `maxNetworkTowns` towns along the real roads, never a lone town (each town has another town or an
+ * industry), or only the user's links once changed by hand (DECISION-019) — each industry's access
+ * to its nearest town (shown on the map; it keeps that town from being alone), and the real main
+ * railway line. The game builds the roads itself in the Map Editor (the importcity mod): its own
+ * routing and road type for the year, and it links the industries while doing so (FACT-024).
+ * Only the town pairs and the rail points are written in the note.
  */
 import { frameProjection, type Frame } from "./area";
 import { overpassLimits, type Bbox } from "./osm";
@@ -77,18 +79,23 @@ export interface NetworkOptions {
   throughTownM: number;
   /** Points of the guide line every … game m (the alignment is designed from it, `railway.ts`). */
   railStepM: number;
+  /**
+   * Most towns in one road network at the start: several separate networks for the player to join.
+   * A town with neither a town nor an industry linked still gets its cheapest link beyond it.
+   */
+  maxNetworkTowns: number;
 }
 
-export const DEFAULT_NETWORK: NetworkOptions = { attachM: 2000, throughTownM: 600, railStepM: 50 };
+export const DEFAULT_NETWORK: NetworkOptions = { attachM: 2000, throughTownM: 600, railStepM: 50, maxNetworkTowns: 3 };
 
 /** Road cost per metre by class: main roads are the natural links. */
 const CLASS_COST: Record<string, number> = { motorway: 0.9, trunk: 0.8, primary: 1, secondary: 1.3 };
 
 export interface RoadLink {
-  /** "town:A|B" (names sorted). */
+  /** "town:A|B" (names sorted), or "ind:<industry key>" for an industry's access. */
   key: string;
-  kind: "town";
-  /** Town names. */
+  kind: "town" | "industry";
+  /** Town names, or the industry's name (a) and its town (b). */
   a: string;
   b: string;
   /** Road length used to choose it (game m), and whether it follows the real network. */
@@ -309,26 +316,88 @@ export interface NetTown {
   y: number;
 }
 
+/** A placed industry to link to its nearest town (land industries only). */
+export interface NetIndustry {
+  key: string;
+  name: string;
+  x: number;
+  y: number;
+}
+
+/** Disjoint sets of towns (road networks). */
+class Networks {
+  private up: number[];
+  private n: number[];
+  constructor(count: number) {
+    this.up = Array.from({ length: count }, (_, k) => k);
+    this.n = new Array(count).fill(1);
+  }
+  find(k: number): number {
+    while (this.up[k] !== k) k = this.up[k] = this.up[this.up[k]];
+    return k;
+  }
+  size(k: number): number {
+    return this.n[this.find(k)];
+  }
+  join(a: number, b: number): void {
+    const ra = this.find(a);
+    const rb = this.find(b);
+    if (ra === rb) return;
+    this.up[rb] = ra;
+    this.n[ra] += this.n[rb];
+  }
+}
+
 /**
- * The links to build: each town to 1 or 2 others (cheapest real road first, never through a third
- * town; a town left alone gets its cheapest link) and the main real railway. `picks[key] === false`
- * drops a link, `true` builds it first (added by hand, even through a town); `customRails` are
- * lines added by hand, along the real tracks when there are some. With `frozen` (the roads were
- * changed by hand), only those links and the ones added by hand: no town gets a link of its own.
+ * The town roads and industry accesses to build.
+ *  - Each land industry gets an access to its nearest town (real road cost, else straight × 1.5).
+ *  - Town pairs, cheapest real road first, never through a third town: each town at most 2 links
+ *    and each network at most `maxNetworkTowns` towns, so the map starts with several separate
+ *    networks. A town left with neither a town nor an industry gets its cheapest link anyway.
+ *  - `picks[key] === false` drops a town pair, `true` builds it first (added by hand, even through
+ *    a town). With `frozen` (the town roads were changed by hand), only those pairs and the ones
+ *    added by hand; a frozen list matching no pair of this map (another area) counts as automatic.
  */
-export function planNetwork(
+export function planRoads(
   f: Frame,
   ways: NetworkWay[],
   towns: NetTown[],
+  industries: NetIndustry[] = [],
   picks: LinkPicks = {},
   o: NetworkOptions = DEFAULT_NETWORK,
-  customRails: CustomRail[] = [],
-  frozen: string[] | null = null,
-): NetworkPlan {
+  frozenIn: string[] | null = null,
+): RoadLink[] {
   const pairKey = (i: number, j: number) => `town:${[towns[i].name, towns[j].name].sort().join("|")}`;
   const roads = buildGraph(f, ways, "road");
   const attach = towns.map((t) => nearestNode(roads, t.x, t.y, o.attachM));
   const trees = attach.map((n) => (n >= 0 ? dijkstra(roads, n) : null));
+
+  // Industry accesses: the nearest town by road (or straight × 1.5 off the network).
+  const access: RoadLink[] = [];
+  const served = new Uint8Array(towns.length);
+  for (const ind of industries) {
+    const at = nearestNode(roads, ind.x, ind.y, o.attachM);
+    let best = -1;
+    let bestCost = Infinity;
+    let bestLen = 0;
+    let bestPts: [number, number][] = [];
+    for (let k = 0; k < towns.length; k++) {
+      const straight = Math.hypot(towns[k].x - ind.x, towns[k].y - ind.y);
+      const tree = trees[k];
+      const real = !!tree && at >= 0 && Number.isFinite(tree.dist[at]);
+      const cost = real ? tree!.dist[at] : straight * 1.5;
+      if (cost >= bestCost) continue;
+      best = k;
+      bestCost = cost;
+      bestLen = real ? tree!.len[at] : straight;
+      bestPts = real
+        ? [[towns[k].x, towns[k].y], ...pathTo(tree!.parent, roads, at), [ind.x, ind.y]]
+        : [[towns[k].x, towns[k].y], [ind.x, ind.y]];
+    }
+    if (best < 0) continue;
+    served[best] = 1;
+    access.push({ key: `ind:${ind.key}`, kind: "industry", a: ind.name, b: towns[best].name, lengthM: Math.round(bestLen), real: bestPts.length > 2, pts: bestPts });
+  }
 
   // Town pairs: real road cost, or the straight line (×1.5) when one is off the network.
   type Cand = { i: number; j: number; cost: number; len: number; real: boolean; pts: [number, number][] };
@@ -351,35 +420,37 @@ export function planNetwork(
     }
   }
   cands.sort((a, b) => a.cost - b.cost);
-  const deg = new Array(towns.length).fill(0);
-  const chosen: Cand[] = [];
   const townKey = (c: Cand) => pairKey(c.i, c.j);
-  const usable = cands.filter((c) => picks[townKey(c)] !== false);
-  // Roads added by hand first.
-  for (const c of usable) {
-    if (picks[townKey(c)] !== true) continue;
+  // A frozen list from another map (or an empty one) matches no pair here: automatic choice.
+  const frozen = frozenIn && cands.some((c) => frozenIn.includes(townKey(c))) ? frozenIn : null;
+  const deg = new Array(towns.length).fill(0);
+  const nets = new Networks(towns.length);
+  const chosen: Cand[] = [];
+  const take = (c: Cand) => {
     chosen.push(c);
     deg[c.i]++;
     deg[c.j]++;
-  }
+    nets.join(c.i, c.j);
+  };
+  const usable = cands.filter((c) => picks[townKey(c)] !== false);
+  // Roads added by hand first.
+  for (const c of usable) if (picks[townKey(c)] === true) take(c);
   const kept = new Set(frozen ?? []);
   for (const c of usable) {
-    if (chosen.includes(c) || (frozen && !kept.has(townKey(c)))) continue;
-    if (frozen || (deg[c.i] < 2 && deg[c.j] < 2)) {
-      chosen.push(c);
-      deg[c.i]++;
-      deg[c.j]++;
+    if (chosen.includes(c)) continue;
+    if (frozen) {
+      if (kept.has(townKey(c))) take(c);
+      continue;
     }
+    if (deg[c.i] >= 2 || deg[c.j] >= 2 || nets.find(c.i) === nets.find(c.j)) continue;
+    if (nets.size(c.i) + nets.size(c.j) > o.maxNetworkTowns) continue;
+    take(c);
   }
-  // A town still alone gets its cheapest link, even to a town that already has two.
+  // Never a lone town: one with neither a town nor an industry gets its cheapest link.
   for (let k = 0; k < towns.length && !frozen; k++) {
-    if (deg[k]) continue;
+    if (deg[k] || served[k]) continue;
     const c = usable.find((x) => (x.i === k || x.j === k) && !chosen.includes(x));
-    if (c) {
-      chosen.push(c);
-      deg[c.i]++;
-      deg[c.j]++;
-    }
+    if (c) take(c);
   }
   const links: RoadLink[] = chosen.map((c) => ({
     key: townKey(c),
@@ -397,8 +468,39 @@ export function planNetwork(
       links.push({ key, kind: "town", a: towns[c.i].name, b: towns[c.j].name, lengthM: Math.round(c.len), real: c.real, pts: c.pts });
     }
   }
+  return [...links, ...access];
+}
 
-  return { links, rail: [...mainRail(f, ways, towns, o), ...customRails.map((c) => userRail(f, ways, c, o))] };
+/** Separate road networks among `towns` with the town links left in (a lone town counts as one). */
+export function roadNetworks(towns: string[], links: RoadLink[], picks: LinkPicks = {}): number {
+  const at = new Map(towns.map((n, k) => [n, k]));
+  const nets = new Networks(towns.length);
+  for (const l of links) {
+    if (l.kind !== "town" || picks[l.key] === false) continue;
+    const a = at.get(l.a);
+    const b = at.get(l.b);
+    if (a !== undefined && b !== undefined) nets.join(a, b);
+  }
+  return new Set(towns.map((_, k) => nets.find(k))).size;
+}
+
+/** The real main railway line(s) and the lines added by hand. */
+export function planRail(f: Frame, ways: NetworkWay[], towns: NetTown[], customRails: CustomRail[] = [], o: NetworkOptions = DEFAULT_NETWORK): RailLine[] {
+  return [...mainRail(f, ways, towns, o), ...customRails.map((c) => userRail(f, ways, c, o))];
+}
+
+/** Town roads, industry accesses and railway in one go (`planRoads` + `planRail`). */
+export function planNetwork(
+  f: Frame,
+  ways: NetworkWay[],
+  towns: NetTown[],
+  picks: LinkPicks = {},
+  o: NetworkOptions = DEFAULT_NETWORK,
+  customRails: CustomRail[] = [],
+  frozen: string[] | null = null,
+  industries: NetIndustry[] = [],
+): NetworkPlan {
+  return { links: planRoads(f, ways, towns, industries, picks, o, frozen), rail: planRail(f, ways, towns, customRails, o) };
 }
 
 /** Farthest a clicked point may be from the real tracks to follow them (game m). */
@@ -478,16 +580,17 @@ function mainRail(f: Frame, ways: NetworkWay[], towns: NetTown[], o: NetworkOpti
 }
 
 /** Note fields read by the importcity mod (`<UD>/towns_industries/realmap_note_<name>.lua`). */
-export function networkData(plan: NetworkPlan, picks: LinkPicks): {
+export function networkData(plan: NetworkPlan, picks: LinkPicks, railGrade?: number): {
   connections: { a: string; b: string }[];
-  rail: { lines: NoteNode[][] };
+  rail: { lines: NoteNode[][]; grade?: number };
 } {
-  const on = plan.links.filter((l) => picks[l.key] !== false);
+  const on = plan.links.filter((l) => l.kind === "town" && picks[l.key] !== false);
   return {
     // Town pairs: the game's connection command routes and builds them.
     connections: on.map((l) => ({ a: l.a, b: l.b })),
     // Designed lines only: nodes with height, unit tangent and the kind of the edge they start.
-    rail: { lines: plan.rail.filter((r) => picks[r.key] !== false && r.nodes).map((r) => r.nodes!.map(noteNode)) },
+    // Its steepest game grade: the mod keeps to it when it lowers the track under a road (DECISION-035).
+    rail: { lines: plan.rail.filter((r) => picks[r.key] !== false && r.nodes).map((r) => r.nodes!.map(noteNode)), grade: railGrade },
   };
 }
 

@@ -2,9 +2,10 @@
 -- then <userdata>/towns_industries/realmap_request.lua = { id, name, createdAt }; the pump (main_gui.handlers.lua)
 -- hands each new request here. This module checks where we are, then builds, in this order and
 -- each step once the previous one has answered:
---   heightmap > biomes > rail > towns (with their real sizes) > industries (with their names) > roads
--- (the railway right after the terrain, DECISION-014: towns, industries and the game's roads adapt
--- to the track, which the app designed around the towns' places)
+--   heightmap > biomes > towns (with their real sizes) > industries (with their names) > roads > rail
+-- (the railway last, DECISION-035: the game's road command gives up on any collision with a track,
+-- so the roads go first and the track, designed by the app around the towns' places, dips under
+-- each road it crosses in a tunnel)
 -- and reports every stage in <userdata>/towns_industries/realmap_status.lua, which the app reads back.
 -- Heightmap and biomes go through the game's own map computation, exactly like the Map Editor's
 -- import tabs (FACT-025): a `builtin.MapPreviewComp` (hosted in the mod's window) turns the import
@@ -393,24 +394,6 @@ local function startRun(request, opts)
 			end, fail)
 		end,
 	}
-	for _, pts in ipairs((note.rail and note.rail.lines) or {}) do
-		steps[#steps + 1] = function(nextStep)
-			stage = "rail"
-			status("rail", tr("rail_building", ctx.report.railSegments))
-			build.line(ctx, pts, nextStep)
-		end
-	end
-	if ctx.report.railSegments > 0 then
-		steps[#steps + 1] = function(nextStep)
-			local r = ctx.report
-			say(tr("rail_done", r.railBuilt, r.railSegments,
-				r.railBridgeEdges > 0 and tr("rail_bridges", r.railBridgeEdges) or "",
-				r.railTunnelEdges > 0 and tr("rail_tunnels", r.railTunnelEdges) or "",
-				r.railFailed > 0 and tr("rail_failed", r.railFailed,
-					r.railReason and (" (" .. r.railReason .. ")") or "", table.concat(r.railGaps, " ; ")) or ""))
-			nextStep()
-		end
-	end
 	local after = {
 		function(nextStep)
 			stage = "towns"
@@ -467,13 +450,46 @@ local function startRun(request, opts)
 					if (ctx.report.roadEdges or 0) > 0 then
 						say(tr("roads_simple", ctx.report.roadEdgesSimple, ctx.report.roadEdges))
 					end
-					nextStep()
+					-- The industries the game's command linked (counted only, nothing laid).
+					build.industryAccess(ctx, function()
+						local r = ctx.report
+						if (r.accessLand or 0) > 0 then
+							say(tr("roads_access", r.accessOk, r.accessLand,
+								r.accessMissing > 0 and tr("roads_access_missing", table.concat(r.accessNames, ", ")) or ""))
+						end
+						nextStep()
+					end)
 				end)
 			end)
 		end,
 	}
 	for _, fn in ipairs(after) do
 		steps[#steps + 1] = fn
+	end
+	-- The railway last (DECISION-035): the game's road command gives up on a collision with the
+	-- track, so the roads go first; the track then dips under each road it crosses in a tunnel, its
+	-- profile lowered around the road within the line's grade (`railCrossings`).
+	for _, pts in ipairs((note.rail and note.rail.lines) or {}) do
+		steps[#steps + 1] = function(nextStep)
+			stage = "rail"
+			status("rail", tr("rail_building", ctx.report.railSegments))
+			build.railCrossings(ctx, pts, note.rail.grade)
+			build.line(ctx, pts, nextStep)
+		end
+	end
+	if ctx.report.railSegments > 0 then
+		steps[#steps + 1] = function(nextStep)
+			local r = ctx.report
+			say(tr("rail_done", r.railBuilt, r.railSegments,
+				r.railBridgeEdges > 0 and tr("rail_bridges", r.railBridgeEdges) or "",
+				r.railTunnelEdges > 0 and tr("rail_tunnels", r.railTunnelEdges) or "",
+				r.railFailed > 0 and tr("rail_failed", r.railFailed,
+					r.railReason and (" (" .. r.railReason .. ")") or "", table.concat(r.railGaps, " ; ")) or ""))
+			if (r.railCrossings or 0) > 0 then
+				say(tr("rail_crossings", r.railCrossings))
+			end
+			nextStep()
+		end
 	end
 	build.chain(steps, log, function()
 		status("done", tr("done", run.name))
