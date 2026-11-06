@@ -18,6 +18,13 @@
   <a href="README.md"><img src="https://flagcdn.com/20x15/gb.png" width="20" height="15" alt=""> English version</a>
 </p>
 
+> [!NOTE]
+> **Nouveau dans la 1.2.0** ([notes de version](https://github.com/Spit8/RealMap/releases/tag/v1.2.0)) — mets à jour l'application et le mod
+> - 📁 **Projets de carte** : enregistre une carte dans un fichier `.realmap` (réglages, données téléchargées, résultat, journal) et rouvre-la aussitôt, même sans réseau ; plusieurs projets ouverts à la fois dans le nouvel onglet **Projet**, avec **Fichier › Nouveau / Ouvrir / Enregistrer / Enregistrer sous / Fermer**.
+> - 🏞️ **Rivières et lacs à la demande** : décoche-les pour garder le relief réel des lits de rivières et des fonds de lacs (le jeu n'a qu'un niveau d'eau).
+> - 🛣️ **Réseaux routiers séparés au départ**, jamais de ville seule, chaque industrie reliée à la ville la plus proche.
+> - 🚆 **La voie ferrée passe sous les routes** en courts tunnels : les routes du jeu sont construites d'abord et n'abandonnent plus face à la voie.
+
 ![RealMap : choisir un lieu réel et en faire une carte TF3](captures/slides/Concept_1.png)
 
 RealMap construit une carte personnalisée de Transport Fever 3 à partir d'une zone réelle : relief,
@@ -111,6 +118,14 @@ Télécharge le fichier de ton système sur la page [Releases](https://github.co
    (ne touche pas au jeu pendant ce temps) ; l'application affiche chaque étape et le rapport du mod.
 6. **Enregistre** la carte depuis le menu de l'éditeur. La fenêtre du mod s'ouvre aussi avec le bouton
    RealMap de la barre du bas du jeu.
+
+**Projets** : chaque carte est un projet que tu peux garder. **Fichier › Enregistrer** (Ctrl+S) écrit un
+fichier `.realmap` (dans le dossier que tu choisis ; les fenêtres rouvrent le dernier) avec les réglages, les données téléchargées
+découpées à la zone, le résultat et le journal : il se rouvre aussitôt, sans réseau. Plusieurs projets
+peuvent être ouverts : l'onglet **Projet** les liste (✱ = modifications non enregistrées ; clic pour
+changer de projet, clic droit pour enregistrer ou fermer) au-dessus du journal. L'application rouvre les
+projets de la dernière session et demande avant de fermer un projet ou l'application avec des
+modifications non enregistrées.
 
 ![Export et résultat dans le jeu](captures/slides/Concept_3.png)
 

@@ -44,15 +44,36 @@ import type { RetryNotice } from "$lib/platform/fetchbytes";
 import { getVersion } from "@tauri-apps/api/app";
 import { buildWarning, parseGameBuild, testedBuildsText } from "$lib/core/gamebuild";
 import { appCacheDir } from "@tauri-apps/api/path";
-import { ensureDir, fileStat, joinPath, readText, writeBytes, writeText } from "$lib/platform/fsx";
+import { open as openDialog, save as saveDialog } from "@tauri-apps/plugin-dialog";
+import { ensureDir, fileStat, joinPath, readBytes, readText, renamePath, writeBytes, writeText } from "$lib/platform/fsx";
 import { allowDirs, detectUserdata, gamePaths, sharedFile } from "$lib/platform/paths";
 import type { TerrainMessage, TerrainRequest, TerrainStats } from "$lib/workers/terrain.worker";
 import { requestMessages } from "$lib/workers/transport";
 import { MsgError } from "$lib/core/msg";
 import { fmtNum, i18n, t, tk, tm, type MessageKey } from "$lib/i18n/index.svelte";
 import { TILE_M } from "$lib/core/area";
+import { dialog } from "./dialog.svelte";
+import { Project } from "./project.svelte";
+import { packProject, PROJECT_EXT, unpackProject, type Inputs } from "./projectfile";
+import { dataKeyOf, defaultSettings, migrateSettings, optionsKeyOf, type Settings } from "./settings";
+export type { ReliefSource, Settings } from "./settings";
 
+/** Map settings before projects (read once, to open them as the first project). */
 const LS_KEY = "importcity.settings";
+/** App-wide settings, and the projects open when the app was closed. */
+const APP_KEY = "importcity.app";
+const SESSION_KEY = "importcity.session";
+
+/** The folder of a file path. */
+function dirName(path: string): string {
+  return path.replace(/[\\/][^\\/]*$/, "");
+}
+
+/** Same file (Windows paths: case and separators do not matter). */
+function samePath(a: string, b: string): boolean {
+  const n = (p: string) => p.replace(/[\\/]+/g, "/").toLowerCase();
+  return n(a) === n(b);
+}
 
 /** The mod's realmap_alive.lua in a game folder, and its age by the file's date (null = missing). */
 async function readAlive(userdata: string): Promise<{ alive: GameAlive | null; ageMs: number | null }> {
@@ -60,123 +81,8 @@ async function readAlive(userdata: string): Promise<{ alive: GameAlive | null; a
   const [text, st] = await Promise.all([readText(path), fileStat(path)]);
   return { alive: parseAlive(text), ageMs: st ? Math.max(0, Date.now() - st.mtimeMs) : null };
 }
-/**
- * Saved settings older than this get the defaults that changed since (v0.7: land at 0.5 m by the
- * shore; v0.8: rivers 64 m, steeper underwater slope; v0.12: rivers 14 m; v0.13: rivers and marshes
- * 20 m, 100 of capacity for 10 000 inhabitants), unless set by hand.
- */
-const SETTINGS_VERSION = 11;
 /** Every place kind is fetched: in France the kind says little about size (FACT-014). */
 const PLACE_KINDS = ["city", "town", "village"];
-
-export type ReliefSource = "auto" | "ign" | "copernicus";
-
-export interface Settings {
-  version: number;
-  name: string;
-  area: Area;
-  userdata: string;
-  source: ReliefSource;
-  terrain: Omit<TerrainOptions, "verticalScale">;
-  useCover: boolean;
-  biomes: BiomeMapping;
-  places: PlaceFilter;
-  towns: TownsOptions;
-  /** Towns kept or removed by hand (by `placeKey`), on top of the population filter. */
-  townPicks: TownPicks;
-  industries: IndustriesOptions;
-  /** Industries kept or removed by hand (by candidate key). */
-  industryPicks: IndustryPicks;
-  /** Road links and railway lines added (true) or left out (false) by hand (by link key). */
-  linkPicks: LinkPicks;
-  /**
-   * null: town roads chosen automatically (each town linked). Once a town road is changed by hand,
-   * the automatic links of that moment, kept as they are: no road is added for the user any more.
-   */
-  roadsFrozen: string[] | null;
-  /** Start road networks: most towns in one network (`network.ts`). */
-  roads: { maxNetworkTowns: number };
-  /** Railway alignment (`railway.ts`). */
-  rail: RailOptions;
-  /** Industries added by hand on the map (right click). */
-  customIndustries: CustomIndustry[];
-  /** Railway lines added by hand between two points (following the real tracks when there are some). */
-  customRails: CustomRail[];
-}
-
-const DEFAULTS: Settings = {
-  version: SETTINGS_VERSION,
-  name: "RealMap",
-  area: { lon: 4.8357, lat: 45.764, size: 3, format: 0, landscape: false, scale: 3, verticalScale: null, rotation: 0 },
-  userdata: "",
-  source: "auto",
-  terrain: { ...DEFAULT_TERRAIN },
-  useCover: true,
-  biomes: structuredClone(DEFAULT_BIOMES),
-  places: { minPopulation: 2000, includeUnknown: true },
-  towns: { ...DEFAULT_TOWNS },
-  townPicks: {},
-  industries: { ...DEFAULT_INDUSTRIES },
-  industryPicks: {},
-  linkPicks: {},
-  roadsFrozen: null,
-  roads: { maxNetworkTowns: DEFAULT_NETWORK.maxNetworkTowns },
-  rail: { ...DEFAULT_RAIL },
-  customIndustries: [],
-  customRails: [],
-};
-
-function loadSettings(): Settings {
-  const d = structuredClone(DEFAULTS);
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return d;
-    const saved = JSON.parse(raw) as Partial<Settings> & Record<string, unknown>;
-    // v0.1 areas had tilesX / tilesY: keep only the centre.
-    const old = saved.area as Partial<Area> | undefined;
-    const area = old?.size !== undefined ? { ...d.area, ...old } : { ...d.area, lon: old?.lon ?? d.area.lon, lat: old?.lat ?? d.area.lat };
-    const terrain = { ...d.terrain, ...saved.terrain };
-    const v = saved.version ?? 0;
-    if (v < 7) terrain.landMin = d.terrain.landMin;
-    if (v < 8) {
-      if (terrain.riverMinWidth === 32) terrain.riverMinWidth = d.terrain.riverMinWidth;
-      if (terrain.riverDepth === 10) terrain.riverDepth = d.terrain.riverDepth;
-      if (terrain.underwaterSlope === 0.35) terrain.underwaterSlope = d.terrain.underwaterSlope;
-    }
-    if (v < 9 && terrain.riverDepth === 9) terrain.riverDepth = d.terrain.riverDepth;
-    const towns = { ...d.towns, ...saved.towns };
-    if (v < 10) {
-      if (terrain.riverDepth === 14) terrain.riverDepth = d.terrain.riverDepth;
-      if (terrain.marshDepth === 4) terrain.marshDepth = d.terrain.marshDepth;
-      if (towns.refCapacity === 300) towns.refCapacity = d.towns.refCapacity;
-    }
-    return {
-      version: SETTINGS_VERSION,
-      name: saved.name ?? d.name,
-      area,
-      userdata: saved.userdata ?? d.userdata,
-      source: saved.source ?? d.source,
-      terrain,
-      useCover: saved.useCover ?? d.useCover,
-      // The biome mapping is no longer offered: always the defaults.
-      biomes: d.biomes,
-      // v0.2 town settings (townKinds, townScale, townSpacingM) and v0.4 `towns.scale` are dropped.
-      places: { ...d.places, ...saved.places },
-      towns,
-      townPicks: saved.townPicks ?? {},
-      industries: { ...d.industries, ...saved.industries },
-      industryPicks: saved.industryPicks ?? {},
-      linkPicks: saved.linkPicks ?? {},
-      roadsFrozen: saved.roadsFrozen ?? null,
-      roads: { ...d.roads, ...saved.roads },
-      rail: { ...d.rail, ...saved.rail },
-      customIndustries: saved.customIndustries ?? [],
-      customRails: saved.customRails ?? [],
-    };
-  } catch {
-    return d;
-  }
-}
 
 export type LogLevel = "info" | "warn" | "error" | "debug";
 export interface LogEvent {
@@ -226,24 +132,6 @@ export interface RunResult {
 /** Map Editor file names: letters, digits, `_` and `-` only. */
 export function safeName(s: string): string {
   return s.trim().replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "") || "RealMap";
-}
-
-interface Inputs {
-  ign: Float32Array | null;
-  rasters: DemRaster[];
-  water: OsmShape[];
-  cover: CoverRaster[] | null;
-  /** Sea-floor heights and where they come from. */
-  bathy: DemRaster[];
-  bathySource: string;
-  places: OsmPlace[];
-  /** Real industrial sites (OSM). */
-  sites: IndustrySite[];
-  /** Real main roads and railways (OSM). */
-  roads: NetworkWay[];
-  /** Beaches and commercial / industrial areas (OSM). */
-  land: LandUse;
-  source: string;
 }
 
 function rgbaToDataUrl(w: number, h: number, rgba: Uint8ClampedArray): string {
@@ -303,12 +191,6 @@ async function appendJournal(line: string): Promise<void> {
   }
 }
 
-/** What the real data depends on (phase 1): the area and the sources. */
-function dataKeyOf(s: Settings): string {
-  const a = s.area;
-  return JSON.stringify([a.lon, a.lat, a.size, a.format, a.landscape, a.scale, a.rotation ?? 0, s.source, s.useCover]);
-}
-
 /** Phase 1 summary for the panel. */
 export interface DataSummary {
   relief: string;
@@ -347,55 +229,225 @@ function summarize(i: Inputs): DataSummary {
   };
 }
 
-/** Options that change the map (not the file name or folder): the preview is stale when they differ. */
-function optionsKeyOf(s: Settings): string {
-  return JSON.stringify([s.area, s.source, s.terrain, s.useCover, s.biomes, s.places, s.towns, s.townPicks, s.industries, s.industryPicks, s.linkPicks, s.roadsFrozen, s.roads, s.rail, s.customIndustries, s.customRails]);
+/** App-wide settings (not part of a project): the game's userdata folder. */
+interface AppSettings {
+  userdata: string;
+  /** Folder of the last project opened or saved: where the file dialogs open (none at first). */
+  lastDir?: string;
+}
+
+/** One open project in the saved session: its file, and its settings when never saved or modified. */
+interface SessionEntry {
+  path?: string;
+  draft?: Settings;
+  untitled?: number;
+  /** Changes not saved when the app was closed (the star comes back). */
+  dirty?: boolean;
+}
+interface Session {
+  open: SessionEntry[];
+  active: number;
+}
+
+function readJson<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+function loadAppSettings(): AppSettings {
+  const app = readJson<Partial<AppSettings>>(APP_KEY);
+  if (app) return { userdata: app.userdata ?? "", lastDir: app.lastDir };
+  // Before projects the game folder was saved with the map settings.
+  const old = readJson<{ userdata?: string }>(LS_KEY);
+  return { userdata: old?.userdata ?? "" };
+}
+
+/** The open projects at start: the saved session, else the settings of the version before projects. */
+function initialProjects(): { projects: Project[]; active: number; pending: Map<Project, SessionEntry> } {
+  const pending = new Map<Project, SessionEntry>();
+  const session = readJson<Session>(SESSION_KEY);
+  const projects: Project[] = [];
+  for (const e of session?.open ?? []) {
+    const settings = e.draft ? migrateSettings(e.draft as Settings & Record<string, unknown>) : defaultSettings();
+    const p = new Project(settings, e.untitled ?? 1);
+    if (e.dirty) p.savedKey = "";
+    if (e.path) {
+      p.path = e.path;
+      // Read from the file by `restoreSession` (the draft, if any, applied over it).
+      p.loading = true;
+      pending.set(p, e);
+    }
+    projects.push(p);
+  }
+  if (!projects.length) {
+    const old = readJson<Partial<Settings> & Record<string, unknown>>(LS_KEY);
+    projects.push(new Project(old ? migrateSettings(old) : defaultSettings()));
+  }
+  const active = Math.min(Math.max(0, session?.active ?? 0), projects.length - 1);
+  return { projects, active, pending };
+}
+
+/** The frame of the area a data key was fetched for (`dataKeyOf`). */
+function frameOfDataKey(key: string): Frame | null {
+  try {
+    const [lon, lat, size, format, landscape, scale, rotation] = JSON.parse(key) as [number, number, number, number, boolean, number, number];
+    return makeFrame({ lon, lat, size, format, landscape, scale, rotation, verticalScale: null });
+  } catch {
+    return null;
+  }
 }
 
 class Importer {
-  settings = $state<Settings>(loadSettings());
+  /** App-wide settings. */
+  app = $state<AppSettings>(loadAppSettings());
+  /** The open projects, and the one the panel and the map show. */
+  projects = $state<Project[]>([]);
+  activeId = $state("");
+  active = $derived(this.projects.find((p) => p.id === this.activeId) ?? this.projects[0]);
+  /** Projects of the saved session still to read from their files. */
+  private pending = new Map<Project, SessionEntry>();
+
   candidates = $state<string[]>([]);
-  running = $state<null | "data" | "preview" | "full" | "test">(null);
+  running = $state<null | "data" | "preview" | "full" | "test" | "project">(null);
   progress = $state(0);
   step = $state("");
-  /** The log panel: what happened, warnings, errors, and (debug) the technical journal. */
-  events = $state<LogEvent[]>([]);
-  /** Phase 1 steps, shown under « Récupérer les données ». */
-  dataSteps = $state<DataStep[]>([]);
-  /** The stages the importcity mod runs in the game, shown under « Générer la carte ». */
-  gameSteps = $state<DataStep[]>([]);
-  /** What « Générer la carte » does in the app before handing over to the game. */
-  exportSteps = $state<DataStep[]>([]);
-  error = $state<string | null>(null);
-  preview = $state<PreviewState | null>(null);
-  result = $state<RunResult | null>(null);
   /** `experimentalMapFeatures` in the game's settings.lua: more map sizes and formats. */
   experimentalMaps = $state(false);
   /** The game's build at its last launch (its log), null when unknown. */
   gameBuild = $state<number | null>(null);
 
+  constructor() {
+    const init = initialProjects();
+    this.projects = init.projects;
+    this.activeId = init.projects[init.active].id;
+    this.pending = init.pending;
+  }
+
+  // The active project's state, as the panel and the computations use it.
+  get settings(): Settings {
+    return this.active.settings;
+  }
+  set settings(v: Settings) {
+    this.active.settings = v;
+  }
+  /** The log panel: what happened, warnings, errors, and (debug) the technical journal. */
+  get events(): LogEvent[] {
+    return this.active.events;
+  }
+  set events(v: LogEvent[]) {
+    this.active.events = v;
+  }
+  /** Phase 1 steps, shown under « Récupérer les données ». */
+  get dataSteps(): DataStep[] {
+    return this.active.dataSteps;
+  }
+  set dataSteps(v: DataStep[]) {
+    this.active.dataSteps = v;
+  }
+  /** The stages the importcity mod runs in the game, shown under « Générer la carte ». */
+  get gameSteps(): DataStep[] {
+    return this.active.gameSteps;
+  }
+  set gameSteps(v: DataStep[]) {
+    this.active.gameSteps = v;
+  }
+  /** What « Générer la carte » does in the app before handing over to the game. */
+  get exportSteps(): DataStep[] {
+    return this.active.exportSteps;
+  }
+  set exportSteps(v: DataStep[]) {
+    this.active.exportSteps = v;
+  }
+  get error(): string | null {
+    return this.active.error;
+  }
+  set error(v: string | null) {
+    this.active.error = v;
+  }
+  get preview(): PreviewState | null {
+    return this.active.preview;
+  }
+  set preview(v: PreviewState | null) {
+    this.active.preview = v;
+  }
+  get result(): RunResult | null {
+    return this.active.result;
+  }
+  set result(v: RunResult | null) {
+    this.active.result = v;
+  }
+  private get previewKey(): string {
+    return this.active.previewKey;
+  }
+  private set previewKey(v: string) {
+    this.active.previewKey = v;
+  }
+  private get exportKey(): string {
+    return this.active.exportKey;
+  }
+  private set exportKey(v: string) {
+    this.active.exportKey = v;
+  }
+  /** Phase 1 results: what was fetched (shown in the panel) and the raw layers (shown on the map). */
+  get dataSummary(): DataSummary | null {
+    return this.active.dataSummary;
+  }
+  set dataSummary(v: DataSummary | null) {
+    this.active.dataSummary = v;
+  }
+  get realLayer(): RealLayer | null {
+    return this.active.realLayer;
+  }
+  set realLayer(v: RealLayer | null) {
+    this.active.realLayer = v;
+  }
+  private get dataKey(): string {
+    return this.active.dataKey;
+  }
+  private set dataKey(v: string) {
+    this.active.dataKey = v;
+  }
+  /** Inputs of the last preview, reused while only terrain / biome / town options change. */
+  private get previewInputs(): { key: string; inputs: Inputs } | null {
+    return this.active.previewInputs;
+  }
+  private set previewInputs(v: { key: string; inputs: Inputs } | null) {
+    this.active.previewInputs = v;
+  }
+  private get lastReport(): string {
+    return this.active.lastReport;
+  }
+  private set lastReport(v: string) {
+    this.active.lastReport = v;
+  }
+
   frame = $derived(makeFrame(this.settings.area));
   /** Options that change the map (not the file name or folder): the preview is stale when they differ. */
   optionsKey = $derived(optionsKeyOf(this.settings));
-  private previewKey = $state("");
   stale = $derived(!!this.preview && this.previewKey !== this.optionsKey);
   /** Options and map name of the last map sent to the game: the export is out of date when they differ. */
-  private exportKey = $state("");
   exported = $derived(!!this.exportKey && this.exportKey === this.optionsKey + "|" + this.settings.name);
 
   private demCache = new Map<string, DemRaster | null>();
-  /** Inputs of the last preview, reused while only terrain / biome / town options change. */
-  private previewInputs: { key: string; inputs: Inputs } | null = null;
-  /** Phase 1 results: what was fetched (shown in the panel) and the raw layers (shown on the map). */
-  dataSummary = $state<DataSummary | null>(null);
-  realLayer = $state.raw<RealLayer | null>(null);
-  private dataKey = $state("");
   /** The area or the sources changed since the data was fetched. */
   dataStale = $derived(!!this.dataSummary && this.dataKey !== dataKeyOf(this.settings));
 
+  /** Remember the app settings and the open projects (every change goes through here). */
   save(): void {
     try {
-      localStorage.setItem(LS_KEY, JSON.stringify(this.settings));
+      localStorage.setItem(APP_KEY, JSON.stringify(this.app));
+      const session: Session = {
+        open: this.projects.map((p) => {
+          const draft = !p.path || p.dirty ? ($state.snapshot(p.settings) as Settings) : undefined;
+          return p.path ? { path: p.path, draft } : { draft, untitled: p.untitled, dirty: p.dirty || undefined };
+        }),
+        active: Math.max(0, this.projects.findIndex((p) => p.id === this.activeId)),
+      };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
     } catch {
       /* storage unavailable */
     }
@@ -557,8 +609,8 @@ class Importer {
   async detect(): Promise<void> {
     const d = await detectUserdata();
     this.candidates = d.candidates;
-    if (!this.settings.userdata && d.userdata) {
-      this.settings.userdata = d.userdata;
+    if (!this.app.userdata && d.userdata) {
+      this.app.userdata = d.userdata;
       this.save();
     }
     await this.readGameSettings();
@@ -569,7 +621,7 @@ class Importer {
    * choice the game would not offer moves to the nearest one it does.
    */
   async readGameSettings(): Promise<void> {
-    const ud = this.settings.userdata;
+    const ud = this.app.userdata;
     if (!ud) return;
     await allowDirs([ud]);
     const text = await readText(joinPath(ud, "settings.lua"));
@@ -583,6 +635,268 @@ class Importer {
       this.settings.area = { ...a, size, format, landscape: format > 0 && a.landscape };
       this.save();
     }
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // Projects (DECISION-036): open, save, close; never while a computation runs.
+
+  /** The project with this id (the active one by default). */
+  private project(id?: string): Project {
+    return (id && this.projects.find((p) => p.id === id)) || this.active;
+  }
+
+  /** A fresh « Sans titre N » number. */
+  private nextUntitled(): number {
+    const used = new Set(this.projects.filter((p) => !p.path).map((p) => p.untitled));
+    let n = 1;
+    while (used.has(n)) n++;
+    return n;
+  }
+
+  /** The name shown for a project: its file's name, else « Sans titre N ». */
+  projectName(p: Project): string {
+    return p.path ? p.title : t("project.untitled", { n: p.untitled });
+  }
+
+  /** A project left as created: replaced by the next one opened. */
+  private pristine(p: Project): boolean {
+    return !p.path && !p.dirty && !p.preview && !p.dataSummary;
+  }
+
+  /** Show another project (its settings, data, result and journal). */
+  activate(id: string): void {
+    if (this.running || id === this.activeId) return;
+    const prev = this.active;
+    // A saved, unmodified project frees its phase-1 data: it is read back from the file when needed.
+    if (prev.path && !prev.dirty && prev.previewInputs) {
+      prev.previewInputs = null;
+      prev.dataOnDisk = true;
+    }
+    this.activeId = id;
+    this.save();
+  }
+
+  newProject(): void {
+    if (this.running) return;
+    const p = new Project(defaultSettings(), this.nextUntitled());
+    this.projects = [...this.projects, p];
+    this.activate(p.id);
+  }
+
+  /** Read a project's data and result from `bytes` into `p`. */
+  private fill(p: Project, d: Awaited<ReturnType<typeof unpackProject>>): void {
+    p.settings = d.settings;
+    p.previewInputs = d.data;
+    p.dataOnDisk = false;
+    p.dataKey = d.data?.key ?? "";
+    p.dataSummary = (d.summary as DataSummary | null) ?? null;
+    p.realLayer = d.data ? { water: d.data.inputs.water, places: d.data.inputs.places, sites: d.data.inputs.sites, roads: d.data.inputs.roads } : null;
+    p.preview = (d.preview as PreviewState | null) ?? null;
+    p.previewKey = d.previewKey;
+    p.exportKey = d.exportKey;
+    p.result = (d.result as RunResult | null) ?? null;
+    p.events = (d.log as LogEvent[]).slice(-400);
+    p.lastReport = "";
+    p.markSaved();
+  }
+
+  private async readProjectFile(path: string): Promise<Awaited<ReturnType<typeof unpackProject>>> {
+    await allowDirs([dirName(path)]);
+    const bytes = await readBytes(path);
+    return unpackProject(bytes);
+  }
+
+  /** File > Ouvrir: a `.realmap` chosen in the system dialog (or `path`), or the project already open. */
+  async openProject(path?: string): Promise<void> {
+    if (this.running) return;
+    let file = path;
+    if (!file) {
+      try {
+        const picked = await openDialog({ multiple: false, directory: false, defaultPath: this.app.lastDir, filters: [{ name: "RealMap", extensions: [PROJECT_EXT] }] });
+        file = typeof picked === "string" ? picked : undefined;
+      } catch (e) {
+        this.report(e, t("file.open"));
+        return;
+      }
+    }
+    if (!file) return;
+    const same = this.projects.find((p) => p.path && samePath(p.path, file));
+    if (same) return this.activate(same.id);
+    this.running = "project";
+    this.step = t("project.reading");
+    try {
+      const d = await this.readProjectFile(file);
+      const p = new Project(d.settings);
+      p.path = file;
+      this.fill(p, d);
+      const replace = this.pristine(this.active) ? this.active.id : null;
+      this.projects = [...this.projects.filter((x) => x.id !== replace), p];
+      this.activeId = p.id;
+      this.app.lastDir = dirName(file);
+      this.say(t("msg.projectOpened", { path: file }));
+      this.save();
+    } catch (e) {
+      this.report(new Error(t("msg.projectBad", { path: file, error: errorText(e) })));
+    } finally {
+      this.running = null;
+      this.step = "";
+    }
+  }
+
+  /** Read the projects of the last session from their files (at start). */
+  async restoreSession(): Promise<void> {
+    for (const [p, e] of [...this.pending]) {
+      this.pending.delete(p);
+      try {
+        this.fill(p, await this.readProjectFile(e.path!));
+        // Changes not saved when the app was closed come back on top of the file.
+        if (e.draft) p.settings = migrateSettings(e.draft as Settings & Record<string, unknown>);
+      } catch (err) {
+        this.projects = this.projects.filter((x) => x !== p);
+        this.warn(t("msg.projectMissing", { path: e.path!, error: errorText(err) }));
+      } finally {
+        p.loading = false;
+      }
+    }
+    if (!this.projects.length) this.projects = [new Project(defaultSettings())];
+    if (!this.projects.some((p) => p.id === this.activeId)) this.activeId = this.projects[0].id;
+    this.save();
+  }
+
+  /** Phase-1 data of a project left on disk, read back from its file. */
+  private async loadProjectData(p: Project): Promise<void> {
+    if (!p.dataOnDisk || !p.path) return;
+    const d = await this.readProjectFile(p.path);
+    if (d.data) p.previewInputs = d.data;
+    p.dataOnDisk = false;
+  }
+
+  /** File > Enregistrer: true once written (false when cancelled or failed). */
+  async saveProject(id?: string): Promise<boolean> {
+    const p = this.project(id);
+    if (!p.path) return this.saveProjectAs(p.id);
+    if (this.running) return false;
+    this.running = "project";
+    this.step = t("project.writing");
+    try {
+      await this.loadProjectData(p);
+      const s = $state.snapshot(p.settings) as Settings;
+      const data = p.previewInputs;
+      const f = data ? frameOfDataKey(data.key) : null;
+      const crop = f ? frameBBox(f, 200 + previewGrid(f).step * f.scale) : null;
+      let app = "";
+      try {
+        app = await getVersion();
+      } catch {
+        /* not in Tauri */
+      }
+      const bytes = await packProject(
+        {
+          settings: s,
+          data,
+          summary: $state.snapshot(p.dataSummary),
+          preview: $state.snapshot(p.preview),
+          previewKey: p.previewKey,
+          exportKey: p.exportKey,
+          result: $state.snapshot(p.result),
+          log: $state.snapshot(p.events),
+        },
+        app,
+        crop,
+      );
+      const path = p.path;
+      await allowDirs([dirName(path)]);
+      // Written next to it first: a failed write never leaves half a project.
+      const part = `${path}.part`;
+      await writeBytes(part, bytes);
+      await renamePath(part, path);
+      p.markSaved();
+      this.app.lastDir = dirName(path);
+      this.save();
+      this.say(t("msg.projectSaved", { path, mb: fmtNum(bytes.byteLength / 2 ** 20, 1) }));
+      return true;
+    } catch (e) {
+      this.report(e, t("file.save"));
+      return false;
+    } finally {
+      this.running = null;
+      this.step = "";
+    }
+  }
+
+  /** File > Enregistrer sous…: a new file chosen in the system dialog. */
+  async saveProjectAs(id?: string): Promise<boolean> {
+    if (this.running) return false;
+    const p = this.project(id);
+    let file: string | null = null;
+    try {
+      // The project's folder, else the last one used; the user always picks the folder.
+      const dir = p.path ? dirName(p.path) : this.app.lastDir;
+      const stem = p.path ? p.title : safeName(p.settings.name);
+      file = await saveDialog({ defaultPath: dir ? joinPath(dir, `${stem}.${PROJECT_EXT}`) : `${stem}.${PROJECT_EXT}`, filters: [{ name: "RealMap", extensions: [PROJECT_EXT] }] });
+    } catch (e) {
+      this.report(e, t("file.saveAs"));
+      return false;
+    }
+    if (!file) return false;
+    if (!file.toLowerCase().endsWith(`.${PROJECT_EXT}`)) file += `.${PROJECT_EXT}`;
+    const old = p.path;
+    p.path = file;
+    const ok = await this.saveProject(p.id);
+    if (!ok) p.path = old;
+    return ok;
+  }
+
+  /** File > Fermer: asks to save a modified project first. The last one closed leaves a blank one. */
+  async closeProject(id?: string): Promise<void> {
+    if (this.running) return;
+    const p = this.project(id);
+    if (p.dirty) {
+      const choice = await dialog.ask(t("project.closeAsk", { name: this.projectName(p) }), [
+        { id: "save", label: t("project.save"), kind: "primary" },
+        { id: "discard", label: t("project.discard"), kind: "danger" },
+        { id: "cancel", label: t("project.cancel") },
+      ]);
+      if (choice === "cancel") return;
+      if (choice === "save" && !(await this.saveProject(p.id))) return;
+    }
+    const at = this.projects.indexOf(p);
+    const rest = this.projects.filter((x) => x !== p);
+    if (!rest.length) rest.push(new Project(defaultSettings(), 1));
+    this.projects = rest;
+    if (this.activeId === p.id || !rest.some((x) => x.id === this.activeId)) this.activeId = rest[Math.min(at, rest.length - 1)].id;
+    this.save();
+  }
+
+  /** Projects with changes not saved. */
+  get unsaved(): Project[] {
+    return this.projects.filter((p) => p.dirty);
+  }
+
+  /** Before the app closes: true when it may close (everything saved, or the user said so). */
+  async confirmQuit(): Promise<boolean> {
+    const list = this.unsaved;
+    if (!list.length) return true;
+    const choice = await dialog.ask(t("project.quitAsk", { n: list.length, names: list.map((p) => this.projectName(p)).join(", ") }), [
+      { id: "save", label: t("project.saveAll"), kind: "primary" },
+      { id: "discard", label: t("project.quitDiscard"), kind: "danger" },
+      { id: "cancel", label: t("project.cancel") },
+    ]);
+    if (choice === "cancel") return false;
+    if (choice === "save") {
+      for (const p of list) {
+        this.activate(p.id);
+        if (!(await this.saveProject(p.id))) return false;
+      }
+    } else {
+      // Quit without saving: a saved project comes back as its file, a never saved one is dropped.
+      for (const p of list) if (p.path) p.markSaved();
+      this.projects = this.projects.filter((p) => p.path || !list.includes(p));
+      if (!this.projects.length) this.projects = [new Project(defaultSettings())];
+      if (!this.projects.some((p) => p.id === this.activeId)) this.activeId = this.projects[0].id;
+      this.save();
+    }
+    return true;
   }
 
   /** One line in the log panel (and `<appcache>/importcity.log`). */
@@ -961,7 +1275,6 @@ class Importer {
   }
 
   /** What the last computation gave, in the log (once per change). */
-  private lastReport = "";
   private reportResult(done: Extract<TerrainMessage, { kind: "done" }>): void {
     const st = done.stats;
     const pct = (x: number) => `${Math.round(x * 100)} %`;
@@ -1036,6 +1349,7 @@ class Importer {
   private async realInputs(s: Settings, base: number, span: number): Promise<Inputs> {
     const f = makeFrame(s.area);
     const key = dataKeyOf(s);
+    if (!this.previewInputs && this.active.dataOnDisk) await this.loadProjectData(this.active);
     if (this.previewInputs?.key === key) return this.previewInputs.inputs;
     const inputs = await this.gather(s, f, previewGrid(f), base, span);
     this.previewInputs = { key, inputs };
@@ -1068,11 +1382,11 @@ class Importer {
   async run(): Promise<void> {
     await this.guard("full", async () => {
       const s = this.snapshot();
-      if (!s.userdata) throw new Error(t("msg.noUserdata"));
+      if (!this.app.userdata) throw new Error(t("msg.noUserdata"));
       this.result = null;
       const name = safeName(s.name);
-      const paths = gamePaths(s.userdata);
-      await allowDirs([s.userdata]);
+      const paths = gamePaths(this.app.userdata);
+      await allowDirs([this.app.userdata]);
       const f = makeFrame(s.area);
       const sizeLabel = sizeText(s.area.size, s.area.format, s.area.landscape);
       this.say(t("msg.sizeScale", { size: sizeLabel, scale: f.scale }));
@@ -1098,7 +1412,7 @@ class Importer {
         else await writeBytes(path, data);
         files.push(path);
       };
-      const biomesDir = joinPath(s.userdata, "biomes");
+      const biomesDir = joinPath(this.app.userdata, "biomes");
       await write(paths.heightmaps, `${name}.png`, done.files!.heightmap);
       await write(biomesDir, `${name}_biomes.png`, done.files!.biomes);
       await write(biomesDir, `${name}_mountains.png`, done.files!.mountains);
@@ -1144,13 +1458,13 @@ class Importer {
       await write(paths.townsIndustries, "realmap_latest.lua", toUserdata({ name }));
       this.exportState("files", "done", t("msg.files", { n: files.length }));
       this.setPreview(s, f, done, inputs);
-      this.say(t("msg.written", { name, n: files.length, dir: s.userdata }));
+      this.say(t("msg.written", { name, n: files.length, dir: this.app.userdata }));
       this.result = { name, sizeLabel, stats: st, towns: done.towns, dropped: done.dropped, industries: done.industries.length, files };
       // Last: the request the importcity mod picks up in the Map Editor (everything above is ready).
       const id = Date.now();
       await write(paths.townsIndustries, "realmap_request.lua", toUserdata(requestData(name, createdAt, id)));
       this.say(t("msg.sent"));
-      const answer = await this.watchGame(s.userdata, { name, createdAt, id }, sizeLabel, 0.6, 0.4);
+      const answer = await this.watchGame(this.app.userdata, { name, createdAt, id }, sizeLabel, 0.6, 0.4);
       for (const line of answer.report) this.say(line);
       this.say(t("msg.generated", { name }));
       this.exportKey = optionsKeyOf(s) + "|" + s.name;
@@ -1265,13 +1579,13 @@ class Importer {
   async writeRiverTest(): Promise<void> {
     await this.guard("test", async () => {
       const s = this.snapshot();
-      if (!s.userdata) throw new Error(t("msg.noUserdata"));
-      await allowDirs([s.userdata]);
+      if (!this.app.userdata) throw new Error(t("msg.noUserdata"));
+      await allowDirs([this.app.userdata]);
       const { tilesX, tilesY } = mapTiles(s.area.size, s.area.format, s.area.landscape);
       const nx = tilesX * 64 + 1;
       const ny = tilesY * 64 + 1;
       const name = "RealMap_test_rivieres";
-      const paths = gamePaths(s.userdata);
+      const paths = gamePaths(this.app.userdata);
       await ensureDir(paths.heightmaps);
       await writeBytes(joinPath(paths.heightmaps, `${name}.png`), encodeHeightmapPng(nx, ny, normalize16(riverTestPattern(nx, ny)).data));
       [

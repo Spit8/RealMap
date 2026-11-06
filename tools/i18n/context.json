@@ -3,7 +3,7 @@
   "sections": {
     "lang": "Name of the language in the language list.",
     "app": "App header: the language picker.",
-    "tabs": "Tabs of the left panel: the three steps of the app (area and data, advanced options, export to the game) and the log.",
+    "tabs": "Tabs of the left panel: Project (the open map projects and the log), then the three steps of the app (area and data, advanced options, export to the game).",
     "data": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
     "data.source": "Tab 1 › Sources: where the relief (elevation) comes from.",
     "advanced": "Tab 2 › Advanced options: how the real data becomes the game map (relief, water depths and banks, towns, industries, roads, railway: its curve radius, gradient, distance to towns and how far it may leave the real line to suit the game's relief). Field labels sit two side by side in a narrow panel: keep them short. Its bottom button recomputes the result.",
@@ -35,7 +35,9 @@
     "net": "Download status of an OpenStreetMap (Overpass) request, shown next to a data step or in an error: {server} is a server name.",
     "why": "Reason shown on the card of a town or an industry (why it was moved or left out, or why an industry is there), after a label such as 'left out:' or 'origin:'. Lower case, no final full stop.",
     "msg": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
-    "updates": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0."
+    "updates": "App updates, in a section of the Export tab and a badge in the header: installed version, check for a new version on GitHub, install it and restart the app, release notes, skip a version, check at startup. {version} is a version number like 1.1.0.",
+    "file": "The File menu in the app header, as in any desktop program: new project, open, save, save as, close the map project (a .realmap file holding a map's settings and downloaded data).",
+    "project": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes."
   },
   "kinds": {
     "tabs.data": "button",
@@ -92,6 +94,16 @@
     "lists.realRoad": "tooltip",
     "lists.directRoad": "tooltip",
     "legend.show": "button",
-    "legend.hide": "button"
+    "legend.hide": "button",
+    "file.new": "button",
+    "file.open": "button",
+    "file.save": "button",
+    "file.saveAs": "button",
+    "file.close": "button",
+    "project.save": "button",
+    "project.saveAll": "button",
+    "project.discard": "button",
+    "project.quitDiscard": "button",
+    "project.cancel": "button"
   }
 }

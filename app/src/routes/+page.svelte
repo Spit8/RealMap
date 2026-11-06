@@ -1,7 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import AreaMap from "$lib/ui/AreaMap.svelte";
-  import LogPanel from "$lib/ui/LogPanel.svelte";
+  import ProjectPanel from "$lib/ui/ProjectPanel.svelte";
+  import FileMenu from "$lib/ui/FileMenu.svelte";
+  import Confirm from "$lib/ui/Confirm.svelte";
+  import { getCurrentWindow } from "@tauri-apps/api/window";
   import ListsPanel from "$lib/ui/ListsPanel.svelte";
   import Section from "$lib/ui/Section.svelte";
   import ResetRoads from "$lib/ui/ResetRoads.svelte";
@@ -15,7 +18,7 @@
   import { fmtNum, i18n, LOCALES, t, tk, type Locale, type MessageKey } from "$lib/i18n/index.svelte";
   import { buildWarning, testedBuildsText } from "$lib/core/gamebuild";
 
-  type PanelTab = "data" | "advanced" | "export" | "log";
+  type PanelTab = "project" | "data" | "advanced" | "export";
   const TAB_KEY = "importcity.panelTab";
   const HIDE_KEY = "importcity.hideOff";
   const LISTS_KEY = "importcity.listsOpen";
@@ -35,15 +38,16 @@
   }
 
   const TABS: { id: PanelTab; label: MessageKey }[] = [
+    { id: "project", label: "tabs.project" },
     { id: "data", label: "tabs.data" },
     { id: "advanced", label: "tabs.advanced" },
     { id: "export", label: "tabs.export" },
-    { id: "log", label: "tabs.log" },
   ];
   const DENSITIES = [0, 1, 2, 3, 4];
   let mapRef: ReturnType<typeof AreaMap> | undefined = $state();
   let mapView = $state<"real" | "game">("game");
-  const savedTab = stored(TAB_KEY);
+  // The journal is at the bottom of the Projet tab (a saved « log » tab opens it).
+  const savedTab = stored(TAB_KEY) === "log" ? "project" : stored(TAB_KEY);
   let panelTab = $state<PanelTab>(TABS.some((x) => x.id === savedTab) ? (savedTab as PanelTab) : "data");
   let hideOff = $state(stored(HIDE_KEY) === "1");
   let listsOpen = $state(stored(LISTS_KEY) === "1");
@@ -69,13 +73,61 @@
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onRejection);
     importer.detect();
+    void importer.restoreSession();
     const stopUpdates = updates.start();
+    // Closing the window with projects not saved: ask first (Save all / Quit without saving / Cancel).
+    let quitting = false;
+    let stopClose: (() => void) | undefined;
+    try {
+      const win = getCurrentWindow();
+      win
+        .onCloseRequested(async (ev) => {
+          if (quitting) return;
+          ev.preventDefault();
+          if (await importer.confirmQuit()) {
+            quitting = true;
+            importer.save();
+            await win.destroy();
+          }
+        })
+        .then((un) => (stopClose = un))
+        .catch(() => {});
+    } catch {
+      /* not in Tauri (browser preview) */
+    }
     return () => {
+      stopClose?.();
       stopUpdates();
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onRejection);
     };
   });
+
+  // Window title: the active project, ✱ when not saved.
+  $effect(() => {
+    const p = importer.active;
+    const title = `RealMap — ${importer.projectName(p)}${p.dirty ? " ✱" : ""}`;
+    try {
+      void getCurrentWindow().setTitle(title).catch(() => {});
+    } catch {
+      document.title = title;
+    }
+  });
+
+  /** File menu shortcuts: Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+Maj+S, Ctrl+W. */
+  function onShortcut(e: KeyboardEvent): void {
+    if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+    const k = e.key.toLowerCase();
+    const act: Record<string, () => unknown> = {
+      n: () => importer.newProject(),
+      o: () => importer.openProject(),
+      s: () => (e.shiftKey ? importer.saveProjectAs() : importer.saveProject()),
+      w: () => importer.closeProject(),
+    };
+    if (!act[k] || (k !== "s" && e.shiftKey)) return;
+    e.preventDefault();
+    if (!importer.running) void act[k]();
+  }
 
   /** Header badge: the Export tab with the updates section open. */
   function showUpdates(): void {
@@ -146,7 +198,7 @@
     <progress max="1" value={importer.progress}></progress>
     <p class="step">{importer.step}</p>
   {:else if importer.error}
-    <p class="error">{importer.error} <button class="link" onclick={() => (panelTab = "log")}>{t("status.seeLog")}</button></p>
+    <p class="error">{importer.error} <button class="link" onclick={() => (panelTab = "project")}>{t("status.seeLog")}</button></p>
   {/if}
 {/snippet}
 
@@ -154,7 +206,10 @@
   <aside>
     <header>
       <div class="title">
-        <h1>Real<span class="accent">Map</span></h1>
+        <div class="brand">
+          <h1>Real<span class="accent">Map</span></h1>
+          <FileMenu />
+        </div>
         {#if updates.badge}
           <button class="update-badge" title={t("updates.title")} onclick={showUpdates}>⬆ {t("updates.badge", { version: updates.available!.version })}</button>
         {/if}
@@ -166,15 +221,15 @@
       </div>
       <nav class="tabs">
         {#each TABS as tab (tab.id)}
-          <button class:active={panelTab === tab.id} class:log={tab.id === "log"} onclick={() => (panelTab = tab.id)}>
-            {t(tab.label)}{tab.id === "advanced" && importer.stale ? " •" : ""}{#if tab.id === "log" && errors}<span class="badge" title={t("tabs.errors", { n: errors })}>{errors}</span>{/if}
+          <button class:active={panelTab === tab.id} class:log={tab.id === "project"} onclick={() => (panelTab = tab.id)}>
+            {t(tab.label)}{tab.id === "advanced" && importer.stale ? " •" : ""}{#if tab.id === "project" && importer.active.dirty}<span class="star" title={t("project.modified")}> ✱</span>{/if}{#if tab.id === "project" && errors}<span class="badge" title={t("tabs.errors", { n: errors })}>{errors}</span>{/if}
           </button>
         {/each}
       </nav>
     </header>
 
-    {#if panelTab === "log"}
-      <LogPanel />
+    {#if panelTab === "project"}
+      <ProjectPanel />
     {:else}
     <div class="body">
       {#if panelTab === "data"}
@@ -392,7 +447,7 @@
         <Section id="export.game" title={t("export.game")} open>
           <label>{t("export.mapName")} <input bind:value={importer.settings.name} onchange={save} /></label>
           <label>{t("export.userdata")}
-            <input bind:value={importer.settings.userdata} onchange={() => { save(); importer.readGameSettings(); }} placeholder="…\3493540\local" />
+            <input bind:value={importer.app.userdata} onchange={() => { save(); importer.readGameSettings(); }} placeholder="…\3493540\local" />
           </label>
           {#if importer.gameBuild !== null && buildWarning(importer.gameBuild)}
             <p class="hint">{t(buildWarning(importer.gameBuild) === "newer" ? "export.buildNewer" : "export.buildOlder", { build: importer.gameBuild, tested: testedBuildsText() })}</p>
@@ -481,6 +536,9 @@
     </div>
   </section>
 </main>
+
+<svelte:window onkeydown={onShortcut} />
+<Confirm />
 
 <style>
   :global(html, body) {
@@ -638,6 +696,14 @@
     font-size: 20px;
     font-family: "Century Gothic", "URW Gothic", "TeX Gyre Adventor", "Avant Garde", sans-serif;
     font-weight: 700;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .tabs .star {
+    color: #FD9401;
   }
   .title {
     display: flex;

@@ -18,6 +18,13 @@
   <a href="README.fr.md"><img src="https://flagcdn.com/20x15/fr.png" width="20" height="15" alt=""> Version française</a>
 </p>
 
+> [!NOTE]
+> **New in 1.2.0** ([release notes](https://github.com/Spit8/RealMap/releases/tag/v1.2.0)) — update the app and the mod
+> - 📁 **Map projects**: save a map as a `.realmap` file (settings, downloaded data, result, log) and reopen it at once, even offline; several projects open at a time in the new **Project** tab, with **File › New / Open / Save / Save as / Close**.
+> - 🏞️ **Rivers and lakes on demand**: untick them to keep the real relief of river beds and lake floors (the game has a single water level).
+> - 🛣️ **Separate road networks at the start**, never a lone town, each industry linked to its nearest town.
+> - 🚆 **The railway goes under the roads** in short tunnels: the game's roads are built first and no longer give up on the track.
+
 ![RealMap: choose a real life location and turn it into a TF3 map](captures/slides/Concept_1.png)
 
 RealMap builds a custom Transport Fever 3 map of a real-world area: relief, sea, rivers and lakes,
@@ -109,6 +116,13 @@ Download the file for your system from the [Releases](https://github.com/Spit8/R
    (do not touch the game meanwhile); the app shows each step and the mod's report.
 6. **Save** the map from the Map Editor menu. You can also open the mod's window with the RealMap
    button in the game's bottom bar.
+
+**Projects**: each map is a project you can keep. **File › Save** (Ctrl+S) writes a `.realmap` file
+(in the folder you choose; the dialogs reopen on the last one) with the settings, the downloaded data cut to the area, the result
+and the log, so it reopens at once, offline. Several projects can be open: the **Project** tab lists
+them (✱ = changes not saved; click to switch, right-click to save or close) above the log. The app
+reopens the projects of the last session and asks before closing a project or the app with changes
+not saved.
 
 ![Export and in-game result](captures/slides/Concept_3.png)
 

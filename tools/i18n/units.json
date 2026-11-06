@@ -10,35 +10,280 @@
     "id": "app:tabs.data",
     "text": "1. Area and data",
     "ref": "1. Zone et données",
-    "context": "Tabs of the left panel: the three steps of the app (area and data, advanced options, export to the game) and the log.",
+    "context": "Tabs of the left panel: Project (the open map projects and the log), then the three steps of the app (area and data, advanced options, export to the game).",
     "kind": "button"
   },
   {
     "id": "app:tabs.advanced",
     "text": "2. Advanced options",
     "ref": "2. Options avancées",
-    "context": "Tabs of the left panel: the three steps of the app (area and data, advanced options, export to the game) and the log.",
+    "context": "Tabs of the left panel: Project (the open map projects and the log), then the three steps of the app (area and data, advanced options, export to the game).",
     "kind": "button"
   },
   {
     "id": "app:tabs.export",
     "text": "3. Export",
     "ref": "3. Export",
-    "context": "Tabs of the left panel: the three steps of the app (area and data, advanced options, export to the game) and the log.",
+    "context": "Tabs of the left panel: Project (the open map projects and the log), then the three steps of the app (area and data, advanced options, export to the game).",
     "kind": "button"
   },
   {
     "id": "app:tabs.log",
     "text": "Log",
     "ref": "Journal",
-    "context": "Tabs of the left panel: the three steps of the app (area and data, advanced options, export to the game) and the log.",
+    "context": "Tabs of the left panel: Project (the open map projects and the log), then the three steps of the app (area and data, advanced options, export to the game).",
     "kind": "button"
   },
   {
     "id": "app:tabs.errors",
     "text": "{n} error(s) in the log",
     "ref": "{n} erreur(s) dans le journal",
-    "context": "Tabs of the left panel: the three steps of the app (area and data, advanced options, export to the game) and the log.",
+    "context": "Tabs of the left panel: Project (the open map projects and the log), then the three steps of the app (area and data, advanced options, export to the game).",
+    "kind": "label"
+  },
+  {
+    "id": "app:tabs.project",
+    "text": "Project",
+    "ref": "Projet",
+    "context": "Tabs of the left panel: Project (the open map projects and the log), then the three steps of the app (area and data, advanced options, export to the game).",
+    "kind": "label"
+  },
+  {
+    "id": "app:file.menu",
+    "text": "File",
+    "ref": "Fichier",
+    "context": "The File menu in the app header, as in any desktop program: new project, open, save, save as, close the map project (a .realmap file holding a map's settings and downloaded data).",
+    "kind": "label"
+  },
+  {
+    "id": "app:file.new",
+    "text": "New project",
+    "ref": "Nouveau projet",
+    "context": "The File menu in the app header, as in any desktop program: new project, open, save, save as, close the map project (a .realmap file holding a map's settings and downloaded data).",
+    "kind": "button"
+  },
+  {
+    "id": "app:file.open",
+    "text": "Open…",
+    "ref": "Ouvrir…",
+    "context": "The File menu in the app header, as in any desktop program: new project, open, save, save as, close the map project (a .realmap file holding a map's settings and downloaded data).",
+    "kind": "button"
+  },
+  {
+    "id": "app:file.save",
+    "text": "Save",
+    "ref": "Enregistrer",
+    "context": "The File menu in the app header, as in any desktop program: new project, open, save, save as, close the map project (a .realmap file holding a map's settings and downloaded data).",
+    "kind": "button"
+  },
+  {
+    "id": "app:file.saveAs",
+    "text": "Save as…",
+    "ref": "Enregistrer sous…",
+    "context": "The File menu in the app header, as in any desktop program: new project, open, save, save as, close the map project (a .realmap file holding a map's settings and downloaded data).",
+    "kind": "button"
+  },
+  {
+    "id": "app:file.close",
+    "text": "Close project",
+    "ref": "Fermer le projet",
+    "context": "The File menu in the app header, as in any desktop program: new project, open, save, save as, close the map project (a .realmap file holding a map's settings and downloaded data).",
+    "kind": "button"
+  },
+  {
+    "id": "app:file.busy",
+    "text": "Not possible during a computation",
+    "ref": "Impossible pendant un calcul",
+    "context": "The File menu in the app header, as in any desktop program: new project, open, save, save as, close the map project (a .realmap file holding a map's settings and downloaded data).",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.open",
+    "text": "Open projects",
+    "ref": "Projets ouverts",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.untitled",
+    "text": "Untitled {n}",
+    "ref": "Sans titre {n}",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.details",
+    "text": "Show details",
+    "ref": "Afficher le détail",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.modified",
+    "text": "Modified, not saved",
+    "ref": "Modifié, non enregistré",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.notSaved",
+    "text": "Never saved",
+    "ref": "Jamais enregistré",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.reading",
+    "text": "Reading the project…",
+    "ref": "Lecture du projet…",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.writing",
+    "text": "Saving the project…",
+    "ref": "Enregistrement du projet…",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.zone",
+    "text": "{size} · scale 1:{scale} · {lat}, {lon}",
+    "ref": "{size} · échelle 1:{scale} · {lat}, {lon}",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.dataOk",
+    "text": "Data fetched (relief {relief})",
+    "ref": "Données récupérées (relief {relief})",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.dataStale",
+    "text": "Data of another area: fetch again",
+    "ref": "Données d'une autre zone : à récupérer",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.noData",
+    "text": "Data not fetched yet",
+    "ref": "Données pas encore récupérées",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.resultOk",
+    "text": "Result up to date",
+    "ref": "Résultat à jour",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.resultStale",
+    "text": "Result to recompute",
+    "ref": "Résultat à recalculer",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.resultNone",
+    "text": "No result yet",
+    "ref": "Pas encore de résultat",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.exported",
+    "text": "Sent to the game as “{name}”",
+    "ref": "Envoyé au jeu sous « {name} »",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.notExported",
+    "text": "Not sent to the game yet",
+    "ref": "Pas encore envoyé au jeu",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "label"
+  },
+  {
+    "id": "app:project.closeAsk",
+    "text": "The project “{name}” has unsaved changes. Save them before closing it?",
+    "ref": "Le projet « {name} » a des modifications non enregistrées. Les enregistrer avant de le fermer ?",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:project.quitAsk",
+    "text": "{n} project(s) have unsaved changes ({names}). Save them before quitting?",
+    "ref": "{n} projet(s) ont des modifications non enregistrées ({names}). Les enregistrer avant de quitter ?",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:project.save",
+    "text": "Save",
+    "ref": "Enregistrer",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "button"
+  },
+  {
+    "id": "app:project.saveAll",
+    "text": "Save all",
+    "ref": "Tout enregistrer",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "button"
+  },
+  {
+    "id": "app:project.discard",
+    "text": "Don't save",
+    "ref": "Ne pas enregistrer",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "button"
+  },
+  {
+    "id": "app:project.quitDiscard",
+    "text": "Quit without saving",
+    "ref": "Quitter sans enregistrer",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "button"
+  },
+  {
+    "id": "app:project.cancel",
+    "text": "Cancel",
+    "ref": "Annuler",
+    "context": "Project tab: the list (tree) of open map projects, with a star for unsaved changes and details per project (area, data, result, export), and the questions asked before closing a project or the app with unsaved changes.",
+    "kind": "button"
+  },
+  {
+    "id": "app:msg.projectOpened",
+    "text": "Project opened: {path}.",
+    "ref": "Projet ouvert : {path}.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.projectSaved",
+    "text": "Project saved: {path} ({mb} MB).",
+    "ref": "Projet enregistré : {path} ({mb} Mo).",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.projectBad",
+    "text": "Could not open the project {path}: {error}",
+    "ref": "Impossible d'ouvrir le projet {path} : {error}",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.projectMissing",
+    "text": "Project of the last session not found, removed: {path} ({error}).",
+    "ref": "Projet de la dernière session introuvable, retiré : {path} ({error}).",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
     "kind": "label"
   },
   {
