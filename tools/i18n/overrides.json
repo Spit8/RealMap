@@ -71,7 +71,10 @@
     "app:msg.projectOpened": "Projekt geöffnet: {path}.",
     "app:msg.projectSaved": "Projekt gespeichert: {path} ({mb} MB).",
     "app:msg.projectBad": "Das Projekt {path} konnte nicht geöffnet werden: {error}",
-    "app:msg.projectMissing": "Projekt der letzten Sitzung nicht gefunden, entfernt: {path} ({error})."
+    "app:msg.projectMissing": "Projekt der letzten Sitzung nicht gefunden, entfernt: {path} ({error}).",
+    "app:data.experimentalHint": "Grössen Winzig, Enorm, Megalomane, Gigantomane und Formate 1 : 4, 1 : 5: Schliesse das Spiel, setze experimentalMapFeatures = true in der Datei settings.lua des Spiels und starte das Spiel dann neu.",
+    "app:data.openSettings": "settings.lua öffnen",
+    "app:msg.bigMap": "Experimentelle Karte mit {mpx} Millionen Punkten, grösser als Sehr gross: Die Berechnung braucht viel Arbeitsspeicher (16 GB empfohlen), und diese Grössen wurden noch nicht im Spiel mit RealMap getestet."
   },
   "it": {
     "app:lists.sharesTitle": "Commerciale / industriale (% della capacità)",
@@ -138,7 +141,8 @@
     "app:msg.projectOpened": "Progetto aperto: {path}.",
     "app:msg.projectSaved": "Progetto salvato: {path} ({mb} MB).",
     "app:msg.projectBad": "Impossibile aprire il progetto {path}: {error}",
-    "app:msg.projectMissing": "Progetto dell'ultima sessione non trovato, rimosso: {path} ({error})."
+    "app:msg.projectMissing": "Progetto dell'ultima sessione non trovato, rimosso: {path} ({error}).",
+    "app:data.experimentalHint": "Dimensioni Minuscola, Enorme, Megalomane, Gigantomane e formati 1 : 4, 1 : 5: a gioco chiuso, imposta experimentalMapFeatures = true nel file settings.lua del gioco, poi riavvia il gioco."
   },
   "es": {
     "app:lists.sharesTitle": "Comercial / industrial (% de la capacidad)",
@@ -209,7 +213,8 @@
     "app:msg.projectOpened": "Proyecto abierto: {path}.",
     "app:msg.projectSaved": "Proyecto guardado: {path} ({mb} MB).",
     "app:msg.projectBad": "No se pudo abrir el proyecto {path}: {error}",
-    "app:msg.projectMissing": "Proyecto de la última sesión no encontrado, retirado: {path} ({error})."
+    "app:msg.projectMissing": "Proyecto de la última sesión no encontrado, retirado: {path} ({error}).",
+    "app:data.experimentalHint": "Tamaños Minúsculo, Enorme, Megalómano, Gigantómano y formatos 1 : 4, 1 : 5: con el juego cerrado, pon experimentalMapFeatures = true en el archivo settings.lua del juego y vuelve a iniciar el juego."
   },
   "zh": {
     "app:lists.sharesTitle": "商业 / 工业（占容量的 %）",
@@ -276,6 +281,8 @@
     "app:msg.projectOpened": "已打开项目：{path}。",
     "app:msg.projectSaved": "项目已保存：{path}（{mb} MB）。",
     "app:msg.projectBad": "无法打开项目 {path}：{error}",
-    "app:msg.projectMissing": "未找到上次会话的项目，已移除：{path}（{error}）。"
+    "app:msg.projectMissing": "未找到上次会话的项目，已移除：{path}（{error}）。",
+    "app:data.experimentalHint": "微型、巨大、狂妄自大、超大地图尺寸以及 1 : 4、1 : 5 比例：请先关闭游戏，在游戏的 settings.lua 文件中设置 experimentalMapFeatures = true，然后重新启动游戏。",
+    "app:data.sizeLocked": "此尺寸或比例仅在开启实验性地图功能时才存在于游戏中，而该功能已关闭：无法导出。"
   }
 }

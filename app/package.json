@@ -1,6 +1,6 @@
 {
   "name": "importcity",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "RealMap: import a real-world area into Transport Fever 3",
   "type": "module",
   "scripts": {

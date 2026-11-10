@@ -7,7 +7,7 @@ export const it: Record<MessageKey, string> = {
 
   "app.language": "Lingua",
 
-  "tabs.data": "1. Zona e dati",
+  "tabs.data": "Zona e dati",
   "tabs.advanced": "2. Opzioni avanzate",
   "tabs.export": "3. Esporta",
   "tabs.log": "Registro",
@@ -52,6 +52,9 @@ export const it: Record<MessageKey, string> = {
   "data.size": "Dimensione",
   "data.format": "Formato",
   "data.experimental": "(sperimentale)",
+  "data.experimentalHint": "Dimensioni Minuscola, Enorme, Megalomane, Gigantomane e formati 1 : 4, 1 : 5: a gioco chiuso, imposta experimentalMapFeatures = true nel file settings.lua del gioco, poi riavvia il gioco.",
+  "data.openSettings": "Apri settings.lua",
+  "data.sizeLocked": "Questa dimensione o formato è disponibile nel gioco solo con le mappe sperimentali, che sono disattivate: l'esportazione è bloccata.",
   "data.landscape": "Lato lungo est-ovest",
   "data.scale": "Scala",
   "data.scaleTitle": "1 metro nel gioco = … metri reali",
@@ -489,6 +492,8 @@ export const it: Record<MessageKey, string> = {
   "msg.workerFailed": "il calcolo non è andato a buon fine",
   "msg.workerFailedAt": "il calcolo non è andato a buon fine in {file}:{line}",
   "msg.workerTooLarge": "Zona troppo grande per la memoria del calcolo: riduci la dimensione della mappa o la scala.",
+  "msg.sizeLocked": "Dimensione o formato sperimentale: attiva \"experimentalMapFeatures\" nel file settings.lua del gioco, oppure scegli un'altra dimensione.",
+  "msg.bigMap": "Mappa sperimentale di {mpx} milioni di punti, più grande di \"Molto grande\": il calcolo richiede molta memoria (si consigliano 16 GB) e queste dimensioni non sono ancora state testate nel gioco con RealMap.",
   "msg.resultTerrain": "Risultato: livello dell'acqua = {ref} m nella realtà, altitudini da {min} a {max} m, presenza di acqua {water}, pendenze elevate {slope}.",
   "msg.resultRiversOne": "una singola rete",
   "msg.resultRiversMany": "{n} reti separate",

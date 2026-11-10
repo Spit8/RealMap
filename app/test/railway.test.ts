@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { makeFrame } from "../src/lib/core/area";
 import { cellToWorld, previewGrid } from "../src/lib/core/grid";
 import { resample } from "../src/lib/core/network";
-import { alignHorizontal, circumradius, DEFAULT_RAIL, designRail, gameGrade, profile, structures, townZones } from "../src/lib/core/railway";
+import { alignHorizontal, circumradius, DEFAULT_RAIL, designRail, gameGrade, profile, segmentsCross, structures, townZones, type RoadSegment } from "../src/lib/core/railway";
 
 const f = makeFrame({ lon: 4.8357, lat: 45.764, size: 3, format: 0, landscape: false, scale: 1, verticalScale: null });
 const g = previewGrid(f, 512);
@@ -88,6 +88,25 @@ describe("railway alignment", () => {
     const z = profile(hill, wet, 50, 0.025);
     for (let i = 1; i < n; i++) expect(Math.abs(z[i] - z[i - 1])).toBeLessThanOrEqual(0.025 * 50 + 1e-6);
     expect(structures(hill, z, wet, 50)).toContain("t");
+  });
+
+  it("keeps to one side of a foreseen road instead of weaving across it", () => {
+    // The real line winds ±150 m around a straight road between two towns 6 km apart.
+    const guide = Array.from({ length: 121 }, (_, i) => [-6000 + i * 100, 1000 + 150 * Math.sin(i / 6)] as [number, number]);
+    const road: RoadSegment = [[-5000, 1000], [5000, 1000]];
+    const crossings = (nodes: { x: number; y: number }[]) => {
+      let k = 0;
+      for (let i = 1; i < nodes.length; i++) if (segmentsCross([nodes[i - 1].x, nodes[i - 1].y], [nodes[i].x, nodes[i].y], road)) k++;
+      return k;
+    };
+    const flat = ground();
+    const [blind] = designRail(f, g, flat, guide, [], { ...DEFAULT_RAIL, corridorM: 600 });
+    const [aware] = designRail(f, g, flat, guide, [], { ...DEFAULT_RAIL, corridorM: 600 }, [road]);
+    expect(crossings(blind.nodes)).toBeGreaterThan(2);
+    expect(crossings(aware.nodes)).toBeLessThanOrEqual(1);
+    // Off the road where it can be (the ends stay on the real line).
+    const mid = aware.nodes.filter((p) => Math.abs(p.x) < 3000);
+    expect(Math.min(...mid.map((p) => Math.abs(p.y - 1000)))).toBeGreaterThan(100);
   });
 
   it("bridges a river, splits on a sea crossing, tangents continuous", () => {

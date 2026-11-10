@@ -315,6 +315,27 @@
     "kind": "label"
   },
   {
+    "id": "app:data.experimentalHint",
+    "text": "Tiny, Huge, Megalomaniac and Gigantomaniac sizes and the 1 : 4, 1 : 5 formats: with the game closed, set experimentalMapFeatures = true in the game's settings.lua, then start the game again.",
+    "ref": "Tailles Minuscule, Énorme, Mégalomane, Gigantomane et formats 1 : 4, 1 : 5 : jeu fermé, mettez experimentalMapFeatures = true dans settings.lua du jeu, puis relancez le jeu.",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:data.openSettings",
+    "text": "Open settings.lua",
+    "ref": "Ouvrir settings.lua",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "label"
+  },
+  {
+    "id": "app:data.sizeLocked",
+    "text": "This size or format exists in the game only with the experimental maps, which are off: export is blocked.",
+    "ref": "Cette taille ou ce format n'existe dans le jeu qu'avec les cartes expérimentales, désactivées : l'export est bloqué.",
+    "context": "Tab 1 › Game map: size, format and scale of the game map, and the data sources (elevation, land cover). Its bottom button fetches the real data.",
+    "kind": "sentence"
+  },
+  {
     "id": "app:data.landscape",
     "text": "Long side east–west",
     "ref": "Côté long est–ouest",
@@ -3237,6 +3258,20 @@
     "id": "app:msg.workerTooLarge",
     "text": "Area too large for the computation memory: reduce the map size or the scale.",
     "ref": "Zone trop grande pour la mémoire du calcul : réduisez la taille de la carte ou l'échelle.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.sizeLocked",
+    "text": "Experimental size or format: turn on experimentalMapFeatures in the game's settings.lua, or choose another size.",
+    "ref": "Taille ou format expérimental : activez experimentalMapFeatures dans settings.lua du jeu, ou choisissez une autre taille.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.bigMap",
+    "text": "Experimental map of {mpx} million points, larger than Very large: the computation needs a lot of memory (16 GB advised) and these sizes have not been tested in game with RealMap yet.",
+    "ref": "Carte expérimentale de {mpx} millions de points, plus grande que Très grande : le calcul demande beaucoup de mémoire (16 Go conseillés) et ces tailles n'ont pas encore été testées en jeu avec RealMap.",
     "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
     "kind": "sentence"
   },

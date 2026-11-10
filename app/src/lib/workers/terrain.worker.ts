@@ -20,7 +20,7 @@ import type { OsmShape } from "../core/osm";
 import { builtAround, businessAround, clearBeaches, rasterizeBeaches, townLandRadiusM, townShares, type LandUse } from "../core/landuse";
 import { townNeeds } from "../core/townneeds";
 import { DEFAULT_NETWORK, planRail, planRoads, type CustomRail, type LinkPicks, type NetworkOptions, type NetworkPlan, type NetworkWay } from "../core/network";
-import { DEFAULT_RAIL, designRail, type RailOptions } from "../core/railway";
+import { DEFAULT_RAIL, designRail, type RailOptions, type RoadSegment } from "../core/railway";
 import { hoverGrid, renderPreview, type HoverGrid } from "../core/preview";
 import { buildTerrain, type TerrainOptions } from "../core/terrain";
 import {
@@ -171,8 +171,14 @@ function build(req: TerrainRequest): void {
     const netOptions = { ...DEFAULT_NETWORK, ...(req.network ?? {}) };
     const network: NetworkPlan = { links: [], rail: planRail(f, req.roads ?? [], netTowns, req.customRails ?? [], netOptions) };
     const railTowns = towns.map((x) => ({ x: x.x, y: x.y, capacity: x.capacity }));
+    // The roads the game will route between linked towns, foreseen straight (the industries' own
+    // accesses are short, left out): the line keeps off them instead of weaving across them.
+    const at = new Map(netTowns.map((x) => [x.name, [x.x, x.y] as [number, number]]));
+    const foreseen: RoadSegment[] = planRoads(f, req.roads ?? [], netTowns, [], req.linkPicks ?? {}, netOptions, req.roadsFrozen ?? null)
+      .filter((l) => l.kind === "town" && at.has(l.a) && at.has(l.b))
+      .map((l) => [at.get(l.a)!, at.get(l.b)!]);
     network.rail = network.rail.flatMap((guide, k) =>
-      designRail(f, g, t, guide.pts, railTowns, req.rail ?? DEFAULT_RAIL).map((d, j) => {
+      designRail(f, g, t, guide.pts, railTowns, req.rail ?? DEFAULT_RAIL, foreseen).map((d, j) => {
         const { nodes, ...design } = d;
         return { key: `${guide.key}${j ? `.${j}` : ""}`, name: guide.name, pts: nodes.map((p) => [p.x, p.y] as [number, number]), nodes, design };
       }),

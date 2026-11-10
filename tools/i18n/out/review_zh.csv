@@ -1,17 +1,58 @@
 ﻿id;kind;flags;en;ref;translation;back_translation;override
 app:app.language;label;;Language;Langue;语言;Language.;
 app:tabs.data;button;overridden;1. Area and data;1. Zone et données;区域与数据;Regions and Data.;1. 区域与数据
-app:tabs.advanced;button;;2. Advanced options;2. Options avancées;2. 高级选项;2. Advanced options.;
+app:tabs.advanced;button;;2. Advanced options;2. Options avancées;高级选项;Advanced options.;
 app:tabs.export;button;;3. Export;3. Export;3. 导出;3. Export.;
 app:tabs.log;button;;Log;Journal;日志;Log.;
-app:tabs.errors;label;;{n} error(s) in the log;{n} erreur(s) dans le journal;日志中包含 {n} 个错误;The log contains {n} errors.;
+app:tabs.errors;label;;{n} error(s) in the log;{n} erreur(s) dans le journal;{n} 个错误出现在日志中;{n} errors appeared in the log.;
+app:tabs.project;label;overridden;Project;Projet;项目;Project.;项目
+app:file.menu;label;overridden;File;Fichier;文件;File.;文件
+app:file.new;button;overridden;New project;Nouveau projet;新建项目;New project.;新建项目
+app:file.open;button;overridden;Open…;Ouvrir…;打开…;Open...;打开…
+app:file.save;button;overridden;Save;Enregistrer;保存;Save.;保存
+app:file.saveAs;button;overridden;Save as…;Enregistrer sous…;另存为…;Save as...;另存为…
+app:file.close;button;overridden;Close project;Fermer le projet;关闭项目;Close project.;关闭项目
+app:file.busy;label;overridden;Not possible during a computation;Impossible pendant un calcul;计算中，不可操作;In calculation, not operable.;计算期间无法进行
+app:project.open;label;overridden;Open projects;Projets ouverts;已打开的项目;Projects that have been opened.;已打开的项目
+app:project.untitled;label;overridden;Untitled {n};Sans titre {n};未命名 {n};Un-named {n}.;未命名 {n}
+app:project.details;label;overridden;Show details;Afficher le détail;显示详情;Display details.;显示详情
+app:project.modified;label;overridden;Modified, not saved;Modifié, non enregistré;已修改，未保存;Modified, not saved.;已修改，未保存
+app:project.notSaved;label;overridden;Never saved;Jamais enregistré;未保存;Not saved.;从未保存
+app:project.reading;label;overridden;Reading the project…;Lecture du projet…;正在读取项目…;Reading project...;正在读取项目…
+app:project.writing;label;overridden;Saving the project…;Enregistrement du projet…;正在保存项目…;Saving project...;正在保存项目…
+app:project.zone;label;overridden;{size} · scale 1:{scale} · {lat}, {lon};{size} · échelle 1:{scale} · {lat}, {lon};{size} · 比例尺 1:{scale} · {lat}, {lon};{size} · Scale: 1:{scale} · {lat}, {lon};{size} · 比例 1:{scale} · {lat}, {lon}
+app:project.dataOk;label;overridden;Data fetched (relief {relief});Données récupérées (relief {relief});已获取的数据 (地形 {relief});Data that has been acquired (terrain {relief}).;数据已获取（地形 {relief}）
+app:project.dataStale;label;overridden;Data of another area: fetch again;Données d'une autre zone : à récupérer;从其他区域获取数据：重新获取;Obtain data from other regions: Re-acquire.;数据属于另一区域：需重新获取
+app:project.noData;label;overridden;Data not fetched yet;Données pas encore récupérées;尚未获取数据;Not yet obtained data.;尚未获取数据
+app:project.resultOk;label;overridden;Result up to date;Résultat à jour;结果已更新;The results have been updated.;结果为最新
+app:project.resultStale;label;overridden;Result to recompute;Résultat à recalculer;重新计算结果;Re-calculate the result.;结果需重新计算
+app:project.resultNone;label;overridden;No result yet;Pas encore de résultat;尚未有结果;Not yet have result.;尚无结果
+app:project.exported;label;overridden;Sent to the game as “{name}”;Envoyé au jeu sous « {name} »;以“{name}”发送到游戏;"Sent to the game with ""{name}"".";已以“{name}”发送到游戏
+app:project.notExported;label;overridden;Not sent to the game yet;Pas encore envoyé au jeu;尚未发送到游戏;Not yet sent to the game.;尚未发送到游戏
+app:project.closeAsk;sentence;overridden;The project “{name}” has unsaved changes. Save them before closing it?;Le projet « {name} » a des modifications non enregistrées. Les enregistrer avant de le fermer ?;项目“{name}”有未保存的更改。是否在关闭前保存这些更改？;"The project ""{name}"" has unsaved changes. Do you want to save these changes before closing?";项目“{name}”有未保存的修改。关闭前要保存吗？
+app:project.quitAsk;sentence;overridden;{n} project(s) have unsaved changes ({names}). Save them before quitting?;{n} projet(s) ont des modifications non enregistrées ({names}). Les enregistrer avant de quitter ?;{n} 个项目存在未保存的更改 ({names})。 退出前是否保存？;{n} projects have unsaved changes ({names}). Do you want to save before exiting?;{n} 个项目有未保存的修改（{names}）。退出前要保存吗？
+app:project.save;button;overridden;Save;Enregistrer;保存;Save.;保存
+app:project.saveAll;button;overridden;Save all;Tout enregistrer;保存全部;Save all.;全部保存
+app:project.discard;button;overridden;Don't save;Ne pas enregistrer;不保存;Do not save.;不保存
+app:project.quitDiscard;button;overridden;Quit without saving;Quitter sans enregistrer;退出，不保存;Exit, do not save.;不保存并退出
+app:project.cancel;button;overridden;Cancel;Annuler;取消;Cancel.;取消
+app:msg.projectOpened;label;overridden;Project opened: {path}.;Projet ouvert : {path}.;项目已打开：{path}。;Project has been opened: {path}.;已打开项目：{path}。
+app:msg.projectSaved;label;overridden;Project saved: {path} ({mb} MB).;Projet enregistré : {path} ({mb} Mo).;项目已保存：{path} ({mb} 兆字节)。;Project saved: {path} ({mb} megabytes).;项目已保存：{path}（{mb} MB）。
+app:msg.projectBad;label;overridden;Could not open the project {path}: {error};Impossible d'ouvrir le projet {path} : {error};无法打开项目 {path}: {error};Unable to open project {path}: {error};无法打开项目 {path}：{error}
+app:msg.projectMissing;label;overridden;Project of the last session not found, removed: {path} ({error}).;Projet de la dernière session introuvable, retiré : {path} ({error}).;上次会话的项目未找到，已删除：{path} ({error})。;The project from the previous session was not found and has been deleted: {path} ({error}).;未找到上次会话的项目，已移除：{path}（{error}）。
 app:data.map;title;;Game map;Carte du jeu;游戏地图;Game map.;
 app:data.size;label;;Size;Taille;大小;Size.;
 app:data.format;label;;Format;Format;格式;Format.;
 app:data.experimental;label;;(experimental);(expérimental);(实验版);(Experimental version);
+app:data.experimentalHint;sentence;overridden;Tiny, Huge, Megalomaniac and Gigantomaniac sizes and the 1 : 4, 1 : 5 formats: with the game closed, set experimentalMapFeatures = true in the game's settings.lua, then start the game again.;Tailles Minuscule, Énorme, Mégalomane, Gigantomane et formats 1 : 4, 1 : 5 : jeu fermé, mettez experimentalMapFeatures = true dans settings.lua du jeu, puis relancez le jeu.;微型、巨大、狂妄和巨型尺寸，以及 1:4、1:5 的比例：在游戏关闭的情况下，在游戏的 settings.lua 文件中设置 experimentalMapFeatures = true，然后重新启动游戏。;"Miniature, gigantic, arrogant, and giant sizes, as well as 1:4 and 1:5 ratios: To enable these features, set ""experimentalMapFeatures = true"" in the settings.lua file within the game's directory, and then restart the game.";微型、巨大、狂妄自大、超大地图尺寸以及 1 : 4、1 : 5 比例：请先关闭游戏，在游戏的 settings.lua 文件中设置 experimentalMapFeatures = true，然后重新启动游戏。
+app:data.openSettings;label;;Open settings.lua;Ouvrir settings.lua;打开 settings.lua;Open settings.lua.;
+app:data.sizeLocked;sentence;overridden;This size or format exists in the game only with the experimental maps, which are off: export is blocked.;Cette taille ou ce format n'existe dans le jeu qu'avec les cartes expérimentales, désactivées : l'export est bloqué.;这个尺寸或格式仅在实验地图中可用，而实验地图目前已禁用：导出功能已受限。;This size or format is only available in the experimental map, and the experimental map is currently disabled: Export functionality is limited.;此尺寸或比例仅在开启实验性地图功能时才存在于游戏中，而该功能已关闭：无法导出。
 app:data.landscape;label;;Long side east–west;Côté long est–ouest;东西方向的长度;The length in the east-west direction.;
 app:data.scale;label;;Scale;Échelle;比例;Ratio.;
 app:data.scaleTitle;tooltip;;1 m in the game = … real metres;1 m dans le jeu = … m réels;游戏中1米 = …实际米;In the game, 1 meter = ... actual meters.;
+app:data.rotation;label;overridden;Rotation (°);Rotation (°);旋转角度（°）;Rotation angle (degrees).;旋转（°）
+app:data.rotationTitle;tooltip;overridden;Direction of the top of the game map, in degrees clockwise from north. On the map: hold the centre point and drag.;Direction du haut de la carte de jeu, en degrés depuis le nord dans le sens horaire. Sur la carte : maintenir le point central et faire glisser.;游戏地图顶部的方向，以度为单位，顺时针从北方开始。 在地图上：按住中心点并拖动。;The direction at the top of the game map is indicated in degrees, starting from North and proceeding clockwise. On the map: Hold down the center point and drag.;游戏地图上边的朝向，以正北为起点按顺时针计算的度数。在地图上：按住中心点并拖动。
+app:data.rotationReset;label;overridden;North up;Nord en haut;北方朝上;North, facing upwards.;北向朝上
 app:data.scaleReal;label;;(real);(réelle);(真实);(Real);
 app:data.scaleOther;label;;Other…;Autre…;其他…;Other...;
 app:data.facts;label;keep:km²;{size} · {w} × {h} km in reality · {km2} km²;{size} · {w} × {h} km réels · {km2} km²;{size} · 实际尺寸：{w} × {h} 公里 · 面积：{km2} 平方公里;{size} · Actual size: {w} × {h} kilometers · Area: {km2} square kilometers.;
@@ -48,6 +89,8 @@ app:advanced.minPond;sentence;;Min. pond (ha);Étangs min. (ha);最小水域面�
 app:advanced.minPondTitle;tooltip;;Smaller bodies of water are filled in, except on a river;Plans d'eau plus petits comblés, sauf sur une rivière;较小的水体将被填充，除非是河流;Smaller bodies of water will be filled, unless they are rivers.;
 app:advanced.waterJoin;label;;Join nearby water (m);Raccord eaux proches (m);连接附近水域 (米);Connect to nearby water areas (meters).;
 app:advanced.waterJoinTitle;tooltip;;A river closer than this to other water is joined to it by a channel;Une rivière à moins de cette distance d'une autre eau y est reliée par un chenal;如果一条河流距离其他水域小于此距离，则它们会通过一个水道相连;If a river is located within this distance from other water bodies, then they will be connected by a waterway.;
+app:advanced.inlandWater;label;overridden;Rivers and lakes;Rivières et lacs;河流和湖泊;Rivers and lakes.;河流和湖泊
+app:advanced.inlandWaterTitle;tooltip;overridden;Unticked: no rivers, canals or lakes, only the sea. The game has a single water level (0 m): without this water, river beds and lake floors keep their real relief instead of being dug down;Décoché : ni rivière, ni canal, ni lac, seulement la mer. Le jeu n'a qu'un niveau d'eau (0 m) : sans cette eau, le lit des rivières et le fond des lacs gardent leur relief réel au lieu d'être creusés;未勾选：没有河流、运河或湖泊，只有海洋。 游戏只有一个水位（0米）：如果没有这个水位，河流的河床和湖泊的底部会保留其真实的地形，而不是被挖掘;"Unchecked: There are no rivers, canals, or lakes, only the ocean. The game has only one water level (0 meters): Without this water level, the riverbeds and the bottoms of lakes would retain their actual terrain, rather than being ""dug out.""";取消勾选：没有河流、运河或湖泊，只保留海洋。游戏只有一个水位（0 米）：没有这些水体，河床和湖底将保留真实地形，而不会被向下挖掘
 app:advanced.marshLakes;label;;Marshes → lakes;Marais → lacs;湿地 → 湖泊;Wetland → Lake.;
 app:advanced.marshArea;sentence;;Min. area (ha);Surface min. (ha);最小区域 (ha);Smallest area (ha).;
 app:advanced.marshDepth;label;;Depth (m);Profondeur (m);深度 (米);Depth (meters).;
@@ -97,9 +140,11 @@ app:advanced.industrySpacing;label;;Distance between industries (m);Écart entre
 app:advanced.townClearance;label;;Distance to towns (m);Distance aux villes (m);与城镇的距离 (米);Distance to the town (meters).;
 app:advanced.rail;title;;Railway;Voie ferrée;铁路;Railway.;
 app:advanced.roads;label;;Roads;Routes;道路;Road.;
-app:roads.auto;sentence;;"Roads chosen automatically: each town is linked to 1 or 2 others; the game lays the roads and links the industries to them. Right-click the map to add or delete a link.";"Routes choisies automatiquement : chaque ville est reliée à 1 ou 2 autres ; le jeu trace les routes et y raccorde les industries. Clic droit sur la carte pour ajouter ou supprimer une liaison.";道路自动选择：每个城镇与1个或2个其他城镇相连；游戏会自动生成道路，并将产业连接到这些道路上。右键单击地图以添加或删除连接。;"Road automatic selection: Each town is connected to one or two other towns; the game automatically generates roads and connects industries to these roads. Right-click on the map to add or delete connections.";
+app:roads.auto;sentence;overridden;"Roads chosen automatically: several small networks of towns (never a lone town), and each industry linked to its nearest town; the game lays the roads. Right-click the map to add or delete a link.";"Routes choisies automatiquement : plusieurs petits réseaux de villes (jamais une ville seule), et chaque industrie reliée à la ville la plus proche ; le jeu trace les routes. Clic droit sur la carte pour ajouter ou supprimer une liaison.";自动选择的道路：会生成多个小型城镇网络（不会出现单独的城镇），并且每个产业都与最近的城镇相连；游戏会自动生成道路。右键点击地图，可以添加或删除道路连接。;"Automatically selected roads: This will generate a network of small towns (without individual towns), and each industry will be connected to the nearest town; the game will automatically generate the roads. Right-clicking on the map allows you to add or delete road connections.";自动选择的道路：多个小型城镇网络（绝不会有孤立的城镇），每个工业都连接到最近的城镇；道路由游戏铺设。在地图上点击右键可添加或删除连接。
 app:roads.manual;sentence;;Roads changed by hand: no road between towns is added automatically any more.;Routes modifiées à la main : plus aucune route n'est ajoutée automatiquement entre les villes.;手动修改的道路：现在，城镇之间的道路将不再自动添加。;Manually modified roads: Now, roads between towns will no longer be automatically added.;
 app:roads.reset;label;;Apply the default settings;Appliquer les paramètres par défaut;应用默认设置;Apply default settings.;
+app:roads.maxNetwork;label;overridden;Towns per network at the start;Villes par réseau au départ;城镇连接方式（初始设置）;Urban connection method (initial settings).;开局时每个网络的城镇数
+app:roads.maxNetworkTitle;tooltip;overridden;At the start of the game, one road network links at most this many towns: the map has several networks to join in game. A town with neither another town nor an industry still gets a link.;Au début de la partie, un réseau routier relie au plus ce nombre de villes : la carte compte plusieurs réseaux à relier en jeu. Une ville sans autre ville ni industrie reçoit quand même une liaison.;游戏开始时，一个道路网络最多连接这么多城镇：地图上存在多个需要连接的网络。即使某个城镇没有其他城镇或产业，也会被连接。;At the beginning of the game, a road network can connect at most this many towns: There are multiple networks on the map that need to be connected. Even if a town has no other towns or industries, it will still be connected.;游戏开始时，一个道路网络最多连接这么多城镇：地图上有多个网络，需在游戏中连接起来。没有其他城镇也没有工业的城镇仍会获得一条连接。
 app:roads.resetTitle;tooltip;;Go back to the automatic choice of roads between towns;Revenir au choix automatique des routes entre les villes;恢复自动选择城镇之间的道路;Restore the automatic selection of roads between towns.;
 app:roads.resetConfirm;sentence;;The roads you added, deleted or kept will be lost. Continue?;Les routes que tu as ajoutées, supprimées ou gardées seront perdues. Continuer ?;你添加、删除或保留的道路将会被清除。继续？;The roads that you add, delete, or keep will be cleared. Continue?;
 app:roads.resetYes;label;;Yes, back to the default roads;Oui, revenir aux routes par défaut;是，恢复默认道路;Yes, restore default road.;
@@ -162,6 +207,7 @@ app:map.hideOff;label;;Hide places left out;Masquer les lieux non retenus;隐藏
 app:map.crashed;label;;The map crashed: {error};La carte a planté : {error};地图出现错误：{error};Map error: {error};
 app:map.retry;button;;Try again;Réessayer;重试;Retry.;
 app:map.placeHere;label;;Click: put the area here;Clic : placer la zone ici;点击：将区域放置于此;Click: Place the region here.;
+app:map.rotateTip;label;overridden;Hold and drag to turn the area (Shift: 15° steps) · rotation {deg}°;Maintenir et faire glisser pour tourner la zone (Maj : par pas de 15°) · rotation {deg}°;按住并拖动以旋转区域（Shift 键：每次 15°）。旋转 {deg}°;Press and drag to rotate the region (Shift key: 15° each time). Rotate {deg}°;按住并拖动以旋转区域（Shift：每次 15°）· 旋转 {deg}°
 app:map.markerTip;label;;{marker} — click: details · right-click: menu ({action}, link…);{marker} — clic : détails · clic droit : menu ({action}, relier…);{marker} — 点击：详细信息；右键点击：菜单 ({action}, 连接…);"{marker} - Click: Details; Right-click: Menu ({action}, Link...)";
 app:map.add;label;;add;ajouter;添加;Add.;
 app:map.remove;label;;remove;retirer;移除;Remove.;
@@ -262,6 +308,7 @@ app:legend.primary;label;;Primary industry (fields, mines, forests);Industrie pr
 app:legend.factory;label;;Factory;Usine;工厂;Factory.;
 app:legend.onWater;label;;Industry on water;Industrie sur l'eau;水上产业;Water-related industry.;
 app:legend.road;label;;Planned road link (the game lays the road);Liaison routière prévue (le jeu trace la route);规划中的公路连接（游戏会自动生成道路）;Planned road connections (the game will automatically generate roads).;
+app:legend.access;label;overridden;Planned industry access (to the nearest town);Accès d'industrie prévu (vers la ville la plus proche);规划的产业连接（至最近的城镇）;Planned industrial connections (to the nearest town).;计划中的工业通道（通往最近的城镇）
 app:legend.rail;label;;Railway line;Voie ferrée;铁路线;Railway line.;
 app:legend.bridge;label;;Railway bridge;Pont ferroviaire;铁路桥梁;Railway bridges.;
 app:legend.tunnel;label;;Railway tunnel;Tunnel ferroviaire;铁路隧道;Railway tunnel.;
@@ -404,6 +451,8 @@ app:msg.fromCache;label;;cache ({age});cache ({age});缓存 ({age});Cache ({age}
 app:msg.fromServer;label;;{server}, {s} s;{server}, {s} s;{server}, {s} 秒;{server}, {s} seconds.;
 app:msg.ignNone;label;;no data here: Copernicus;pas de données ici : Copernicus;这里没有数据：Copernicus;Here is no data: Copernicus.;
 app:msg.ignNoneWarn;label;;IGN: no data here, falling back to Copernicus.;IGN : pas de données ici, repli sur Copernicus.;IGN：此处无数据，已切换到Copernicus。;"IGN: No data available here; switched to Copernicus.";
+app:msg.ignGaveUp;sentence;overridden;IGN unreachable ({error}): the rest of the relief comes from Copernicus.;IGN injoignable ({error}) : le reste du relief vient de Copernicus.;IGN 无法连接 ({error})：其余的地形数据来自 Copernicus。;IGN cannot be connected ({error}): The remaining terrain data comes from Copernicus.;无法连接 IGN（{error}）：其余地形数据来自 Copernicus。
+app:msg.demTileFailed;sentence;overridden;Relief tile {tile} unreadable after several tries ({error}). Try again: the tiles already downloaded are kept.;Tuile de relief {tile} illisible après plusieurs essais ({error}). Relance : les tuiles déjà téléchargées sont gardées.;地形图块 {tile} 尝试多次读取后仍然无法读取 ({error})。 重新尝试：已经下载的图块将被保留。;Terrain tile {tile} still cannot be read after multiple attempts ({error}). Retry: The already downloaded tile will be kept.;地形瓦片 {tile} 多次尝试后仍无法读取（{error}）。请重试：已下载的瓦片会保留。
 app:msg.demSkipped;label;;not needed (IGN covers everything);inutile (IGN complet);不需要 (IGN 包含所有内容);Not needed (IGN includes all content).;
 app:msg.coverFailed;label;;Land cover unavailable ({error}): biomes from the relief.;Occupation du sol indisponible ({error}) : biomes déduits du relief.;土地覆盖数据不可用 ({error})：生物群系数据来源于地形。;Land cover data unavailable ({error}): The biome data is derived from the topography.;
 app:msg.waterPlaces;label;;{water} water features, {places} places;{water} eaux, {places} lieux;{water} 水域，{places} 地点;{water} Water area, {places} Locations.;
@@ -415,11 +464,16 @@ app:msg.landCounts;label;;{beaches} beaches, {business} business areas;{beaches}
 app:msg.landFailed;sentence;;Beaches and business areas unavailable ({error}): beaches from the land cover, default districts.;Plages et zones d'activité indisponibles ({error}) : plages déduites de l'occupation du sol, quartiers par défaut.;海滩和商业区域不可用 ({error})：海滩数据来自土地覆盖信息，默认区域。;Beach and commercial areas unavailable ({error}): The beach data comes from land cover information, default area.;
 app:msg.workerFailed;label;;the computation failed;le calcul a échoué;计算失败;Calculation failed.;
 app:msg.workerFailedAt;label;;the computation failed in {file}:{line};le calcul a échoué dans {file}:{line};计算失败，位置：{file}:{line};Calculation failed, location: {file}:{line}.;
+app:msg.workerTooLarge;sentence;overridden;Area too large for the computation memory: reduce the map size or the scale.;Zone trop grande pour la mémoire du calcul : réduisez la taille de la carte ou l'échelle.;区域过大，超出计算内存限制：请减小地图尺寸或调整比例。;The region is too large, exceeding the calculation memory limit: Please reduce the map size or adjust the scale.;区域过大，超出计算内存：请减小地图大小或比例。
+app:msg.sizeLocked;sentence;;Experimental size or format: turn on experimentalMapFeatures in the game's settings.lua, or choose another size.;Taille ou format expérimental : activez experimentalMapFeatures dans settings.lua du jeu, ou choisissez une autre taille.;实验性尺寸或格式：请在游戏设置的 settings.lua 文件中启用 experimentalMapFeatures，或者选择其他尺寸。;"Experimental size or format: Please enable the ""experimentalMapFeatures"" option in the settings.lua file within the game settings, or choose a different size.";
+app:msg.bigMap;sentence;;Experimental map of {mpx} million points, larger than Very large: the computation needs a lot of memory (16 GB advised) and these sizes have not been tested in game with RealMap yet.;Carte expérimentale de {mpx} millions de points, plus grande que Très grande : le calcul demande beaucoup de mémoire (16 Go conseillés) et ces tailles n'ont pas encore été testées en jeu avec RealMap.;实验性地图，包含 {mpx} 百万个点，尺寸大于“非常大”：计算需要大量内存（建议 16GB），并且这些尺寸尚未在游戏中通过 RealMap 进行测试。;"Experimental map, containing {mpx} million points, with a size greater than ""very large"":  Calculating this requires a large amount of memory (16GB recommended), and these sizes have not yet been tested in the game using RealMap.";
 app:msg.resultTerrain;sentence;;Result: water level = {ref} m in reality, heights {min} → {max} m, water {water}, steep slopes {slope}.;Résultat : niveau de l'eau = {ref} m réels, hauteurs {min} → {max} m, eau {water}, pentes fortes {slope}.;结果：实际水位 = {ref} 米，高度范围 {min} → {max} 米，水域 {water}，陡峭坡度 {slope}。;Results: Actual water level = {ref} meters, height range {min} → {max} meters, water area {water}, steep slope {slope}.;
 app:msg.resultRiversOne;label;;a single network;un seul réseau;一个网络;A network.;
 app:msg.resultRiversMany;label;;{n} separate networks;{n} réseaux séparés;{n} 个独立网络;{n} independent networks.;
+app:msg.inlandWaterOff;label;overridden;Rivers and lakes: off, real relief kept.;Rivières et lacs : désactivés, relief réel conservé.;河流和湖泊：已禁用，保留真实地形。;Rivers and lakes: Disabled, but the actual terrain is preserved.;河流和湖泊：已关闭，保留真实地形。
 app:msg.resultRivers;sentence;;Rivers: {networks}, {joined} junctions, {routed} led to the water, {channels} channels, {marsh} marshes turned into lakes, {ponds} ponds filled in, {beach} beach cells without trees.;Rivières : {networks}, {joined} jonctions, {routed} tracés jusqu'à l'eau, {channels} chenaux, {marsh} marais en lacs, {ponds} étangs comblés, {beach} cellules de plage sans arbres.;河流：{networks} 条河流，{joined} 个交汇点，{routed} 条通往水域的线路，{channels} 个河道，{marsh} 个沼泽地已变为湖泊，{ponds} 个水塘已填满，{beach} 个无树木的沙滩区域。;Rivers: {networks} rivers, {joined} junctions, {routed} routes leading to water bodies, {channels} river channels, {marsh} marshes that have become lakes, {ponds} ponds that have been filled, {beach} a treeless sandy beach area.;
 app:msg.resultCounts;sentence;;{towns} towns, {industries} industries, {links} links between towns, {rails} railway line(s).;{towns} villes, {industries} industries, {links} liaisons entre villes, {rails} voie(s) ferrée(s).;{towns} 个城镇，{industries} 个产业，{links} 个城镇之间的连接，{rails} 条铁路线。;{towns} towns, {industries} industries, {links} connections between towns, {rails} railway lines.;
+app:msg.resultRoads;sentence;overridden;Roads: {networks} separate network(s), {linked} / {industries} industries linked to a town.;Routes : {networks} réseau(x) séparé(s), {linked} / {industries} industries reliées à une ville.;道路：{networks} 个独立的网络，{linked} / {industries} 个与城镇相连的产业。;Roads: {networks} independent networks, {linked} / {industries} industries connected to towns.;道路：{networks} 个独立网络，{linked} / {industries} 个工业已连接到城镇。
 app:msg.resultRail;sentence;overridden;Railway: {km} km, tightest curve {radius} m, steepest {grade} % in the game, {bridges} bridge(s) (highest {high} m), {tunnels} tunnel(s).;Voie ferrée : {km} km, courbe la plus serrée {radius} m, pente max. {grade} % dans le jeu, {bridges} pont(s) (le plus haut {high} m), {tunnels} tunnel(s).;Railway: {km} km, tightest curve {radius} m, steepest {grade} % in the game, {bridges} bridge(s) (highest {high} m), {tunnels} tunnel(s).;Railway: {km} km, tightest curve {radius} m, steepest {grade} % in the game, {bridges} bridge(s) (highest {high} m), {tunnels} tunnel(s).;铁路：{km} 公里，最小转弯半径 {radius} 米，游戏内最大坡度 {grade} %，{bridges} 座桥梁（最高 {high} 米），{tunnels} 条隧道。
 app:msg.dataSummary;sentence;;Data: relief {relief}, sea floor {sea}, {cover}, {water} water features, {places} places, {sites} industrial sites, {roads} roads, {rails} railways.;Données : relief {relief}, fonds marins {sea}, {cover}, {water} eaux, {places} lieux, {sites} sites industriels, {roads} routes, {rails} voies ferrées.;数据：地形 {relief}、海底 {sea}、{cover}、{water} 水域特征、{places} 地点、{sites} 工业区、{roads} 道路、{rails} 铁路。;Data: Terrain (relief), seabed (sea), coverage, water features, locations (places), industrial areas (sites), roads (roads), railways (rails).;
 app:msg.noUserdata;label;;TF3 data folder not found: enter it in the Export tab.;Dossier de données de TF3 introuvable : indique-le dans l'onglet Export.;TF3 数据文件夹未找到：请在“导出”选项卡中指定。;"TF3 data folder not found: Please specify it in the ""Export"" tab.";
@@ -507,4 +561,7 @@ mod:roads_building;label;;Roads: %d link(s) between towns…;Routes : %d liaison
 mod:roads_done;label;;%d road link(s)%s.;%d liaison(s) routière(s)%s.;%d 个公路连接%s.;%d roads connect to %s.;
 mod:roads_partly;label;; (partly refused); (refusées en partie); （部分已拒绝）;(Partially rejected);
 mod:roads_simple;label;overridden;%d / %d road segment(s) rebuilt as small country roads (2 lanes).;%d / %d tronçon(s) de route refait(s) en petites routes de campagne (2 voies).;你已重新构建了 %d / %d 个道路段，将其转换为双车道的乡村道路。;You have rebuilt %d out of %d road segments, converting them into two-lane rural roads.;%d / %d 个道路段已重建为小型乡村道路（双车道）。
+mod:roads_access;label;overridden;Industries linked by the game: %d / %d reach a road%s.;Industries reliées par le jeu : %d / %d ont une route%s.;游戏连接的产业：%d / %d 个产业可通往道路%s。;Game connection industry: %d / %d industries can be connected via road %s.;游戏已连接的工业：%d / %d 个有道路%s。
+mod:rail_crossings;label;overridden;Railway: %d road crossing(s) passed under in a tunnel.;Voie ferrée : %d croisement(s) de route passé(s) dessous en tunnel.;铁路：%d 个道路在隧道下方交叉。;Railways: %d roads cross underneath the tunnel.;铁路：%d 处道路交叉以隧道从下方穿过。
+mod:roads_access_missing;label;overridden;"; without a road nearby: %s";" ; sans route à proximité : %s";"; 附近没有道路：%s";"; There is no road nearby: %s.";；附近没有道路：%s
 mod:done;sentence;;Map “%s” generated. Save it (Map Editor menu).;Carte « %s » générée. Enregistre-la (menu de l'éditeur).;地图“%s”已生成。请保存它（在地图编辑工具的菜单中）。;"The map ""%s"" has been generated. Please save it (in the menu of the map editing tool).";

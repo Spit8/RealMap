@@ -16,6 +16,18 @@ export function fullGrid(f: Frame): Grid {
   return { nx: f.samplesX, ny: f.samplesY, step: SAMPLE_M };
 }
 
+/** Heightmap samples of the full map (every grid of the export is this big). */
+export function gridSamples(f: Frame): number {
+  return f.samplesX * f.samplesY;
+}
+
+/**
+ * Most samples of a map the game offers without experimental features, the largest tested in game:
+ * Très Grande 1:1 (64 × 64 tiles, 4097 × 4097). The experimental sizes go up to 3 times that
+ * (Gigantomane, 7169 × 7169 in 1:1).
+ */
+export const TESTED_MAX_SAMPLES = (64 * 64 + 1) ** 2;
+
 /** Longest side of the preview grid (samples). */
 export const PREVIEW_PX = 1024;
 

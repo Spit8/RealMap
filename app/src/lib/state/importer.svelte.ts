@@ -8,12 +8,12 @@ import {
   DEFAULT_BIOMES, RIVER_TEST_DEPTHS, RIVER_TEST_LAND, RIVER_TEST_WIDTHS, riverTestPattern, type BiomeMapping,
 } from "$lib/core/biomes";
 import { copernicusTilesFor, type DemRaster } from "$lib/core/dem";
-import { fullGrid, previewGrid, type Grid } from "$lib/core/grid";
+import { fullGrid, gridSamples, previewGrid, TESTED_MAX_SAMPLES, type Grid } from "$lib/core/grid";
 import { encodeGray8Png, encodeHeightmapPng, normalize16 } from "$lib/core/heightmap";
 import { inIgnCoverage } from "$lib/core/ign";
 import { toUserdata } from "$lib/core/luadata";
 import {
-  availableFormats, availableSizes, MAP_FORMATS, MAP_SIZES, mapTiles, nearestAvailable, parseExperimentalMapFeatures,
+  isExperimental, MAP_FORMATS, MAP_SIZES, mapTiles, parseExperimentalMapFeatures,
 } from "$lib/core/mapsizes";
 import {
   DEFAULT_INDUSTRIES, industryNoteData, overpassIndustryQuery, parseIndustrySites,
@@ -317,6 +317,10 @@ class Importer {
   step = $state("");
   /** `experimentalMapFeatures` in the game's settings.lua: more map sizes and formats. */
   experimentalMaps = $state(false);
+  /** The game's settings.lua was read (the flag above is known, not just assumed off). */
+  gameSettingsRead = $state(false);
+  /** `<UD>/settings.lua`, for « open the folder » next to the map size. */
+  gameSettingsPath = $state("");
   /** The game's build at its last launch (its log), null when unknown. */
   gameBuild = $state<number | null>(null);
 
@@ -426,6 +430,8 @@ class Importer {
   }
 
   frame = $derived(makeFrame(this.settings.area));
+  /** The chosen size or format is one the game lists only with experimental map features, which are off. */
+  sizeLocked = $derived(this.gameSettingsRead && !this.experimentalMaps && isExperimental(this.settings.area.size, this.settings.area.format));
   /** Options that change the map (not the file name or folder): the preview is stale when they differ. */
   optionsKey = $derived(optionsKeyOf(this.settings));
   stale = $derived(!!this.preview && this.previewKey !== this.optionsKey);
@@ -617,24 +623,24 @@ class Importer {
   }
 
   /**
-   * Whether the game lists the experimental map sizes and formats (`<UD>/settings.lua`); a saved
-   * choice the game would not offer moves to the nearest one it does.
+   * Whether the game lists the experimental map sizes and formats (`<UD>/settings.lua`). Read at
+   * start and again when the window gets the focus back (the player may have just edited the file).
+   * A project keeps its size even when the game would not offer it: the export is then blocked.
    */
   async readGameSettings(): Promise<void> {
     const ud = this.app.userdata;
     if (!ud) return;
     await allowDirs([ud]);
-    const text = await readText(joinPath(ud, "settings.lua"));
-    this.experimentalMaps = text ? parseExperimentalMapFeatures(text) ?? false : false;
-    this.gameBuild = parseGameBuild(await readText(joinPath(ud, "crash_dump", "stdout.txt")));
-    if (this.gameBuild !== null) this.diag(`jeu : build ${this.gameBuild}`);
-    const a = this.settings.area;
-    const size = nearestAvailable(a.size, availableSizes(this.experimentalMaps));
-    const format = nearestAvailable(a.format, availableFormats(this.experimentalMaps));
-    if (size !== a.size || format !== a.format) {
-      this.settings.area = { ...a, size, format, landscape: format > 0 && a.landscape };
-      this.save();
-    }
+    const path = joinPath(ud, "settings.lua");
+    const text = await readText(path);
+    this.gameSettingsPath = path;
+    this.gameSettingsRead = !!text;
+    const experimental = text ? parseExperimentalMapFeatures(text) ?? false : false;
+    if (experimental !== this.experimentalMaps) this.diag(`jeu : experimentalMapFeatures = ${experimental}`);
+    this.experimentalMaps = experimental;
+    const build = parseGameBuild(await readText(joinPath(ud, "crash_dump", "stdout.txt")));
+    if (build !== null && build !== this.gameBuild) this.diag(`jeu : build ${build}`);
+    this.gameBuild = build;
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -1383,6 +1389,7 @@ class Importer {
     await this.guard("full", async () => {
       const s = this.snapshot();
       if (!this.app.userdata) throw new Error(t("msg.noUserdata"));
+      if (this.sizeLocked) throw new Error(t("msg.sizeLocked"));
       this.result = null;
       const name = safeName(s.name);
       const paths = gamePaths(this.app.userdata);
@@ -1390,6 +1397,9 @@ class Importer {
       const f = makeFrame(s.area);
       const sizeLabel = sizeText(s.area.size, s.area.format, s.area.landscape);
       this.say(t("msg.sizeScale", { size: sizeLabel, scale: f.scale }));
+      // Beyond the largest map tested in game (Très Grande): heavier, said before the long part.
+      const samples = gridSamples(f);
+      if (samples > TESTED_MAX_SAMPLES) this.warn(t("msg.bigMap", { mpx: fmtNum(samples / 1e6, 1) }));
       this.gameSteps = [];
       this.exportSteps = [
         { id: "relief", label: "Relief pleine résolution" },

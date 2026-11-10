@@ -347,7 +347,9 @@ function B.line(ctx, pts, nextStep)
 	end
 	local name = year() >= STANDARD_FROM and TRACK_STANDARD or TRACK_SIMPLE
 	local template = api.res.streetTemplateRep.get(api.res.streetTemplateRep.find(name))
-	local k, retryUntil, prevNode, asBridge = 1, 0, nil, false
+	-- `retryAs`: the refused edge tried once more as a bridge, or as a tunnel when it lies in the
+	-- cutting under a road (`lowered`, B.railCrossings).
+	local k, retryUntil, prevNode, retryAs = 1, 0, nil, nil
 	local function pos(i)
 		local p = pts[i]
 		return vec3(p.x, p.y, p.z or height(p.x, p.y))
@@ -391,7 +393,7 @@ function B.line(ctx, pts, nextStep)
 		for i = k, last - 1 do
 			local a, b = at[i], at[i + 1]
 			local length = math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2 + (b.z - a.z) ^ 2)
-			local kind = asBridge and "b" or pts[i].kind or "n"
+			local kind = retryAs or pts[i].kind or "n"
 			local edge = api.type.SegmentAndEntity.new()
 			edge.entity = id
 			id = id - 1
@@ -428,7 +430,7 @@ function B.line(ctx, pts, nextStep)
 			if success then
 				ctx.report.railBuilt = ctx.report.railBuilt + count
 				for i = k, last - 1 do
-					local kind = asBridge and "b" or pts[i].kind
+					local kind = retryAs or pts[i].kind
 					if kind == "b" then
 						ctx.report.railBridgeEdges = ctx.report.railBridgeEdges + 1
 					elseif kind == "t" then
@@ -437,12 +439,14 @@ function B.line(ctx, pts, nextStep)
 				end
 				prevNode = addedEnd(res)
 				k = last
-				asBridge = false
+				retryAs = nil
 			elseif n > 1 then
 				-- Same start again, one edge at a time.
 				retryUntil = last
-			elseif not asBridge and (pts[k].kind or "n") == "n" and bridge() then
-				asBridge = true
+			elseif not retryAs and (pts[k].kind or "n") == "n" and pts[k].lowered and tunnel() then
+				retryAs = "t"
+			elseif not retryAs and (pts[k].kind or "n") == "n" and not pts[k].lowered and bridge() then
+				retryAs = "b"
 			else
 				ctx.report.railFailed = ctx.report.railFailed + 1
 				if reason and ctx.report.railReason == nil then
@@ -455,7 +459,7 @@ function B.line(ctx, pts, nextStep)
 				ctx.log("track refused at " .. where .. ": " .. tostring(reason))
 				prevNode = nil
 				k = last
-				asBridge = false
+				retryAs = nil
 			end
 			step()
 		end)
@@ -559,6 +563,61 @@ local CROSS_HALF_M = 80
 local CROSS_GRADE = 0.025
 --- Two crossings closer than this (game m) along the line are one.
 local CROSS_MERGE_M = 30
+--- A tunnel mouth, and the cutting after it, keep this much (game m, plus the cutting's depth: its
+--- side slopes) from every road: a road met at a sharp angle, or another road nearby, makes the
+--- tunnel longer. Not more: a track running beside a road at ground level needs no tunnel.
+local CROSS_CLEAR_M = 10
+--- A tunnel goes at most this far (game m) from its road on each side.
+local CROSS_MAX_HALF_M = 300
+--- Two tunnels with less than this (game m) of cutting between them become one.
+local CROSS_JOIN_M = 150
+--- A segment longer than this gets a node under the road (the app's nodes are ~100 m apart: the
+--- flat bottom already holds a node on each side).
+local CROSS_SPLIT_M = 140
+
+--- Distance (game m) from x, y to the nearest road edge (taken straight between its nodes) within `r`,
+--- or nil when none.
+local function roadDistance(x, y, r)
+	local best
+	for _, e in ipairs(roadEdgesNear(x, y, r)) do
+		local n0 = type(e.base.node0) == "number" and comp(e.base.node0, "BASE_NODE") or nil
+		local n1 = type(e.base.node1) == "number" and comp(e.base.node1, "BASE_NODE") or nil
+		local p, q = n0 and n0.position, n1 and n1.position
+		if p and q then
+			local dx, dy = q.x - p.x, q.y - p.y
+			local l2 = dx * dx + dy * dy
+			local t = l2 > 0 and math.max(0, math.min(1, ((x - p.x) * dx + (y - p.y) * dy) / l2)) or 0
+			local d = math.sqrt((p.x + t * dx - x) ^ 2 + (p.y + t * dy - y) ^ 2)
+			if best == nil or d < best then
+				best = d
+			end
+		end
+	end
+	return best
+end
+
+--- Point and unit tangent at `t` on the edge a → b laid as `B.line` lays it (Hermite curve, tangents
+--- = unit tangent × length); the straight chord when a node has no tangent.
+local function onEdge(a, b, t)
+	local az, bz = a.z or 0, b.z or 0
+	if a.tx == nil or b.tx == nil then
+		local dx, dy, dz = b.x - a.x, b.y - a.y, bz - az
+		local d = math.sqrt(dx * dx + dy * dy + dz * dz)
+		return a.x + t * dx, a.y + t * dy, az + t * dz, dx / d, dy / d, dz / d
+	end
+	local L = math.sqrt((b.x - a.x) ^ 2 + (b.y - a.y) ^ 2 + (bz - az) ^ 2)
+	local t2, t3 = t * t, t * t * t
+	local h00, h10, h01, h11 = 2 * t3 - 3 * t2 + 1, t3 - 2 * t2 + t, -2 * t3 + 3 * t2, t3 - t2
+	local d00, d10, d01, d11 = 6 * t2 - 6 * t, 3 * t2 - 4 * t + 1, -6 * t2 + 6 * t, 3 * t2 - 2 * t
+	local function at(pa, pb, ta, tb)
+		return h00 * pa + h10 * L * ta + h01 * pb + h11 * L * tb, d00 * pa + d10 * L * ta + d01 * pb + d11 * L * tb
+	end
+	local x, dx = at(a.x, b.x, a.tx, b.tx)
+	local y, dy = at(a.y, b.y, a.ty, b.ty)
+	local z, dz = at(az, bz, a.tz or 0, b.tz or 0)
+	local d = math.sqrt(dx * dx + dy * dy + dz * dz)
+	return x, y, z, dx / d, dy / d, dz / d
+end
 
 --- Where segments a→b and c→d cross: t along a→b, u along c→d (0..1), or nil.
 local function segmentHit(ax, ay, bx, by, cx, cy, dx, dy)
@@ -648,17 +707,22 @@ function B.railCrossings(ctx, pts, grade)
 	if #crossings == 0 then
 		return
 	end
-	-- A node right under each road (the app's nodes are ~100 m apart): the deepest point is there.
+	-- A long segment gets a node under the road, on the curve the track will follow (a node on the
+	-- chord of a curved edge makes a kink: « Courbure excessive »). Last crossing first: the
+	-- distances before an insertion stay right; `along` grows with `pts`.
 	table.sort(crossings, function(p, q)
 		return p.s > q.s
 	end)
 	for _, c in ipairs(crossings) do
-		for i = 1, #pts - 1 do
-			if along[i] + 5 < c.s and c.s < along[i + 1] - 5 then
-				local a, b = pts[i], pts[i + 1]
-				local t = (c.s - along[i]) / (along[i + 1] - along[i])
-				table.insert(pts, i + 1, { x = c.x, y = c.y, z = a.z + t * (b.z - a.z), tx = a.tx, ty = a.ty, tz = a.tz, kind = a.kind })
-				ctx.report.railSegments = ctx.report.railSegments + 1
+		for i = 1, #along - 1 do
+			if along[i] <= c.s and c.s < along[i + 1] then
+				if along[i + 1] - along[i] > CROSS_SPLIT_M and along[i] + 5 < c.s and c.s < along[i + 1] - 5 then
+					local a, b = pts[i], pts[i + 1]
+					local x, y, z, tx, ty, tz = onEdge(a, b, (c.s - along[i]) / (along[i + 1] - along[i]))
+					table.insert(pts, i + 1, { x = x, y = y, z = z, tx = tx, ty = ty, tz = tz, kind = a.kind })
+					table.insert(along, i + 1, c.s)
+					ctx.report.railSegments = ctx.report.railSegments + 1
+				end
 				break
 			end
 		end
@@ -667,22 +731,103 @@ function B.railCrossings(ctx, pts, grade)
 	for i = 2, #pts do
 		along[i] = along[i - 1] + math.sqrt((pts[i].x - pts[i - 1].x) ^ 2 + (pts[i].y - pts[i - 1].y) ^ 2)
 	end
+	-- Each crossing: the track flat at `bottom` from node `lo` to node `hi` (the road and
+	-- CROSS_HALF_M on each side), rising back at the line's grade on both sides; the tunnel starts
+	-- over the same nodes and may grow (below).
+	local spans = {}
 	for _, c in ipairs(crossings) do
-		local bottom = c.z - CROSS_DEPTH_M
+		local lo, hi = 1, #pts
 		for i = 1, #pts do
-			local limit = bottom + grade * math.max(0, math.abs(along[i] - c.s) - CROSS_HALF_M)
-			if pts[i].z > limit then
-				pts[i].z = limit
-				changed[i] = true
+			if along[i] <= c.s - CROSS_HALF_M then
+				lo = i
 			end
 		end
-		-- The edges over the road and CROSS_HALF_M on each side: a tunnel.
-		for i = 1, #pts - 1 do
-			if along[i + 1] >= c.s - CROSS_HALF_M and along[i] <= c.s + CROSS_HALF_M then
-				pts[i].kind = "t"
+		for i = #pts, 1, -1 do
+			if along[i] >= c.s + CROSS_HALF_M then
+				hi = i
 			end
 		end
-		ctx.log(string.format("rail under the road at %d, %d (road %.1f m, track %.1f m)", math.floor(c.x), math.floor(c.y), c.z, bottom))
+		spans[#spans + 1] = { lo = lo, hi = hi, flatLo = lo, flatHi = hi, bottom = c.z - CROSS_DEPTH_M, c = c }
+	end
+	-- Highest track allowed at node i: under every road, each with its own ramp (a long tunnel under
+	-- several roads climbs back between them instead of staying at the deepest bottom).
+	local limits = {}
+	for i = 1, #pts do
+		local limit = math.huge
+		for _, sp in ipairs(spans) do
+			local d = i < sp.flatLo and along[sp.flatLo] - along[i] or i > sp.flatHi and along[i] - along[sp.flatHi] or 0
+			limit = math.min(limit, sp.bottom + grade * d)
+		end
+		limits[i] = limit
+	end
+	local function cutAt(i)
+		return pts[i].z - limits[i]
+	end
+	local function tooClose(i)
+		local r = CROSS_CLEAR_M + math.max(0, cutAt(i))
+		local d = roadDistance(pts[i].x, pts[i].y, r)
+		return d ~= nil and d < r
+	end
+	-- The mouth moves out while it, or the cutting after it, comes too close to a road (never onto
+	-- a bridge, never further than CROSS_MAX_HALF_M).
+	local function extend(sp, dir)
+		local j = dir < 0 and sp.lo or sp.hi
+		while true do
+			local edge = dir < 0 and j - 1 or j
+			if j + dir < 1 or j + dir > #pts or pts[edge].kind == "b" or math.abs(along[j + dir] - sp.c.s) > CROSS_MAX_HALF_M then
+				break
+			end
+			local near = false
+			local k = j
+			while k >= 1 and k <= #pts and cutAt(k) > 0.5 do
+				if tooClose(k) then
+					near = true
+					break
+				end
+				k = k + dir
+			end
+			if not near then
+				break
+			end
+			j = j + dir
+			if dir < 0 then
+				sp.lo = j
+			else
+				sp.hi = j
+			end
+		end
+	end
+	for _, sp in ipairs(spans) do
+		extend(sp, -1)
+		extend(sp, 1)
+	end
+	-- Tunnels a short cutting apart: one tunnel.
+	table.sort(spans, function(p, q)
+		return p.lo < q.lo
+	end)
+	local joined = {}
+	for _, sp in ipairs(spans) do
+		local last = joined[#joined]
+		if last and along[sp.lo] - along[last.hi] < CROSS_JOIN_M then
+			last.hi = math.max(last.hi, sp.hi)
+			last.n = last.n + 1
+		else
+			joined[#joined + 1] = { lo = sp.lo, hi = sp.hi, c = sp.c, n = 1 }
+		end
+	end
+	for _, sp in ipairs(joined) do
+		for i = sp.lo, sp.hi - 1 do
+			pts[i].kind = "t"
+		end
+		ctx.log(string.format("rail under %d road(s) at %d, %d: tunnel %d m, mouths %.1f m and %.1f m below the designed line",
+			sp.n, math.floor(sp.c.x), math.floor(sp.c.y), math.floor(along[sp.hi] - along[sp.lo]), math.max(0, cutAt(sp.lo)), math.max(0, cutAt(sp.hi))))
+	end
+	for i = 1, #pts do
+		if pts[i].z > limits[i] then
+			pts[i].z = limits[i]
+			pts[i].lowered = true
+			changed[i] = true
+		end
 	end
 	-- Tangents of the lowered nodes from their neighbours (unit vector, as the app's).
 	local around = {}

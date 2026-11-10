@@ -32,7 +32,10 @@ export interface RailOptions {
   corridorM: number;
 }
 
-export const DEFAULT_RAIL: RailOptions = { minRadiusM: 300, maxGrade: 0.025, townClearanceM: 250, corridorM: 600 };
+export const DEFAULT_RAIL: RailOptions = { minRadiusM: 300, maxGrade: 0.025, townClearanceM: 250, corridorM: 1000 };
+
+/** A road the game will build, foreseen as the straight segment between its two towns (game m). */
+export type RoadSegment = [P, P];
 
 /** Edge leaving a node: normal track, bridge, tunnel. */
 export type RailKind = "n" | "b" | "t";
@@ -197,6 +200,35 @@ const DEVIATION_COST = 2;
 const SHIFT_COST = 5;
 /** Cost per metre of each grade (of the ground) above the game's grade, in multiples of it. */
 const SLOPE_COST = 40;
+/**
+ * The game routes its roads itself between the linked towns, after the line is designed: the line
+ * keeps ROAD_CLEAR_M from where they will be (cost per point, falling to 0 at that distance), and
+ * crossing one costs as much as ROAD_CROSS_COST metres of line (each crossing is a tunnel under
+ * the road). The real line and the road run between the same towns: without this the line weaves
+ * across the road again and again.
+ */
+const ROAD_CLEAR_M = 250;
+const ROAD_NEAR_COST = 60;
+const ROAD_CROSS_COST = 3000;
+
+/** Distance from p to segment a–b. */
+function segmentDistance(px: number, py: number, [a, b]: RoadSegment): number {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const l2 = dx * dx + dy * dy;
+  const t = l2 > 0 ? Math.max(0, Math.min(1, ((px - a[0]) * dx + (py - a[1]) * dy) / l2)) : 0;
+  return Math.hypot(a[0] + t * dx - px, a[1] + t * dy - py);
+}
+
+/** True when segments p–q and a–b cross. */
+export function segmentsCross(p: P, q: P, [a, b]: RoadSegment): boolean {
+  const side = (o: P, u: P, v: P) => (u[0] - o[0]) * (v[1] - o[1]) - (u[1] - o[1]) * (v[0] - o[0]);
+  const d1 = side(a, b, p);
+  const d2 = side(a, b, q);
+  const d3 = side(p, q, a);
+  const d4 = side(p, q, b);
+  return d1 * d2 < 0 && d3 * d4 < 0;
+}
 
 /**
  * Step 0: the cheapest path on the game's terrain within `corridorM` of the real line (dynamic
@@ -206,7 +238,9 @@ const SLOPE_COST = 40;
  * river the game widens and deepens: following them exactly would put the line in the water or
  * across it again and again. The ends stay on the real line.
  */
-export function corridorPath(f: Frame, s: ReturnType<typeof sampler>, guide: P[], towns: RailTown[], o: RailOptions, grade: number): P[] {
+export function corridorPath(
+  f: Frame, s: ReturnType<typeof sampler>, guide: P[], towns: RailTown[], o: RailOptions, grade: number, roads: RoadSegment[] = [],
+): P[] {
   const W = Math.round(o.corridorM / LANE_M);
   const c = resample(guide, STEP);
   const n = c.length;
@@ -241,13 +275,24 @@ export function corridorPath(f: Frame, s: ReturnType<typeof sampler>, guide: P[]
       wet[k] = s.wet(x, y) ? 1 : 0;
     }
   }
+  // Foreseen roads: nearness per point, and those that may meet each station's edges.
+  const near = new Float64Array(n * L);
+  if (roads.length) {
+    for (let k = 0; k < n * L; k++) {
+      let d = ROAD_CLEAR_M;
+      for (const r of roads) d = Math.min(d, segmentDistance(X[k], Y[k], r));
+      near[k] = ROAD_NEAR_COST * (1 - d / ROAD_CLEAR_M);
+    }
+  }
+  const reach = (2 * W + 2) * LANE_M + STEP;
+  const roadsAt = c.map((p) => roads.filter((r) => segmentDistance(p[0], p[1], r) <= reach));
   const node = (i: number, j: number): number => {
     const k = i * L + j;
     if (!ok[k] || ((i === 0 || i === n - 1) && j !== W)) return Infinity;
     let v = DEVIATION_COST * Math.abs(j - W);
     if (!wet[k] && ((j > 0 && wet[k - 1]) || (j < L - 1 && wet[k + 1]))) v += BANK_COST;
     if (zones.some((z) => Math.hypot(X[k] - z.x, Y[k] - z.y) < z.r)) v += TOWN_COST;
-    return v;
+    return v + near[k];
   };
   const edge = (a: number, b: number): number => {
     const len = Math.hypot(X[b] - X[a], Y[b] - Y[a]) || 1;
@@ -258,6 +303,8 @@ export function corridorPath(f: Frame, s: ReturnType<typeof sampler>, guide: P[]
     if (w) v += WATER_COST * len;
     const over = Math.abs(Z[b] - Z[a]) / len - grade;
     if (over > 0) v += (SLOPE_COST * len * over) / Math.max(grade, 1e-3);
+    const i = Math.floor(b / L);
+    for (const r of roadsAt[i]) if (segmentsCross([X[a], Y[a]], [X[b], Y[b]], r)) v += ROAD_CROSS_COST;
     return v;
   };
   let cost = new Float64Array(L);
@@ -448,10 +495,12 @@ export function structures(ground: number[], z: number[], wet: boolean[], step: 
  * The whole design for one guide line, in pieces (a sea crossing splits it); pieces shorter than
  * 500 m are dropped.
  */
-export function designRail(f: Frame, g: Grid, ground: RailGround, guide: P[], towns: RailTown[], o: RailOptions = DEFAULT_RAIL): RailDesign[] {
+export function designRail(
+  f: Frame, g: Grid, ground: RailGround, guide: P[], towns: RailTown[], o: RailOptions = DEFAULT_RAIL, roads: RoadSegment[] = [],
+): RailDesign[] {
   const s = sampler(f, g, ground);
   const grade = gameGrade(o.maxGrade, f.scale, f.verticalScale);
-  const pts = alignHorizontal(corridorPath(f, s, guide, towns, o, grade), towns, o);
+  const pts = alignHorizontal(corridorPath(f, s, guide, towns, o, grade, roads), towns, o);
   if (pts.length < 3) return [];
   // Split on long open water.
   const wetAll = pts.map(([x, y]) => s.wet(x, y));

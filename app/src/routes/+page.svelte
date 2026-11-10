@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, tick } from "svelte";
+  import { revealItemInDir } from "@tauri-apps/plugin-opener";
   import AreaMap from "$lib/ui/AreaMap.svelte";
   import ProjectPanel from "$lib/ui/ProjectPanel.svelte";
   import FileMenu from "$lib/ui/FileMenu.svelte";
@@ -12,7 +13,7 @@
   import { updates } from "$lib/state/updates.svelte";
   import { errorText, importer, type ReliefSource } from "$lib/state/importer.svelte";
   import { defaultVerticalScale, roundRotation, TILE_M, type Area } from "$lib/core/area";
-  import { MAP_FORMATS, MAP_SIZES, availableFormats, availableSizes, mapTiles } from "$lib/core/mapsizes";
+  import { MAP_FORMATS, MAP_SIZES, mapTiles } from "$lib/core/mapsizes";
   import { gameTownLimit } from "$lib/core/towns";
   import { defaultIndustryCount, ECONOMIES, ECONOMY_LABELS, INDUSTRIES } from "$lib/core/industries";
   import { fmtNum, i18n, LOCALES, t, tk, type Locale, type MessageKey } from "$lib/i18n/index.svelte";
@@ -74,6 +75,14 @@
     window.addEventListener("unhandledrejection", onRejection);
     importer.detect();
     void importer.restoreSession();
+    // Back from the game or a text editor: settings.lua may now unlock the experimental map sizes.
+    let lastRead = 0;
+    const onFocus = () => {
+      if (Date.now() - lastRead < 2000) return;
+      lastRead = Date.now();
+      void importer.readGameSettings().catch(() => {});
+    };
+    window.addEventListener("focus", onFocus);
     const stopUpdates = updates.start();
     // Closing the window with projects not saved: ask first (Save all / Quit without saving / Cancel).
     let quitting = false;
@@ -100,7 +109,17 @@
       stopUpdates();
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onRejection);
+      window.removeEventListener("focus", onFocus);
     };
+  });
+
+  // Another project shown (opened, switched to, read back at start): the view goes to its area.
+  // Only on the project's id and loading, not on the area: moving the area by hand keeps the view.
+  $effect(() => {
+    const id = importer.activeId;
+    const loading = importer.active.loading;
+    if (!id || loading) return;
+    void tick().then(() => mapRef?.fit());
   });
 
   // Window title: the active project, ✱ when not saved.
@@ -165,6 +184,12 @@
   };
 
   const SCALES = [1, 2, 3, 4, 5, 6, 8];
+  /** The game's experimental map sizes and formats are off (settings.lua read, flag false). */
+  const locked = $derived(importer.gameSettingsRead && !importer.experimentalMaps);
+  /** The game's settings.lua shown in the file explorer. */
+  function openGameSettings(): void {
+    if (importer.gameSettingsPath) void revealItemInDir(importer.gameSettingsPath).catch((e) => importer.report(e, "settings.lua"));
+  }
 
   function setArea(patch: Partial<Area>): void {
     // Another place, size or orientation: the town roads changed by hand belonged to the old map.
@@ -237,19 +262,25 @@
           <div class="row">
             <label>{t("data.size")}
               <select value={s.area.size} onchange={(e) => setArea({ size: +e.currentTarget.value })}>
-                {#each availableSizes(importer.experimentalMaps) as i (i)}
-                  <option value={i}>{tk(`size.${MAP_SIZES[i].id}`)}{MAP_SIZES[i].experimental ? ` ${t("data.experimental")}` : ""}</option>
+                {#each MAP_SIZES as sz, i (sz.id)}
+                  <option value={i} disabled={sz.experimental && locked && i !== s.area.size}>{tk(`size.${sz.id}`)}{sz.experimental ? ` ${t("data.experimental")}` : ""}</option>
                 {/each}
               </select>
             </label>
             <label>{t("data.format")}
               <select value={s.area.format} onchange={(e) => setArea({ format: +e.currentTarget.value })}>
-                {#each availableFormats(importer.experimentalMaps) as i (i)}
-                  <option value={i}>{MAP_FORMATS[i].label}{MAP_FORMATS[i].experimental ? ` ${t("data.experimental")}` : ""}</option>
+                {#each MAP_FORMATS as fm, i (fm.label)}
+                  <option value={i} disabled={fm.experimental && locked && i !== s.area.format}>{fm.label}{fm.experimental ? ` ${t("data.experimental")}` : ""}</option>
                 {/each}
               </select>
             </label>
           </div>
+          {#if importer.sizeLocked}
+            <p class="warn">{t("data.sizeLocked")}</p>
+          {/if}
+          {#if locked}
+            <p class="hint">{t("data.experimentalHint")} <button class="link" onclick={openGameSettings}>{t("data.openSettings")}</button></p>
+          {/if}
           {#if s.area.format > 0}
             <label class="check"><input type="checkbox" checked={s.area.landscape} onchange={(e) => setArea({ landscape: e.currentTarget.checked })} /> {t("data.landscape")}</label>
           {/if}
@@ -485,7 +516,7 @@
           </button>
         </div>
       {:else}
-        <button class="action" class:ok={importer.exported} disabled={!!importer.running} onclick={() => importer.run()}>
+        <button class="action" class:ok={importer.exported} disabled={!!importer.running || importer.sizeLocked} title={importer.sizeLocked ? t("data.sizeLocked") : undefined} onclick={() => importer.run()}>
           {importer.running === "full" ? t("export.generating", { pct: pct() }) : importer.exported ? t("export.generated") : t("export.generate")}
         </button>
       {/if}

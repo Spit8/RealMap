@@ -6,7 +6,7 @@ import {
   riverTestPattern,
 } from "../src/lib/core/biomes";
 import { copernicusTileName, copernicusTilesFor, sampleDem, sampleDemBox, type DemRaster } from "../src/lib/core/dem";
-import { cellToWorld, fullGrid, previewGrid, worldToCell } from "../src/lib/core/grid";
+import { cellToWorld, fullGrid, gridSamples, previewGrid, TESTED_MAX_SAMPLES, worldToCell } from "../src/lib/core/grid";
 import { encodeHeightmapPng, normalize16 } from "../src/lib/core/heightmap";
 import { decodeBil, ignBlocks, ignRaster, resampleToGrid } from "../src/lib/core/ign";
 import proj4 from "proj4";
@@ -71,6 +71,59 @@ describe("map sizes (FACT-010)", () => {
     expect(parseExperimentalMapFeatures("\t\texperimentalMapFeatures = false,\n")).toBe(false);
     expect(parseExperimentalMapFeatures("experimentalMapFeatures = true,")).toBe(true);
     expect(parseExperimentalMapFeatures("experimentalOptimizeShaders = true,")).toBeNull();
+  });
+});
+
+describe("experimental map sizes (game manual, Map sizes page)", () => {
+  // Edge lengths in metres as the game manual lists them, [size][format] = [short, long].
+  const MANUAL_M: [number, number][][] = [
+    [[4096, 4096], [2560, 5120], [2048, 6144], [2048, 6144], [1536, 7680]],
+    [[8192, 8192], [5632, 11264], [4608, 13824], [4096, 13824], [3584, 17920]],
+    [[11264, 11264], [8192, 16384], [6656, 19968], [5632, 22528], [5120, 25600]],
+    [[14336, 14336], [10240, 20480], [8192, 24576], [7168, 28672], [6144, 32256]],
+    [[16384, 16384], [11264, 22528], [9216, 27648], [8192, 32768], [7168, 35840]],
+    [[20480, 20480], [14336, 28672], [11776, 35328], [10240, 40960], [8704, 43520]],
+    [[24576, 24576], [16896, 33792], [13824, 41472], [12288, 49152], [10752, 53760]],
+    [[28672, 28672], [20480, 40960], [16384, 49152], [14336, 57344], [12800, 64000]],
+  ];
+
+  it("has the manual's 40 sizes", () => {
+    MANUAL_M.forEach((row, size) =>
+      row.forEach(([a, b], format) => {
+        // Small 1:4: the manual says 16.384 km, the game's own table 54 tiles (13.824 km, FACT-010).
+        const { tilesX, tilesY } = mapTiles(size, format);
+        expect([size, format, tilesX * 256, tilesY * 256]).toEqual([size, format, a, b]);
+      }),
+    );
+  });
+
+  it("gives the heightmap one sample every 4 m, both orientations", () => {
+    for (const size of [5, 6, 7])
+      for (const format of [0, 1, 2, 3, 4])
+        for (const landscape of [false, true]) {
+          const f = makeFrame(area({ size, format, landscape: format > 0 && landscape }));
+          expect(f.samplesX).toBe(f.tilesX * 64 + 1);
+          expect(f.samplesY).toBe(f.tilesY * 64 + 1);
+          expect(f.widthM).toBe(f.tilesX * 256);
+        }
+    expect(makeFrame(area({ size: 7, format: 0 }))).toMatchObject({ samplesX: 7169, samplesY: 7169 });
+    expect(makeFrame(area({ size: 7, format: 4, landscape: true }))).toMatchObject({ samplesX: 16001, samplesY: 3201 });
+  });
+
+  it("flags the maps beyond the largest standard one", () => {
+    expect(gridSamples(makeFrame(area({ size: 4, format: 0 })))).toBe(TESTED_MAX_SAMPLES);
+    for (const format of [0, 1, 2]) for (const size of [1, 2, 3, 4]) expect(gridSamples(makeFrame(area({ size, format })))).toBeLessThanOrEqual(TESTED_MAX_SAMPLES);
+    for (const format of [0, 1, 2, 3, 4]) for (const size of [5, 6, 7]) expect(gridSamples(makeFrame(area({ size, format })))).toBeGreaterThan(TESTED_MAX_SAMPLES);
+  });
+
+  it("reads the flag as the game writes settings.lua", () => {
+    const lua = "settings = {\n\t\texperimentalMailboxPresent = false,\n\t\texperimentalMapFeatures = true,\n\t\texperimentalOptimizeShaders = false,\n}";
+    expect(parseExperimentalMapFeatures(lua)).toBe(true);
+    expect(parseExperimentalMapFeatures(lua.replace("Features = true", "Features = false"))).toBe(false);
+    expect(parseExperimentalMapFeatures("experimentalMailboxPresent = true,")).toBeNull();
+    expect(isExperimental(5, 0)).toBe(true);
+    expect(isExperimental(4, 3)).toBe(true);
+    expect(isExperimental(4, 2)).toBe(false);
   });
 });
 
