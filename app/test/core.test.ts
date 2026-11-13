@@ -137,14 +137,18 @@ describe("Overpass (FACT-012)", () => {
   });
 
   it("declares limits that grow with the area, below the 180 s / 512 MiB defaults", () => {
-    // ≈ 170 km²: 60 s + 1 s per 50 km², 64 MiB.
+    // ≈ 170 km²: the 60 s / 64 MiB floor; part of Normandy (≈ 7 000 km²) about 100 s / 96 MiB.
     const small = overpassLimits({ west: 4.7, south: 45.7, east: 4.9, north: 45.8 });
-    expect(small).toEqual({ timeout: 63, maxsize: 64 * 1024 * 1024 });
+    expect(small).toEqual({ timeout: 60, maxsize: 64 * 1024 * 1024 });
+    const normandy = overpassLimits({ west: -1.3, south: 48.8, east: 0, north: 49.5 });
+    expect(normandy.timeout).toBeGreaterThan(90);
+    expect(normandy.timeout).toBeLessThan(180);
+    expect(normandy.maxsize).toBeLessThan(256 * 1024 * 1024);
     const big = overpassLimits({ west: 4, south: 45, east: 6, north: 47 });
     expect(big.timeout).toBe(180);
     expect(big.maxsize).toBe(256 * 1024 * 1024);
     const q = overpassAreaQuery({ west: 4.7, south: 45.7, east: 4.9, north: 45.8 }, ["town"]);
-    expect(q.startsWith("[out:json][timeout:63][maxsize:67108864];(")).toBe(true);
+    expect(q.startsWith("[out:json][timeout:60][maxsize:67108864];(")).toBe(true);
     expect(q).not.toContain("forest");
     expect(q).not.toContain("length()");
   });

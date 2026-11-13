@@ -20,13 +20,18 @@ export interface OsmPlace {
   population?: number;
 }
 
+/** Limites déclarées de la requête des lieux, quelle que soit la zone (des nœuds seulement). */
+export const PLACES_TIMEOUT_S = 90;
+export const PLACES_MAXSIZE = 64 * 1024 * 1024;
+
 export function overpassTownsQuery(
   b: { west: number; south: number; east: number; north: number },
   kinds: PlaceKind[],
 ): string {
   const bbox = `${b.south},${b.west},${b.north},${b.east}`;
   const sel = kinds.map((k) => `node["place"="${k}"]["name"](${bbox});`).join("");
-  return `[out:json][timeout:60];(${sel});out body;`;
+  // Requête légère (des nœuds seulement, environ 45 000 pour la Pologne) : limites modestes, admise vite.
+  return `[out:json][timeout:${PLACES_TIMEOUT_S}][maxsize:${PLACES_MAXSIZE}];(${sel});out body;`;
 }
 
 interface OverpassElement {
@@ -134,6 +139,8 @@ export type CandidateStatus = "placed" | "dropped" | "limit" | "off";
 export interface TownCandidate {
   key: string;
   name: string;
+  /** Type OSM du lieu (filtre des listes). */
+  place: PlaceKind;
   lon: number;
   lat: number;
   rank: number;
@@ -162,7 +169,7 @@ export function townCandidates(
       const t = placed.get(key);
       const status: CandidateStatus = t ? "placed" : lost.has(key) ? "dropped" : chosen.has(key) ? "limit" : "off";
       const reason = lost.get(key);
-      return { key, name: p.name, lon: p.lon, lat: p.lat, rank, estimated, pick: picks[key] ?? null, status, reason, capacity: t?.capacity };
+      return { key, name: p.name, place: p.place, lon: p.lon, lat: p.lat, rank, estimated, pick: picks[key] ?? null, status, reason, capacity: t?.capacity };
     })
     .sort((a, b) => b.rank - a.rank || a.name.localeCompare(b.name));
 }

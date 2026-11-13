@@ -133,3 +133,44 @@ export function dataKeyOf(s: Settings): string {
 export function optionsKeyOf(s: Settings): string {
   return JSON.stringify([s.area, s.source, s.terrain, s.useCover, s.biomes, s.places, s.towns, s.townPicks, s.industries, s.industryPicks, s.linkPicks, s.roadsFrozen, s.roads, s.rail, s.customIndustries, s.customRails]);
 }
+
+/**
+ * Les options seules, sans les choix faits sur la carte ou dans les listes (villes, industries,
+ * routes, rails ajoutés ou retirés) : la mise à jour automatique des options avancées suit cette clé,
+ * les choix attendent que le joueur actualise (ou la case « Actualiser automatiquement » des listes).
+ */
+export function optionsOnlyKeyOf(s: Settings): string {
+  return JSON.stringify([s.area, s.source, s.terrain, s.useCover, s.biomes, s.places, s.towns, s.industries, s.roads, s.rail]);
+}
+
+/** Positions des choix dans `optionsKeyOf` (townPicks, industryPicks, linkPicks, customIndustries, customRails). */
+const PICK_SLOTS = { town: 7, industry: 9, link: 10, customIndustries: 14, customRails: 15 } as const;
+
+/**
+ * Choix faits depuis le dernier calcul de la carte (`previewKey` = `optionsKeyOf` de ce calcul) :
+ * villes, industries, liens ajoutés, retirés ou rendus au choix automatique, industries et rails
+ * ajoutés à la main. 0 si la carte est à jour pour les choix.
+ */
+export function pendingPickChanges(previewKey: string, s: Settings): number {
+  let old: unknown[];
+  try {
+    old = JSON.parse(previewKey) as unknown[];
+  } catch {
+    return 0;
+  }
+  if (!Array.isArray(old)) return 0;
+  const diff = (a: Record<string, unknown> = {}, b: Record<string, unknown> = {}) => {
+    let n = 0;
+    for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) if (a[k] !== b[k]) n++;
+    return n;
+  };
+  const keys = (list: unknown) => new Set(((list as { key: string }[] | undefined) ?? []).map((x) => x.key));
+  const setDiff = (a: Set<string>, b: Set<string>) => [...a].filter((k) => !b.has(k)).length + [...b].filter((k) => !a.has(k)).length;
+  return (
+    diff(old[PICK_SLOTS.town] as Record<string, unknown>, s.townPicks) +
+    diff(old[PICK_SLOTS.industry] as Record<string, unknown>, s.industryPicks) +
+    diff(old[PICK_SLOTS.link] as Record<string, unknown>, s.linkPicks) +
+    setDiff(keys(old[PICK_SLOTS.customIndustries]), keys(s.customIndustries)) +
+    setDiff(keys(old[PICK_SLOTS.customRails]), keys(s.customRails))
+  );
+}

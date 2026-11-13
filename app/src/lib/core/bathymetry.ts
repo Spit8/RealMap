@@ -25,10 +25,25 @@ export function inEmodnet(b: Bbox): boolean {
 
 const fix = (v: number) => Math.round(v * 1e5) / 1e5;
 
+/** Pixels par degré de la grille EMODnet (1/960°). */
+export const EMODNET_PX_PER_DEG = 960;
+
+/** Au plus 4 Mpx (16 Mo en float32) par réponse EMODnet : au-delà, le serveur réduit la grille. */
+export const EMODNET_MAX_PX = 4_000_000;
+
+/**
+ * Requête WCS sur une zone. Une très grande zone (un pays : environ 10 000 × 6 000 px natifs, 230 Mo)
+ * est demandée réduite avec `SCALESIZE=i(largeur),j(hauteur)` (vérifié sur le serveur en 1.2.3 :
+ * i = longitudes, j = latitudes, géoréférencement juste). Les zones habituelles restent natives.
+ */
 export function emodnetUrl(b: Bbox): string {
+  const w = Math.ceil((b.east - b.west) * EMODNET_PX_PER_DEG);
+  const h = Math.ceil((b.north - b.south) * EMODNET_PX_PER_DEG);
+  const k = Math.sqrt((w * h) / EMODNET_MAX_PX);
+  const scale = k > 1 ? `&SCALESIZE=i(${Math.max(1, Math.floor(w / k))}),j(${Math.max(1, Math.floor(h / k))})` : "";
   return (
     `${EMODNET_WCS}?service=WCS&version=2.0.1&request=GetCoverage&coverageId=emodnet__mean` +
-    `&subset=Lat(${fix(b.south)},${fix(b.north)})&subset=Long(${fix(b.west)},${fix(b.east)})&format=image/tiff`
+    `&subset=Lat(${fix(b.south)},${fix(b.north)})&subset=Long(${fix(b.west)},${fix(b.east)})&format=image/tiff${scale}`
   );
 }
 

@@ -20,7 +20,9 @@
 | Map sizes | `app/src/lib/core/mapsizes.ts` | game size/format table, standard vs experimental (FACT-010) |
 | Grid | `app/src/lib/core/grid.ts` | full / preview grids, row 0 north |
 | IGN | `app/src/lib/core/ign.ts` | UTM raster around the map (`ignRaster`), WMS blocks, BIL decoding (FACT-011), bilinear `resampleToGrid` |
-| OSM | `app/src/lib/core/osm.ts` | combined Overpass query and its limits, `/api/status` parsing, ways / multipolygons |
+| OSM | `app/src/lib/core/osm.ts` | Overpass queries and their declared limits, `/api/status` parsing, ways / multipolygons, runtime-error split (`fetchSplit`, `mergeOverpass`) |
+| Geofabrik | `app/src/lib/core/geofabrik.ts` (`pickExtracts`, `estimateSeconds`), `app/src/lib/platform/geofabrik.ts` (`readRegion`, rates), Rust `src-tauri/src/geofabrik.rs` (`geofabrik_download`, `osm_extract`) and `osm_pbf.rs` | areas over 20 000 km²: extracts chosen in a checklist with size and time, streamed download with resume, `.osm.pbf` read per region (same filters as the Overpass queries, Overpass JSON out) (DECISION-040) |
+| Simplify | `app/src/lib/core/simplify.ts` (`reduceOsm`) | OSM cropped to the frame, Douglas-Peucker (iterative) on very large areas, junctions kept |
 | Land cover | `app/src/lib/core/landcover.ts` | WorldCover tiles, overview level, windows, class codes → cover |
 | Sea floor | `app/src/lib/core/bathymetry.ts` | EMODnet / ETOPO URLs and parsing (FACT-018) |
 | Rivers | `app/src/lib/core/rivers.ts` | network repair: joins, priority-flood routing, tapered sources |

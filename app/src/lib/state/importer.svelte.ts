@@ -7,7 +7,7 @@ import { floatsToB64, bytesToB64 } from "$lib/core/b64";
 import {
   DEFAULT_BIOMES, RIVER_TEST_DEPTHS, RIVER_TEST_LAND, RIVER_TEST_WIDTHS, riverTestPattern, type BiomeMapping,
 } from "$lib/core/biomes";
-import { copernicusTilesFor, type DemRaster } from "$lib/core/dem";
+import { copernicusTilesFor, demLevel, type DemRaster } from "$lib/core/dem";
 import { fullGrid, gridSamples, previewGrid, TESTED_MAX_SAMPLES, type Grid } from "$lib/core/grid";
 import { encodeGray8Png, encodeHeightmapPng, normalize16 } from "$lib/core/heightmap";
 import { inIgnCoverage } from "$lib/core/ign";
@@ -24,7 +24,7 @@ import { worldcoverLevel, type CoverRaster } from "$lib/core/landcover";
 import { overpassLandQuery, parseLandUse, type LandUse } from "$lib/core/landuse";
 import {
   bboxAreaKm2, isWaterShape, LARGE_AREA_KM2, minWaterPerimeterM, overpassAreaQuery, parseOverpassShapes, roundBbox,
-  type OsmShape,
+  type Bbox, type OsmShape,
 } from "$lib/core/osm";
 import { DEFAULT_TERRAIN, type TerrainOptions } from "$lib/core/terrain";
 import {
@@ -36,10 +36,10 @@ import {
   DEFAULT_NETWORK, networkData, overpassNetworkQuery, roadNetworks, parseNetwork, type CustomRail, type LinkPicks, type NetworkPlan, type NetworkWay,
 } from "$lib/core/network";
 import {
-  DEFAULT_TOWNS, parseOverpassPlaces, townsIndustriesData, townSizesData,
-  type DroppedTown, type MapTown, type OsmPlace, type PlaceFilter, type TownCandidate, type TownPicks, type TownsOptions,
+  DEFAULT_TOWNS, overpassTownsQuery, parseOverpassPlaces, townsIndustriesData, townSizesData,
+  type DroppedTown, type MapTown, type OsmPlace, type PlaceFilter, type PlaceKind, type TownCandidate, type TownPicks, type TownsOptions,
 } from "$lib/core/towns";
-import { loadBathymetry, loadDemTile, loadIgnGrid, loadLandcover, overpass } from "$lib/platform/download";
+import { loadBathymetry, loadDemTile, loadIgnGrid, loadLandcover, overpass, setDownloadNote } from "$lib/platform/download";
 import type { RetryNotice } from "$lib/platform/fetchbytes";
 import { getVersion } from "@tauri-apps/api/app";
 import { buildWarning, parseGameBuild, testedBuildsText } from "$lib/core/gamebuild";
@@ -51,11 +51,17 @@ import type { TerrainMessage, TerrainRequest, TerrainStats } from "$lib/workers/
 import { requestMessages } from "$lib/workers/transport";
 import { MsgError } from "$lib/core/msg";
 import { fmtNum, i18n, t, tk, tm, type MessageKey } from "$lib/i18n/index.svelte";
-import { TILE_M } from "$lib/core/area";
+import { SAMPLE_M, TILE_M } from "$lib/core/area";
+import { pointCount, reduceOsm, simplifyTolerance, type OsmLists } from "$lib/core/simplify";
+import { estimateSeconds, GEOFABRIK_KM2, isSliver, pickExtracts, totalSeconds, updateRate, type RegionCost } from "$lib/core/geofabrik";
+import {
+  downloadExtract, extractFiles, loadGeofabrikIndex, loadRates, mergeRegions, readRegion, regionReady, saveRates,
+  type ExtractedOsm, type ExtractFile, type ReadParams,
+} from "$lib/platform/geofabrik";
 import { dialog } from "./dialog.svelte";
 import { Project } from "./project.svelte";
 import { packProject, PROJECT_EXT, unpackProject, type Inputs } from "./projectfile";
-import { dataKeyOf, defaultSettings, migrateSettings, optionsKeyOf, type Settings } from "./settings";
+import { dataKeyOf, defaultSettings, migrateSettings, optionsKeyOf, optionsOnlyKeyOf, pendingPickChanges, type Settings } from "./settings";
 export type { ReliefSource, Settings } from "./settings";
 
 /** Map settings before projects (read once, to open them as the first project). */
@@ -82,7 +88,25 @@ async function readAlive(userdata: string): Promise<{ alive: GameAlive | null; a
   return { alive: parseAlive(text), ageMs: st ? Math.max(0, Date.now() - st.mtimeMs) : null };
 }
 /** Every place kind is fetched: in France the kind says little about size (FACT-014). */
-const PLACE_KINDS = ["city", "town", "village"];
+const PLACE_KINDS: PlaceKind[] = ["city", "town", "village"];
+
+/** Case « Actualiser automatiquement » des listes, gardée entre les sessions. */
+const AUTO_PICKS_KEY = "importcity.autoPicks";
+function loadFlag(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+}
+function saveFlag(key: string, on: boolean): void {
+  try {
+    localStorage.setItem(key, on ? "1" : "0");
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 
 export type LogLevel = "info" | "warn" | "error" | "debug";
 export interface LogEvent {
@@ -325,6 +349,8 @@ class Importer {
   gameBuild = $state<number | null>(null);
 
   constructor() {
+    // Détails des téléchargements (cache, replis, réponses coupées) dans le journal technique.
+    setDownloadNote((line) => this.diag(line));
     const init = initialProjects();
     this.projects = init.projects;
     this.activeId = init.projects[init.active].id;
@@ -435,6 +461,60 @@ class Importer {
   /** Options that change the map (not the file name or folder): the preview is stale when they differ. */
   optionsKey = $derived(optionsKeyOf(this.settings));
   stale = $derived(!!this.preview && this.previewKey !== this.optionsKey);
+  /** Options seules (sans les choix) : suivie par la mise à jour automatique des options avancées. */
+  optionsOnlyKey = $derived(optionsOnlyKeyOf(this.settings));
+  /** Choix faits sur la carte ou dans les listes depuis le dernier calcul. */
+  pendingPicks = $derived(this.preview ? pendingPickChanges(this.previewKey, this.settings) : 0);
+  /** Actualiser la carte après chaque choix (case du panneau Listes ; non par défaut). */
+  autoApplyPicks = $state(loadFlag(AUTO_PICKS_KEY));
+
+  setAutoApplyPicks(on: boolean): void {
+    this.autoApplyPicks = on;
+    saveFlag(AUTO_PICKS_KEY, on);
+    if (on) this.afterPick();
+  }
+
+  /**
+   * Après un choix (ville, industrie, route, rail) : enregistré ; la carte n'est recalculée que si le
+   * joueur l'a demandé (« Actualiser automatiquement »), sinon au clic sur « Actualiser la carte ».
+   */
+  private afterPick(): void {
+    this.save();
+    if (this.autoApplyPicks && this.preview && !this.running) void this.runPreview();
+  }
+
+  /** Plusieurs villes d'un coup (filtre des listes) : un seul enregistrement, aucun calcul. */
+  setPicks(keys: string[], pick: boolean | null): void {
+    const picks = { ...this.settings.townPicks };
+    for (const k of keys) {
+      if (pick === null) delete picks[k];
+      else picks[k] = pick;
+    }
+    this.settings.townPicks = picks;
+    this.afterPick();
+  }
+
+  /** Plusieurs industries d'un coup. */
+  setIndustryPicks(keys: string[], pick: boolean | null): void {
+    const picks = { ...this.settings.industryPicks };
+    for (const k of keys) {
+      if (pick === null) delete picks[k];
+      else picks[k] = pick;
+    }
+    this.settings.industryPicks = picks;
+    this.afterPick();
+  }
+
+  /** Une ville est-elle retenue, choix en attente compris ? */
+  townOn(c: { key: string; status: string }): boolean {
+    const p = this.settings.townPicks[c.key];
+    return p === undefined ? c.status !== "off" : p;
+  }
+
+  industryOn(c: { key: string; status: string }): boolean {
+    const p = this.settings.industryPicks[c.key];
+    return p === undefined ? c.status !== "off" : p;
+  }
   /** Options and map name of the last map sent to the game: the export is out of date when they differ. */
   exported = $derived(!!this.exportKey && this.exportKey === this.optionsKey + "|" + this.settings.name);
 
@@ -468,14 +548,13 @@ class Importer {
     if (pick === null) delete picks[key];
     else picks[key] = pick;
     this.settings.townPicks = picks;
-    this.save();
-    if (this.preview && !this.running) void this.runPreview();
+    this.afterPick();
   }
 
   /** A click on a town (map, preview or list): a chosen town is removed, any other is added. */
   toggleTown(key: string): void {
     const c = this.preview?.candidates.find((x) => x.key === key);
-    if (c) this.setPick(key, c.status === "off");
+    if (c) this.setPick(key, !this.townOn(c));
   }
 
   /** Same for industries: keep (true), remove (false) or hand back to the automatic choice (null). */
@@ -484,19 +563,17 @@ class Importer {
     if (pick === null) delete picks[key];
     else picks[key] = pick;
     this.settings.industryPicks = picks;
-    this.save();
-    if (this.preview && !this.running) void this.runPreview();
+    this.afterPick();
   }
 
   toggleIndustry(key: string): void {
     const c = this.preview?.industryCandidates?.find((x) => x.key === key);
-    if (c) this.setIndustryPick(key, c.status === "off");
+    if (c) this.setIndustryPick(key, !this.industryOn(c));
   }
 
   resetIndustryPicks(): void {
     this.settings.industryPicks = {};
-    this.save();
-    if (this.preview && !this.running) void this.runPreview();
+    this.afterPick();
   }
 
   /**
@@ -540,10 +617,9 @@ class Importer {
     this.save();
   }
 
-  /** Recompute the result after a change made on the map (when there is one and nothing runs). */
+  /** A change made on the map (road, rail, industry added by hand): like a pick, see `afterPick`. */
   private refresh(): void {
-    this.save();
-    if (this.preview && !this.running) void this.runPreview();
+    this.afterPick();
   }
 
   /** An industry of type `tag` added by hand at lon / lat (right click on the map). */
@@ -608,8 +684,7 @@ class Importer {
     const picks: TownPicks = {};
     if (mode === "none") for (const c of this.preview?.candidates ?? []) picks[c.key] = false;
     this.settings.townPicks = picks;
-    this.save();
-    if (this.preview && !this.running) void this.runPreview();
+    this.afterPick();
   }
 
   async detect(): Promise<void> {
@@ -809,6 +884,10 @@ class Importer {
         },
         app,
         crop,
+        (reason) => {
+          this.diag(`projet enregistré sans ses données : ${reason}`);
+          this.warn(t("msg.projectDataSkipped"));
+        },
       );
       const path = p.path;
       await allowDirs([dirName(path)]);
@@ -996,12 +1075,16 @@ class Importer {
       if (ign) source = "IGN RGE ALTI";
     }
     let rasters = phase1.rasters;
-    if ((!ign || ign.some((z) => !Number.isFinite(z))) && !rasters.length) {
+    // Très grande zone : l'aperçu a lu les dalles à un niveau plus grossier que la grille complète.
+    const level = demLevel(g.step * f.scale);
+    const coarser = level !== demLevel(previewGrid(f).step * f.scale);
+    if ((!ign || ign.some((z) => !Number.isFinite(z))) && (!rasters.length || coarser)) {
       // The preview had full IGN cover but the 4 m grid has holes: Copernicus fills them.
       rasters = [];
       for (const tile of copernicusTilesFor(frameBBox(f, 200))) {
-        if (!this.demCache.has(tile)) this.demCache.set(tile, await loadDemTile(tile, this.retryNotice(tile, (x) => this.exportState("relief", "run", x))));
-        const r = this.demCache.get(tile);
+        const key = `${tile}|${level}`;
+        if (!this.demCache.has(key)) this.demCache.set(key, await loadDemTile(tile, this.retryNotice(tile, (x) => this.exportState("relief", "run", x)), level));
+        const r = this.demCache.get(key);
         if (r) rasters.push(r);
       }
     }
@@ -1030,45 +1113,33 @@ class Importer {
   private async gather(s: Settings, f: Frame, g: Grid, base: number, span: number): Promise<Inputs> {
     const at = (x: number) => (this.progress = base + span * x);
     const wantIgn = s.source === "ign" || (s.source === "auto" && inIgnCoverage(s.area.lon, s.area.lat));
+    // OpenStreetMap first and in the background (two requests at once, other servers than the
+    // relief and land cover): its waits overlap the downloads below.
+    const bbox = roundBbox(frameBBox(f));
+    const km2 = bboxAreaKm2(bbox);
+    // Très grande zone : extraits Geofabrik (la doc d'Overpass renvoie les pays vers eux), confirmés
+    // avant tout téléchargement avec leur taille.
+    const large = km2 > GEOFABRIK_KM2;
+    const plan = large ? await this.geofabrikPlan(bbox, km2, f) : null;
     this.dataSteps = [
       ...(wantIgn ? [{ id: "ign", label: "Relief IGN RGE ALTI" }] : []),
       { id: "dem", label: "Relief Copernicus GLO-30" },
       ...(s.useCover ? [{ id: "cover", label: "Occupation du sol (ESA WorldCover)" }] : []),
       { id: "bathy", label: "Fonds marins (EMODnet / ETOPO)" },
-      { id: "osm", label: "Eau et lieux (OpenStreetMap)" },
-      { id: "sites", label: "Sites industriels (OpenStreetMap)" },
-      { id: "roads", label: "Routes et voies ferrées (OpenStreetMap)" },
-      { id: "land", label: "Plages et zones d'activité (OpenStreetMap)" },
+      ...(large
+        ? [{ id: "geofabrik", label: "OpenStreetMap (extraits Geofabrik)" }]
+        : [
+            { id: "places", label: "Lieux (OpenStreetMap)" },
+            { id: "osm", label: "Eau (OpenStreetMap)" },
+            { id: "sites", label: "Sites industriels (OpenStreetMap)" },
+            { id: "roads", label: "Routes et voies ferrées (OpenStreetMap)" },
+            { id: "land", label: "Plages et zones d'activité (OpenStreetMap)" },
+          ]),
     ].map((d) => ({ ...d, state: "wait" as const }));
-    // OpenStreetMap first and in the background (two requests at once, other servers than the
-    // relief and land cover): its waits overlap the downloads below.
-    const bbox = roundBbox(frameBBox(f));
-    const km2 = bboxAreaKm2(bbox);
-    if (km2 > LARGE_AREA_KM2) this.warn(t("msg.largeArea", { km2: fmtNum(km2) }));
-    const origins: Record<string, string> = {};
-    const osm = <T>(step: string, query: string): Promise<{ ok: true; json: T } | { ok: false; error: unknown }> => {
-      this.stepState(step, "run", t("msg.queued"));
-      return overpass<T>(
-        query,
-        (sec, reason) => this.stepState(step, "run", sec > 0 ? t("msg.retryIn", { reason, s: sec }) : reason),
-        bbox,
-        (o) => {
-          origins[step] = o.source === "cache" ? t("msg.fromCache", { age: ageText(o.ageMs) }) : t("msg.fromServer", { server: o.source, s: Math.round(o.ms / 1000) });
-          this.diag(`OSM ${step} : ${o.source}, ${Math.round(o.ms / 100) / 10} s, ${Math.round(o.bytes / 1024)} Ko`);
-        },
-      ).then(
-        (json) => ({ ok: true as const, json }),
-        (error: unknown) => ({ ok: false as const, error }),
-      );
-    };
-    const areaQ = osm<Parameters<typeof parseOverpassShapes>[0] & Parameters<typeof parseOverpassPlaces>[0]>(
-      "osm",
-      overpassAreaQuery(bbox, PLACE_KINDS, minWaterPerimeterM(f.scale)),
-    );
-    const networkQ = osm<Parameters<typeof parseNetwork>[0]>("roads", overpassNetworkQuery(bbox));
-    const sitesQ = osm<Parameters<typeof parseIndustrySites>[0]>("sites", overpassIndustryQuery(bbox));
-    const landQ = osm<Parameters<typeof parseLandUse>[0]>("land", overpassLandQuery(bbox));
-    const detail = (step: string, text: string) => (origins[step] ? `${text} · ${origins[step]}` : text);
+    if (!large && km2 > LARGE_AREA_KM2) this.warn(t("msg.largeArea", { km2: fmtNum(km2) }));
+    const osmQ = plan ? this.osmFromGeofabrik(plan, f) : this.osmFromOverpass(bbox, f);
+    // Rejet tenu jusqu'à l'attente ci-dessous (pas d'« unhandled rejection » pendant le relief).
+    osmQ.catch(() => {});
     let ign: Float32Array | null = null;
     let source = "Copernicus GLO-30";
     if (wantIgn) {
@@ -1095,13 +1166,17 @@ class Importer {
     if (!ign || ign.some((z) => !Number.isFinite(z))) {
       if (ign) source = "IGN RGE ALTI + Copernicus";
       const tiles = copernicusTilesFor(frameBBox(f, 200));
+      // Niveau d'aperçu du COG selon le pas réel : 0 (pleine résolution) pour les cartes habituelles.
+      const level = demLevel(g.step * f.scale);
+      if (level > 0) this.diag(`relief : ${tiles.length} dalles Copernicus lues au niveau 1/${2 ** level}`);
       for (const [i, tile] of tiles.entries()) {
         this.stepState("dem", "run", t("msg.tiles", { d: i + 1, n: tiles.length }));
-        if (!this.demCache.has(tile)) {
+        const key = `${tile}|${level}`;
+        if (!this.demCache.has(key)) {
           const notice = this.retryNotice(tile, (x) => this.stepState("dem", "run", `${t("msg.tiles", { d: i + 1, n: tiles.length })} · ${x}`));
-          this.demCache.set(tile, await loadDemTile(tile, notice));
+          this.demCache.set(key, await loadDemTile(tile, notice, level));
         }
-        const r = this.demCache.get(tile);
+        const r = this.demCache.get(key);
         if (r) rasters.push(r);
         at(0.4 + (0.2 * (i + 1)) / tiles.length);
       }
@@ -1126,15 +1201,70 @@ class Importer {
     this.stepState("bathy", "run");
     const { rasters: bathy, source: bathySource } = await loadBathymetry(bbox);
     this.stepState("bathy", bathy.length ? "done" : "skip", bathySource);
+    let { water, places, sites, roads, land } = await osmQ;
+    at(0.92);
+    // Données d'une zone plus grande que la carte (cache réutilisé) coupées au cadre, et géométries
+    // simplifiées au pas de la grille complète pour une très grande zone (un pays entier).
+    const before = pointCount({ water, roads, land });
+    const frame = frameBBox(f, 0.1 * Math.max(f.widthM, f.heightM) * f.scale);
+    const tol = simplifyTolerance(SAMPLE_M * f.scale);
+    ({ water, places, sites, roads, land } = reduceOsm({ water, places, sites, roads, land }, frame, tol));
+    const after = pointCount({ water, roads, land });
+    if (after < before) this.diag(`OSM réduit au cadre${tol ? ` et simplifié à ${Math.round(tol)} m` : ""} : ${before} → ${after} points`);
+    this.diag(
+      `données : relief ${source} (IGN ${ign ? "oui" : "non"}, ${rasters.length} dalles Copernicus), ` +
+        `WorldCover ${cover ? `${cover.length} fenêtres` : "non"}, fonds marins ${bathySource}, ` +
+        `OSM ${water.length} eaux / ${places.length} lieux / ${sites.length} sites industriels / ${roads.length} routes et voies`,
+    );
+    at(1);
+    return { ign, rasters, water, cover, bathy, bathySource, places, sites, roads, land, source };
+  }
+
+  /**
+   * Données OSM par Overpass (zones habituelles) : lieux, eau, sites, routes et sol en cinq requêtes,
+   * deux à la fois. Les lieux ont leur propre requête légère : ils ne dépendent plus de l'eau, la plus
+   * lourde (1.2.2 : une eau expirée laissait la carte sans villes). Lieux ou eau absents : erreur.
+   */
+  private async osmFromOverpass(bbox: Bbox, f: Frame): Promise<OsmLists> {
+    const origins: Record<string, string> = {};
+    const osm = <T>(step: string, query: string): Promise<{ ok: true; json: T } | { ok: false; error: unknown }> => {
+      this.stepState(step, "run", t("msg.queued"));
+      return overpass<T>(
+        query,
+        (sec, reason) => this.stepState(step, "run", sec > 0 ? t("msg.retryIn", { reason, s: sec }) : reason),
+        bbox,
+        (o) => {
+          origins[step] = o.source === "cache" ? t("msg.fromCache", { age: ageText(o.ageMs) }) : t("msg.fromServer", { server: o.source, s: Math.round(o.ms / 1000) });
+          this.diag(`OSM ${step} : ${o.source}, ${Math.round(o.ms / 100) / 10} s, ${Math.round(o.bytes / 1024)} Ko`);
+        },
+        (remark, depth) => this.diag(`OSM ${step} : zone trop lourde pour le serveur (${remark.slice(0, 160)}), découpée en 4 (niveau ${depth})`),
+      ).then(
+        (json) => ({ ok: true as const, json }),
+        (error: unknown) => ({ ok: false as const, error }),
+      );
+    };
+    // Les lieux d'abord : premiers servis dans les deux créneaux.
+    const placesQ = osm<Parameters<typeof parseOverpassPlaces>[0]>("places", overpassTownsQuery(bbox, PLACE_KINDS));
+    const areaQ = osm<Parameters<typeof parseOverpassShapes>[0]>("osm", overpassAreaQuery(bbox, [], minWaterPerimeterM(f.scale)));
+    const sitesQ = osm<Parameters<typeof parseIndustrySites>[0]>("sites", overpassIndustryQuery(bbox));
+    const networkQ = osm<Parameters<typeof parseNetwork>[0]>("roads", overpassNetworkQuery(bbox));
+    const landQ = osm<Parameters<typeof parseLandUse>[0]>("land", overpassLandQuery(bbox));
+    const detail = (step: string, text: string) => (origins[step] ? `${text} · ${origins[step]}` : text);
+
+    const placesA = await placesQ;
+    if (!placesA.ok) {
+      this.stepState("places", "fail", errorText(placesA.error));
+      throw placesA.error;
+    }
+    const places = parseOverpassPlaces(placesA.json);
+    this.stepState("places", "done", detail("places", t("msg.places", { n: places.length })));
     const area = await areaQ;
     if (!area.ok) {
       this.stepState("osm", "fail", errorText(area.error));
       throw area.error;
     }
     const water = parseOverpassShapes(area.json).filter(isWaterShape);
-    const places = parseOverpassPlaces(area.json);
-    this.stepState("osm", "done", detail("osm", t("msg.waterPlaces", { water: water.length, places: places.length })));
-    at(0.85);
+    this.stepState("osm", "done", detail("osm", t("msg.water", { n: water.length })));
     // Industrial sites, the road / rail network and land use: without them the industries come
     // from the land cover only, no road or railway is planned, towns keep the usual split.
     let sites: IndustrySite[] = [];
@@ -1146,7 +1276,6 @@ class Importer {
       this.stepState("sites", "fail", errorText(sitesA.error));
       this.warn(t("msg.sitesFailed", { error: errorText(sitesA.error) }));
     }
-    at(0.92);
     let roads: NetworkWay[] = [];
     const networkA = await networkQ;
     if (networkA.ok) {
@@ -1166,13 +1295,173 @@ class Importer {
       this.stepState("land", "fail", errorText(landA.error));
       this.warn(t("msg.landFailed", { error: errorText(landA.error) }));
     }
-    this.diag(
-      `données : relief ${source} (IGN ${ign ? "oui" : "non"}, ${rasters.length} dalles Copernicus), ` +
-        `WorldCover ${cover ? `${cover.length} fenêtres` : "non"}, fonds marins ${bathySource}, ` +
-        `OSM ${water.length} eaux / ${places.length} lieux / ${sites.length} sites industriels / ${roads.length} routes et voies`,
+    return { water, places, sites, roads, land };
+  }
+
+  /** Cadre et précision de lecture des extraits : les mêmes que la suite (`reduceOsm`). */
+  private readParams(f: Frame): ReadParams {
+    return {
+      bbox: frameBBox(f, 0.1 * Math.max(f.widthM, f.heightM) * f.scale),
+      placeKinds: PLACE_KINDS,
+      minWaterPerimeterM: minWaterPerimeterM(f.scale),
+      toleranceM: simplifyTolerance(SAMPLE_M * f.scale),
+    };
+  }
+
+  /**
+   * Extraits Geofabrik d'une très grande zone, choisis par le joueur dans une liste à cocher avec,
+   * pour chacun, sa taille, le temps estimé (téléchargement + lecture) et sa part de la zone. Les
+   * bandes lourdes de moins de 1 % de la zone sont décochées d'office mais restent proposées.
+   */
+  private async geofabrikPlan(bbox: Bbox, km2: number, f: Frame): Promise<ExtractFile[]> {
+    this.step = t("step.data.geofabrik");
+    const picked = pickExtracts(await loadGeofabrikIndex(), bbox);
+    const all = await extractFiles(picked);
+    if (!all.length) throw new Error(t("msg.geofabrikNone"));
+    const params = this.readParams(f);
+    const ready = new Set<string>();
+    for (const x of all) if (await regionReady(x, params)) ready.add(x.extract.id);
+    const rates = loadRates();
+    const share = new Map(picked.map((e) => [e.id, e.share]));
+    const pct = (id: string) => {
+      const p = 100 * (share.get(id) ?? 0);
+      return p < 0.1 ? `< ${fmtNum(0.1, 1)}` : fmtNum(p, p < 10 ? 1 : 0);
+    };
+    const size = (b: number) =>
+      !Number.isFinite(b) ? "?" : b >= 1e9 ? t("msg.gigabytes", { n: fmtNum(b / 1e9, 1) }) : t("msg.megabytes", { n: fmtNum(Math.max(1, b / 1e6), 0) });
+    const known = (b: number) => (Number.isFinite(b) ? b : 0);
+    const cost = (x: ExtractFile): RegionCost => ({ download: known(x.bytes), read: ready.has(x.extract.id) ? 0 : known(x.size) });
+    // Les régions qui portent la zone d'abord, les bandes à la fin.
+    const order = [...all].sort((x, y) => (share.get(y.extract.id) ?? 0) - (share.get(x.extract.id) ?? 0));
+    const items = order.map((x) => {
+      const id = x.extract.id;
+      const time = durationText(estimateSeconds(cost(x), rates), true);
+      return {
+        id,
+        label: x.extract.name,
+        detail: ready.has(id)
+          ? t("msg.geofabrikReadyItem", { share: pct(id) })
+          : x.cached
+            ? t("msg.geofabrikCachedItem", { time, share: pct(id) })
+            : t("msg.geofabrikItem", { size: size(x.bytes), time, share: pct(id) }),
+        checked: x.cached || !isSliver(share.get(id) ?? 0, x.bytes),
+      };
+    });
+    const total = (ids: string[]) => {
+      const on = all.filter((x) => ids.includes(x.extract.id));
+      const bytes = on.reduce((n, x) => n + known(x.bytes), 0);
+      return t("msg.geofabrikTotal", { size: size(bytes), time: durationText(totalSeconds(on.map(cost), rates)), n: on.length });
+    };
+    const { choice, checked } = await dialog.askList(
+      t("msg.geofabrikAsk", { km2: fmtNum(km2) }),
+      items,
+      [
+        { id: "go", label: t("msg.geofabrikGo"), kind: "primary" },
+        { id: "cancel", label: t("project.cancel") },
+      ],
+      total,
     );
-    at(1);
-    return { ign, rasters, water, cover, bathy, bathySource, places, sites, roads, land, source };
+    if (choice !== "go" || !checked.length) throw new Error(t("msg.geofabrikCancelled"));
+    const files = all.filter((x) => checked.includes(x.extract.id));
+    const left = all.filter((x) => !checked.includes(x.extract.id));
+    this.diag(`Geofabrik : ${files.map((x) => `${x.extract.id}${ready.has(x.extract.id) ? " (lue)" : x.cached ? " (cache)" : ""}`).join(", ")} ; ${total(checked)}`);
+    // Une région décochée : pas de villes, d'eau ni d'industries réelles à cet endroit de la carte.
+    if (left.length) this.warn(t("msg.geofabrikLeftOut", { names: left.map((x) => x.extract.name).join(", ") }));
+    return files;
+  }
+
+  /**
+   * Données OSM d'une très grande zone depuis les extraits Geofabrik : chaque région est lue (Rust)
+   * dès qu'elle est téléchargée, pendant le téléchargement de la suivante ; les régions déjà en cache
+   * sont lues tout de suite. Vitesses mesurées gardées pour les estimations suivantes.
+   */
+  private async osmFromGeofabrik(files: ExtractFile[], f: Frame): Promise<OsmLists> {
+    const step = "geofabrik";
+    const params = this.readParams(f);
+    const todo = files.filter((x) => !x.cached);
+    const known = (b: number) => (Number.isFinite(b) ? b : 0);
+    const totalBytes = todo.reduce((n, x) => n + known(x.bytes), 0);
+    const gb = (b: number) => t("msg.gigabytes", { n: fmtNum(b / 1e9, 1) });
+    const rates = loadRates();
+    const t0 = Date.now();
+    let got = 0;
+    let dlIndex = 0;
+    let readDone = 0;
+    let readBusy = false;
+    const show = () => {
+      const parts: string[] = [];
+      if (dlIndex < todo.length) parts.push(t("msg.geofabrikDownload", { got: gb(got), total: gb(totalBytes), d: dlIndex + 1, n: todo.length }));
+      parts.push(t("msg.geofabrikRead", { d: Math.min(files.length, readDone + (readBusy ? 1 : 0)), n: files.length }));
+      this.stepState(step, "run", parts.join(" · "));
+    };
+    // File de lecture : une région à la fois (chaque lecture occupe déjà tous les cœurs).
+    const results: ExtractedOsm[] = [];
+    let chain: Promise<void> = Promise.resolve();
+    const enqueue = (x: ExtractFile) => {
+      chain = chain.then(async () => {
+        readBusy = true;
+        show();
+        const r0 = Date.now();
+        const { osm, cached } = await readRegion(x, params, () => show());
+        if (!cached) rates.read = updateRate(rates.read, known(x.size), (Date.now() - r0) / 1000);
+        results.push(osm);
+        readBusy = false;
+        readDone++;
+        show();
+      });
+      // Erreur tenue jusqu'à l'attente finale (pas d'« unhandled rejection » pendant les téléchargements).
+      chain.catch(() => {});
+    };
+    for (const x of files) if (x.cached) enqueue(x);
+    for (const [k, x] of todo.entries()) {
+      dlIndex = k;
+      show();
+      const before = todo.slice(0, k).reduce((n, y) => n + known(y.bytes), 0);
+      const d0 = Date.now();
+      try {
+        await downloadExtract(x, (received) => {
+          got = before + received;
+          show();
+        });
+      } catch (e) {
+        this.stepState(step, "fail", errorText(e));
+        throw new Error(t("msg.geofabrikFailed", { name: x.extract.name, error: errorText(e) }));
+      }
+      rates.download = updateRate(rates.download, known(x.bytes), (Date.now() - d0) / 1000);
+      // Taille réelle du fichier pour la lecture (celle annoncée peut manquer).
+      x.size = (await fileStat(x.path))?.size ?? x.size;
+      this.diag(`Geofabrik : ${x.extract.id} téléchargé`);
+      enqueue(x);
+    }
+    dlIndex = todo.length;
+    try {
+      await chain;
+    } catch (e) {
+      this.stepState(step, "fail", errorText(e));
+      throw e;
+    }
+    saveRates(rates);
+    const osm = mergeRegions(results);
+    const water = parseOverpassShapes(osm.area as never).filter(isWaterShape);
+    const places = parseOverpassPlaces(osm.places as never);
+    const sites = parseIndustrySites(osm.sites as never);
+    const roads = parseNetwork(osm.roads as never);
+    const land = parseLandUse(osm.land as never);
+    const rails = roads.filter((w) => w.kind === "rail").length;
+    this.diag(
+      `Geofabrik : ${files.length} régions en ${Math.round((Date.now() - t0) / 1000)} s ; vitesses ${fmtNum(rates.download / 1e6, 1)} Mo/s (téléchargement), ${fmtNum(rates.read / 1e6, 0)} Mo/s (lecture)`,
+    );
+    this.stepState(
+      step,
+      "done",
+      [
+        t("msg.places", { n: places.length }),
+        t("msg.water", { n: water.length }),
+        t("msg.sites", { n: sites.length }),
+        t("msg.roadsRails", { roads: roads.length - rails, rails }),
+      ].join(" · "),
+    );
+    return { water, places, sites, roads, land };
   }
 
   private request(s: Settings, f: Frame, inputs: Inputs, mode: "preview" | "full", ign: Float32Array | null): TerrainRequest {
@@ -1615,3 +1904,14 @@ class Importer {
 }
 
 export const importer = new Importer();
+
+/**
+ * Durée estimée lisible : « < 1 min », « 4 min », « 1 h 20 ». `approx` ajoute « ~ » devant une
+ * durée d'au moins une minute (lignes de la liste ; le total dit déjà « environ »).
+ */
+export function durationText(seconds: number, approx = false): string {
+  if (seconds < 60) return t("msg.durationUnderMin");
+  const min = Math.round(seconds / 60);
+  const text = min < 60 ? t("msg.durationMin", { n: min }) : t("msg.durationHours", { h: Math.floor(min / 60), m: String(min % 60).padStart(2, "0") });
+  return approx ? `~${text}` : text;
+}

@@ -34,13 +34,15 @@ export const LARGE_AREA_KM2 = 2500;
 
 /**
  * Declared `[timeout]` (s) and `[maxsize]` (bytes) for an area. Overpass admits a query only if
- * both fit in half of its free resources (FACT-012): declaring more than needed gets the query
- * refused first under load (504), so they grow with the area instead of the 180 s / 512 MiB default.
+ * both fit in half of its free resources (FACT-012, doc « commons »), else answers 504: declaring
+ * more than needed gets the query refused first under load. Before 1.3.0 the maximum (180 s,
+ * 256 MiB) was reached from 4 000 km² on; now it is reached around 15 000 km², and beyond
+ * GEOFABRIK_KM2 the data comes from Geofabrik extracts, not Overpass.
  */
 export function overpassLimits(b: Bbox): { timeout: number; maxsize: number } {
   const km2 = bboxAreaKm2(b);
-  const timeout = Math.round(Math.max(60, Math.min(180, 60 + km2 / 50)));
-  const mib = Math.max(64, Math.min(256, 64 * Math.ceil(km2 / 1000)));
+  const timeout = Math.round(Math.max(60, Math.min(180, 30 + km2 / 100)));
+  const mib = Math.max(64, Math.min(256, 32 * Math.ceil(km2 / 2500)));
   return { timeout, maxsize: mib * 1024 * 1024 };
 }
 
@@ -92,6 +94,89 @@ export function parseOverpassStatus(text: string): OverpassStatus {
   const waits = [...text.matchAll(/in\s+(-?\d+)\s+seconds?/g)].map((m) => Math.max(0, +m[1]));
   const waitS = free > 0 ? 0 : waits.length ? Math.min(...waits) : null;
   return { slots, free, waitS };
+}
+
+/**
+ * Erreur d'exécution d'Overpass (mémoire ou temps dépassés) : le serveur répond quand même HTTP 200,
+ * avec `remark: "runtime error: …"` et des `elements` vides ou tronqués. Le texte, ou null.
+ */
+export function overpassRuntimeError(json: unknown): string | null {
+  const remark = (json as { remark?: unknown } | null)?.remark;
+  return typeof remark === "string" && /runtime error/i.test(remark) ? remark : null;
+}
+
+/** Les 4 quarts d'une bbox (sud-ouest, sud-est, nord-ouest, nord-est). */
+export function splitBbox(b: Bbox): Bbox[] {
+  const r = (v: number) => Math.round(v * 1e6) / 1e6;
+  const midLon = r((b.west + b.east) / 2);
+  const midLat = r((b.south + b.north) / 2);
+  return [
+    { west: b.west, south: b.south, east: midLon, north: midLat },
+    { west: midLon, south: b.south, east: b.east, north: midLat },
+    { west: b.west, south: midLat, east: midLon, north: b.north },
+    { west: midLon, south: midLat, east: b.east, north: b.north },
+  ];
+}
+
+/** La même requête sur une autre bbox, avec `[timeout][maxsize]` recalculés pour elle. */
+export function queryForBbox(query: string, from: Bbox, to: Bbox): string {
+  const { timeout, maxsize } = overpassLimits(to);
+  return query
+    .split(bb(from))
+    .join(bb(to))
+    .replace(/\[timeout:\d+\]\[maxsize:\d+\]/, `[timeout:${timeout}][maxsize:${maxsize}]`);
+}
+
+/**
+ * Réponses de plusieurs morceaux fusionnées, sans doublon (`type/id`) : avec `out geom`, une voie
+ * ou un lac à cheval sur deux morceaux arrive en entier dans chacun.
+ */
+export function mergeOverpass(jsons: unknown[]): { elements: unknown[] } {
+  const seen = new Set<string>();
+  const elements: unknown[] = [];
+  for (const j of jsons) {
+    for (const e of (j as { elements?: { type?: string; id?: number }[] }).elements ?? []) {
+      if (e.id !== undefined) {
+        const key = `${e.type}/${e.id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+      }
+      elements.push(e);
+    }
+  }
+  return { elements };
+}
+
+/** Découpages successifs au plus (4 niveaux : jusqu'à 256 morceaux). */
+export const OVERPASS_MAX_SPLIT_DEPTH = 4;
+
+export interface SplitOptions {
+  /** Une zone découpée parce que le serveur n'a pas pu la traiter. */
+  onSplit?: (remark: string, depth: number) => void;
+  /** L'erreur levée quand même le plus petit morceau échoue. */
+  tooLarge: (remark: string) => Error;
+  maxDepth?: number;
+}
+
+/**
+ * Requête Overpass qui se découpe d'elle-même : si le serveur renvoie une erreur d'exécution, la
+ * zone est coupée en 4 et chaque quart redemandé (profondeur bornée), puis les réponses fusionnées.
+ * `fetchOne` renvoie la réponse telle quelle, erreur d'exécution comprise.
+ */
+export async function fetchSplit(
+  query: string,
+  bbox: Bbox,
+  fetchOne: (query: string, bbox: Bbox) => Promise<unknown>,
+  o: SplitOptions,
+  depth = 0,
+): Promise<{ json: unknown; parts: number }> {
+  const json = await fetchOne(query, bbox);
+  const remark = overpassRuntimeError(json);
+  if (!remark) return { json, parts: 1 };
+  if (depth >= (o.maxDepth ?? OVERPASS_MAX_SPLIT_DEPTH)) throw o.tooLarge(remark);
+  o.onSplit?.(remark, depth + 1);
+  const subs = await Promise.all(splitBbox(bbox).map((b) => fetchSplit(queryForBbox(query, bbox, b), b, fetchOne, o, depth + 1)));
+  return { json: mergeOverpass(subs.map((s) => s.json)), parts: subs.reduce((n, s) => n + s.parts, 0) };
 }
 
 export function isWaterShape(s: OsmShape): boolean {

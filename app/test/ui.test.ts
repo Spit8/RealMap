@@ -3,7 +3,7 @@ import type { TownCandidate } from "../src/lib/core/towns";
 import { foldName, SHOWN_OFF, shownTownKeys } from "../src/lib/ui/townMarkers";
 
 const cand = (name: string, rank: number, status: TownCandidate["status"]): TownCandidate => ({
-  key: name, name, lon: 0, lat: 0, rank, estimated: false, pick: null, status,
+  key: name, name, place: "town", lon: 0, lat: 0, rank, estimated: false, pick: null, status,
 });
 
 describe("town list", () => {

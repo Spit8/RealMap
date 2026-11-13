@@ -39,7 +39,8 @@
         { "url": "https://esa-worldcover.s3.eu-central-1.amazonaws.com/*" },
         { "url": "https://data.geopf.fr/*" },
         { "url": "https://ows.emodnet-bathymetry.eu/*" },
-        { "url": "https://coastwatch.pfeg.noaa.gov/erddap/*" }
+        { "url": "https://coastwatch.pfeg.noaa.gov/erddap/*" },
+        { "url": "https://download.geofabrik.de/*" }
       ]
     }
   ]

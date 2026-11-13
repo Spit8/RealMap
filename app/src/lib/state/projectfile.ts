@@ -79,6 +79,9 @@ interface InputsJson extends Omit<Inputs, "ign" | "rasters" | "bathy" | "cover">
   cover: RasterJson<CoverRaster>[] | null;
 }
 
+/** Au-delà (caractères), les données ne sont pas enregistrées dans le projet (bien sous la limite de V8). */
+export const MAX_INPUTS_CHARS = 300 * 2 ** 20;
+
 const enc = new TextEncoder();
 const dec = new TextDecoder();
 
@@ -94,6 +97,7 @@ export async function packProject(
   p: ProjectData,
   app: string,
   crop: { west: number; south: number; east: number; north: number } | null,
+  onDataSkipped?: (reason: string) => void,
 ): Promise<Uint8Array> {
   const files: Zippable = {};
   const json = (name: string, value: unknown) => (files[name] = [enc.encode(JSON.stringify(value)), { level: 6 }]);
@@ -101,19 +105,9 @@ export async function packProject(
     files[name] = [bytesOf(a), { level: 1 }];
     return { file: name, type: a instanceof Float32Array ? "f32" : "u8" };
   };
-  const header: ProjectJson = {
-    format: PROJECT_FORMAT,
-    version: PROJECT_VERSION,
-    app,
-    savedAt: new Date().toISOString(),
-    settings: p.settings,
-    dataKey: p.data?.key ?? null,
-    summary: p.summary,
-    previewKey: p.previewKey,
-    exportKey: p.exportKey,
-    result: p.result,
-  };
-  json("project.json", header);
+  // Les données d'abord : trop grosses pour une chaîne JSON (limite de V8, très grande zone), le
+  // projet est enregistré sans elles et les retélécharge (depuis le cache) à l'ouverture.
+  let dataKey = p.data?.key ?? null;
   if (p.data) {
     const i = p.data.inputs;
     const dem = (list: DemRaster[], prefix: string) =>
@@ -128,8 +122,37 @@ export async function packProject(
       bathy: dem(i.bathy, "bathy"),
       cover: i.cover ? i.cover.map((r, k) => ({ ...r, data: bin(`data/cover_${k}.bin`, r.data) })) : null,
     };
-    json("data/inputs.json", inputs);
+    let text: string | null = null;
+    let reason = "";
+    try {
+      text = JSON.stringify(inputs);
+      if (text.length > MAX_INPUTS_CHARS) {
+        reason = `${Math.round(text.length / 2 ** 20)} M caractères`;
+        text = null;
+      }
+    } catch (e) {
+      reason = e instanceof Error ? e.message : String(e);
+    }
+    if (text !== null) files["data/inputs.json"] = [enc.encode(text), { level: 6 }];
+    else {
+      for (const name of Object.keys(files)) if (name.startsWith("data/")) delete files[name];
+      dataKey = null;
+      onDataSkipped?.(reason);
+    }
   }
+  const header: ProjectJson = {
+    format: PROJECT_FORMAT,
+    version: PROJECT_VERSION,
+    app,
+    savedAt: new Date().toISOString(),
+    settings: p.settings,
+    dataKey,
+    summary: p.summary,
+    previewKey: p.previewKey,
+    exportKey: p.exportKey,
+    result: p.result,
+  };
+  json("project.json", header);
   if (p.preview) json("preview.json", p.preview);
   json("log.json", p.log);
   return new Promise((resolve, reject) => zip(files, (err, out) => (err ? reject(err) : resolve(out))));

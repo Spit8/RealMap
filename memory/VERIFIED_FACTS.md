@@ -226,3 +226,18 @@ Use one entry per durable finding. Do not mark a claim VERIFIED until its eviden
 - `Copernicus_DSM_COG_10_N48_00_W002_00_DEM.tif` cached at 40 074 731 bytes, `Content-Length` 40 091 115 (16 KiB missing), no error raised; geotiff then fails « incorrect data check » on every later run (cache hit). Dropped connections also show as `TypeError: Failed to fetch` in the plugin's `readChunk`.
 - IGN WMS answers HTTP 400 (XML) for a block outside its coverage, 200 with no-data BIL in the sea.
 - Consequence: DECISION-030.
+
+## FACT-038 — Overpass rules for large areas, and what Overpass does when a query is too heavy
+- Status: VERIFIED (docs: https://wiki.openstreetmap.org/wiki/Overpass_API, https://dev.overpass-api.de/overpass-doc/en/preface/commons.html, read 2026-11-13; answers cached by the app 2026-11-13)
+- Admission: a query is admitted only if its declared `[timeout]` and `[maxsize]` fit in half of the server's free resources, else **504**; rate limit (slots per IP) gives **429**, and the wiki asks for a 30 s pause. Defaults 180 s / 512 MiB. Guideline: < 10 000 queries and < 1 GB per day per IP.
+- Large areas: « country-sized regions … better to use planet.osm mirrors »; « stitching bounding boxes » is listed as misuse; « various water features with a small polygon each » is one of the two query types the operators named as a problem.
+- A query that runs out of time or memory still answers **HTTP 200** with `"remark": "runtime error: Query timed out in \"query\" …"` (or out of memory) and empty / partial `elements`. Seen for the whole of Poland (water + places, roads) on 2026-11-13; 1.2.2 cached it silently (no towns, no water).
+- VK Maps (`maps.mail.ru`): « no requests limitations »; no other documentation. Measured 2026-11-13: a 2° × 2° cell in Poland, water 52 s / 27 MB, roads 23 s / 45 MB; on the same day it answered 504 to tiny queries for a while, and overpass-api.de answered 502 « at capacity ».
+
+## FACT-039 — Geofabrik extracts, Copernicus overviews, EMODnet scaling
+- Status: VERIFIED (requests and reads 2026-11-13)
+- Geofabrik: `index-v1.json` (3.8 MB, 554 extracts; `id`, `parent`, `urls.pbf`, MultiPolygon). « latest » URLs redirect (307) to a dated file. Poland 2.0 GB or 16 voivodeships (52–288 MB). Ways and multipolygons crossing an extract border stay whole in each extract. No usage limits documented; data ODbL.
+- Extracting with `osmpbf` (Rust, release): Opolskie 55 MB in 0.73 s; output compared with Overpass on an inner box (17.6–18.1 E, 50.5–50.8 N): places 111 / 111, roads 2 103 / 2 103, sites 13 / 13, land use 706 / 706, water 963 / 961.
+- Whole-Poland bbox (13.47–24.77 E, 48.87–55.43 N): 42 leaf extracts, 8.2 GB; 6.2 GB once the slivers under 1 % of the area and over 100 MB are left out (Austria, Berlin, Sweden, Ústí).
+- Copernicus DEM COG tiles have 4 images (full, 1/2, 1/4, 1/8); the overviews carry no georeference of their own (origin of image 0, step × size ratio).
+- EMODnet WCS: `SCALESIZE=i(<width>),j(<height>)` works (i = longitudes, j = latitudes, georeference right); `scalesize=Long(..)`/`scaleaxes` give 404.

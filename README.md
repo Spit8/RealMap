@@ -19,7 +19,7 @@
 </p>
 
 > [!NOTE]
-> **New in 1.2.0** ([release notes](https://github.com/Spit8/RealMap/releases/tag/v1.2.0)) — update the app and the mod
+> **New in 1.3.0** ([release notes](https://github.com/Spit8/RealMap/releases/tag/v1.3.0)) — whole countries from Geofabrik extracts, towns and industries chosen in bulk; update the app and the mod
 > - 📁 **Map projects**: save a map as a `.realmap` file (settings, downloaded data, result, log) and reopen it at once, even offline; several projects open at a time in the new **Project** tab, with **File › New / Open / Save / Save as / Close**.
 > - 🏞️ **Rivers and lakes on demand**: untick them to keep the real relief of river beds and lake floors (the game has a single water level).
 > - 🛣️ **Separate road networks at the start**, never a lone town, each industry linked to its nearest town.
@@ -132,6 +132,10 @@ not saved.
   automatic process but have not been tried yet (feedback welcome).
 - **Internet** is needed to fetch the data. The first download of an area can take a few minutes:
   the OpenStreetMap (Overpass) servers are shared and sometimes busy. Later changes reuse the cache.
+- **Very large areas** (over 20,000 km², such as a whole country): the OpenStreetMap data comes from
+  [Geofabrik](https://download.geofabrik.de) extracts instead of Overpass, as the Overpass documentation
+  asks. The app shows the size to download first (several GB for a whole country) and keeps the files
+  for 30 days.
 - The map is built in the **Map Editor**, on a **new empty map of the same size and format** as in the
   app. The mod does nothing in a running game.
 - Bigger sizes and formats (1:4, 1:5, Huge…) only appear with the game's **experimental map
@@ -156,7 +160,7 @@ not saved.
 - Land cover: © ESA WorldCover project 2021 (CC BY 4.0).
 - Rotation icon: Lucide `rotate-cw` (ISC License, © Lucide Contributors).
 - Water, places, industrial sites, roads and railways: © OpenStreetMap contributors (ODbL), through the
-  Overpass API.
+  Overpass API, or Geofabrik extracts for very large areas.
 
 ## Contributing
 

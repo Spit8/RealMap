@@ -27,6 +27,7 @@
 - 2026-11-01 (DECISION-024, v1.0.1): mod logs every decision (pump, requests, saves), no clock check, window pump as fallback, alive.lua heartbeat; the app resends a request found at the mod's start and names why the game does not answer.
 - 2026-11-01 (DECISION-022): whole UI translated (log, step details, reasons through `Msg` + `tm`, industry names per language), Export hint names the RealMap mod, deliverables as HQminiMap (NSIS, MSI, portable zip, AppImage, deb, dmg, mod zip; CI and release workflows).
 - 2026-11-01 (DECISION-023, FACT-033): automatic app updates as HQminiMap (signed latest.json, portable marker, Export › Mises à jour); Mod Manager crash fixed (description.html limited to the tags the game renders).
+- 2026-11-13 (DECISION-040, FACT-038/039, v1.3.0): country-sized areas from Geofabrik extracts (Rust `osmpbf`, confirmed size, resume), Overpass within its documented rules (places on their own, modest limits, 429 pause, runtime errors split and never cached), relief at COG overview level, OSM simplified and cropped. NOT TESTED on a whole country in the app.
 - Sister project: `../HQminiMap` (same stack, memory in `docs/agent-memory`).
 
 ## Read first

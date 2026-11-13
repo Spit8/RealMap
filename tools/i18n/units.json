@@ -1254,8 +1254,8 @@
   },
   {
     "id": "app:step.data.osm",
-    "text": "Water and places (OpenStreetMap)",
-    "ref": "Eau et lieux (OpenStreetMap)",
+    "text": "Water (OpenStreetMap)",
+    "ref": "Eau (OpenStreetMap)",
     "context": "Tab 1: list of the data downloads in progress (one line per source).",
     "kind": "label"
   },
@@ -1277,6 +1277,20 @@
     "id": "app:step.data.land",
     "text": "Beaches and business areas (OpenStreetMap)",
     "ref": "Plages et zones d'activité (OpenStreetMap)",
+    "context": "Tab 1: list of the data downloads in progress (one line per source).",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.data.places",
+    "text": "Places (OpenStreetMap)",
+    "ref": "Lieux (OpenStreetMap)",
+    "context": "Tab 1: list of the data downloads in progress (one line per source).",
+    "kind": "label"
+  },
+  {
+    "id": "app:step.data.geofabrik",
+    "text": "OpenStreetMap (Geofabrik extracts)",
+    "ref": "OpenStreetMap (extraits Geofabrik)",
     "context": "Tab 1: list of the data downloads in progress (one line per source).",
     "kind": "label"
   },
@@ -1939,13 +1953,6 @@
     "kind": "label"
   },
   {
-    "id": "app:lists.addTown",
-    "text": "Add a town…",
-    "ref": "Ajouter une ville…",
-    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
-    "kind": "label"
-  },
-  {
     "id": "app:lists.allAuto",
     "text": "All automatic",
     "ref": "Tout auto",
@@ -1993,13 +2000,6 @@
     "ref": "Commerce / industrie (% de la capacité)",
     "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
     "kind": "tooltip"
-  },
-  {
-    "id": "app:lists.industryHint",
-    "text": "Ticked = kept · click on the name = show on the map",
-    "ref": "Coché = retenue · clic sur le nom = sur la carte",
-    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
-    "kind": "sentence"
   },
   {
     "id": "app:lists.relevanceTitle",
@@ -2084,6 +2084,188 @@
     "ref": "réessayer",
     "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
     "kind": "button"
+  },
+  {
+    "id": "app:lists.resize",
+    "text": "Drag to widen or narrow",
+    "ref": "Glisser pour élargir ou réduire",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.applying",
+    "text": "Computing…",
+    "ref": "Calcul…",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.apply",
+    "text": "Update the map",
+    "ref": "Actualiser la carte",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.autoApplyTitle",
+    "text": "Recompute the map after each choice (slower on a large map)",
+    "ref": "Recalculer la carte après chaque choix (plus lent sur une grande carte)",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:lists.autoApply",
+    "text": "Update automatically",
+    "ref": "Actualiser automatiquement",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.upToDate",
+    "text": "Map up to date",
+    "ref": "Carte à jour",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.pending",
+    "text": "{n} change(s) pending",
+    "ref": "{n} changement(s) en attente",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.more",
+    "text": "+ {n} more: narrow the filter",
+    "ref": "+ {n} autres : affine le filtre",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.pendingShort",
+    "text": "pending",
+    "ref": "en attente",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.pendingTitle",
+    "text": "Changed since the last computation: « Update the map » to apply it",
+    "ref": "Changé depuis le dernier calcul : « Actualiser la carte » pour l'appliquer",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:lists.overLimit",
+    "text": "{n} towns ticked: more than the {limit} the game puts on a map of this size. They are placed if there is room.",
+    "ref": "{n} villes cochées : plus que les {limit} que le jeu met sur une carte de cette taille. Elles seront placées si la place le permet.",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:lists.uncheckFiltered",
+    "text": "Untick the {n}",
+    "ref": "Décocher les {n}",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.checkFiltered",
+    "text": "Tick the {n}",
+    "ref": "Cocher les {n}",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.filtered",
+    "text": "{n} in the filter",
+    "ref": "{n} dans le filtre",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.originAll",
+    "text": "All origins",
+    "ref": "Toutes les origines",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.typeAll",
+    "text": "All types",
+    "ref": "Tous les types",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.showOff",
+    "text": "Unticked",
+    "ref": "Non cochées",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.showOn",
+    "text": "Ticked",
+    "ref": "Cochées",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.showAll",
+    "text": "All",
+    "ref": "Toutes",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.minPopTitle",
+    "text": "Minimum population",
+    "ref": "Population minimale",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:lists.kindVillage",
+    "text": "Villages (village)",
+    "ref": "Villages (village)",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.kindTown",
+    "text": "Towns (town)",
+    "ref": "Petites villes (town)",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.kindCity",
+    "text": "Cities (city)",
+    "ref": "Villes (city)",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.kindAll",
+    "text": "All types",
+    "ref": "Tous les types",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
+  },
+  {
+    "id": "app:lists.kindTitle",
+    "text": "OpenStreetMap place type",
+    "ref": "Type de lieu OpenStreetMap",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "tooltip"
+  },
+  {
+    "id": "app:lists.search",
+    "text": "Search…",
+    "ref": "Rechercher…",
+    "context": "Lists panel over the map: towns, industries, roads and railway lines of the result, with check boxes to keep or leave them out.",
+    "kind": "label"
   },
   {
     "id": "app:legend.show",
@@ -2884,6 +3066,13 @@
     "kind": "sentence"
   },
   {
+    "id": "app:net.tooLarge",
+    "text": "Area too large for OpenStreetMap, even split into 256 pieces ({remark}). Make the area smaller.",
+    "ref": "Zone trop grande pour OpenStreetMap, même découpée en 256 morceaux ({remark}). Réduis la zone.",
+    "context": "Download status of an OpenStreetMap (Overpass) request, shown next to a data step or in an error: {server} is a server name.",
+    "kind": "sentence"
+  },
+  {
     "id": "app:net.noBathy",
     "text": "none (default depth)",
     "ref": "aucune (profondeur par défaut)",
@@ -3178,6 +3367,13 @@
     "kind": "sentence"
   },
   {
+    "id": "app:msg.projectDataSkipped",
+    "text": "The area's data is too large for the project file: it is saved without it. The data will be read again from the cache (or downloaded again) when the project is opened.",
+    "ref": "Données de la zone trop volumineuses pour le fichier du projet : il est enregistré sans elles. Elles seront relues depuis le cache (ou retéléchargées) à l'ouverture.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
     "id": "app:msg.demSkipped",
     "text": "not needed (IGN covers everything)",
     "ref": "inutile (IGN complet)",
@@ -3188,13 +3384,6 @@
     "id": "app:msg.coverFailed",
     "text": "Land cover unavailable ({error}): biomes from the relief.",
     "ref": "Occupation du sol indisponible ({error}) : biomes déduits du relief.",
-    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
-    "kind": "label"
-  },
-  {
-    "id": "app:msg.waterPlaces",
-    "text": "{water} water features, {places} places",
-    "ref": "{water} eaux, {places} lieux",
     "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
     "kind": "label"
   },
@@ -3230,6 +3419,153 @@
     "id": "app:msg.landCounts",
     "text": "{beaches} beaches, {business} business areas",
     "ref": "{beaches} plages, {business} zones d'activité",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.places",
+    "text": "{n} places",
+    "ref": "{n} lieux",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.water",
+    "text": "{n} water features",
+    "ref": "{n} eaux",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.gigabytes",
+    "text": "{n} GB",
+    "ref": "{n} Go",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.geofabrikAsk",
+    "text": "{km2} km² area: too large for the Overpass servers. The OpenStreetMap data therefore comes from the Geofabrik extracts below. Untick the ones you do not need: where a region is unticked, the map will have no real towns, water or industries. Heavy regions that only cover a strip of the area are unticked to start with. The files stay in the cache for 30 days.",
+    "ref": "Zone de {km2} km² : trop grande pour les serveurs Overpass. Les données OpenStreetMap viennent donc des extraits Geofabrik ci-dessous. Décoche ceux dont tu n'as pas besoin : là où une région est décochée, la carte n'aura ni villes, ni eau, ni industries réelles. Les régions lourdes qui ne couvrent qu'une bande de la zone sont décochées d'office. Les fichiers restent en cache 30 jours.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.geofabrikGo",
+    "text": "Download",
+    "ref": "Télécharger",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.geofabrikCancelled",
+    "text": "Download of the Geofabrik extracts cancelled: no data fetched.",
+    "ref": "Téléchargement des extraits Geofabrik annulé : données non récupérées.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.geofabrikNone",
+    "text": "No Geofabrik extract covers this area.",
+    "ref": "Aucun extrait Geofabrik ne couvre cette zone.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.geofabrikDownload",
+    "text": "{got} / {total} · region {d}/{n}",
+    "ref": "{got} / {total} · région {d}/{n}",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.geofabrikRead",
+    "text": "reading region {d}/{n}",
+    "ref": "lecture de la région {d}/{n}",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.geofabrikFailed",
+    "text": "Geofabrik extract « {name} » not downloaded ({error}). Try again: the part already received is kept.",
+    "ref": "Extrait Geofabrik « {name} » non téléchargé ({error}). Relance : la partie déjà reçue est gardée.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.durationHours",
+    "text": "{h} h {m}",
+    "ref": "{h} h {m}",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.durationMin",
+    "text": "{n} min",
+    "ref": "{n} min",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.durationUnderMin",
+    "text": "< 1 min",
+    "ref": "< 1 min",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.geofabrikReadyItem",
+    "text": "ready · {share} % of the area",
+    "ref": "prête · {share} % de la zone",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.checkNone",
+    "text": "Untick all",
+    "ref": "Tout décocher",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.checkAll",
+    "text": "Tick all",
+    "ref": "Tout cocher",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.geofabrikLeftOut",
+    "text": "Geofabrik regions left out: {names}. The map will have no real towns, water or industries there.",
+    "ref": "Régions Geofabrik laissées de côté : {names}. La carte n'y aura ni villes, ni eau, ni industries réelles.",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "sentence"
+  },
+  {
+    "id": "app:msg.geofabrikTotal",
+    "text": "To download: {size} · about {time} in all ({n} regions ticked)",
+    "ref": "À télécharger : {size} · environ {time} en tout ({n} régions cochées)",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.geofabrikCachedItem",
+    "text": "in the cache · {time} · {share} % of the area",
+    "ref": "en cache · {time} · {share} % de la zone",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.geofabrikItem",
+    "text": "{size} · {time} · {share} % of the area",
+    "ref": "{size} · {time} · {share} % de la zone",
+    "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
+    "kind": "label"
+  },
+  {
+    "id": "app:msg.megabytes",
+    "text": "{n} MB",
+    "ref": "{n} Mo",
     "context": "Messages of the Log tab and of the panel's status line: download details, warnings when a data source fails, the summary of the computed map, the export and in-game generation steps.",
     "kind": "label"
   },

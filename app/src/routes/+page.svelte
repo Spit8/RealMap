@@ -58,10 +58,11 @@
   let autoPreview = $state(true);
   // Phase 2 is cheap once the data is there: recompute the result shortly after each change.
   $effect(() => {
-    const key = importer.optionsKey;
+    // Les options seules : les choix (villes, industries, routes) attendent « Actualiser la carte ».
+    const key = importer.optionsOnlyKey;
     if (!autoPreview || !importer.preview || importer.dataStale) return;
     const t = setTimeout(() => {
-      if (importer.stale && !importer.running && key === importer.optionsKey) void importer.runPreview();
+      if (importer.stale && !importer.running && key === importer.optionsOnlyKey) void importer.runPreview();
     }, 700);
     return () => clearTimeout(t);
   });

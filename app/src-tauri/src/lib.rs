@@ -1,4 +1,7 @@
 use serde::Serialize;
+
+mod geofabrik;
+mod osm_pbf;
 use std::path::{Path, PathBuf};
 use tauri_plugin_fs::FsExt;
 
@@ -188,7 +191,13 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
-        .invoke_handler(tauri::generate_handler![detect_paths, install_info, allow_dirs])
+        .invoke_handler(tauri::generate_handler![
+            detect_paths,
+            install_info,
+            allow_dirs,
+            geofabrik::geofabrik_download,
+            geofabrik::osm_extract
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

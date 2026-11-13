@@ -18,6 +18,23 @@ export function copernicusTileUrl(name: string): string {
   return `${COPERNICUS_BASE}/${name}/${name}.tif`;
 }
 
+/**
+ * Niveaux d'aperçu (overviews) des COG Copernicus, vérifiés sur une dalle réelle en 1.2.3 : 4 images,
+ * pleine résolution puis 1/2, 1/4, 1/8 (environ 30, 60, 120, 240 m).
+ */
+export const COPERNICUS_OVERVIEWS = 3;
+const COPERNICUS_RES_M = 30;
+
+/**
+ * Niveau de dalle pour un pas de grille réel : le plus grossier qui garde au moins 2 pixels par
+ * cellule. 0 (pleine résolution) pour les cartes habituelles ; un pays entier lit 1/4 ou 1/8.
+ */
+export function demLevel(realStepM: number): number {
+  let level = 0;
+  while (level < COPERNICUS_OVERVIEWS && COPERNICUS_RES_M * 2 ** (level + 1) <= realStepM / 2) level++;
+  return level;
+}
+
 /** Names of the tiles covering a lon/lat box. */
 export function copernicusTilesFor(b: { west: number; south: number; east: number; north: number }): string[] {
   const names: string[] = [];

@@ -19,7 +19,7 @@
 </p>
 
 > [!NOTE]
-> **Nouveau dans la 1.2.0** ([notes de version](https://github.com/Spit8/RealMap/releases/tag/v1.2.0)) — mets à jour l'application et le mod
+> **Nouveau dans la 1.3.0** ([notes de version](https://github.com/Spit8/RealMap/releases/tag/v1.3.0)) — des pays entiers depuis les extraits Geofabrik, villes et industries choisies en masse ; mets à jour l'application et le mod
 > - 📁 **Projets de carte** : enregistre une carte dans un fichier `.realmap` (réglages, données téléchargées, résultat, journal) et rouvre-la aussitôt, même sans réseau ; plusieurs projets ouverts à la fois dans le nouvel onglet **Projet**, avec **Fichier › Nouveau / Ouvrir / Enregistrer / Enregistrer sous / Fermer**.
 > - 🏞️ **Rivières et lacs à la demande** : décoche-les pour garder le relief réel des lits de rivières et des fonds de lacs (le jeu n'a qu'un niveau d'eau).
 > - 🛣️ **Réseaux routiers séparés au départ**, jamais de ville seule, chaque industrie reliée à la ville la plus proche.
@@ -136,6 +136,10 @@ modifications non enregistrées.
 - **Internet** est nécessaire pour récupérer les données. Le premier téléchargement d'une zone peut
   prendre quelques minutes : les serveurs OpenStreetMap (Overpass) sont partagés et parfois chargés.
   Les changements suivants réutilisent le cache.
+- **Très grandes zones** (plus de 20 000 km², un pays entier par exemple) : les données OpenStreetMap
+  viennent des extraits [Geofabrik](https://download.geofabrik.de) au lieu d'Overpass, comme le demande la
+  documentation d'Overpass. L'app affiche d'abord la taille à télécharger (plusieurs Go pour un pays
+  entier) et garde les fichiers 30 jours.
 - La carte se construit dans l'**éditeur de cartes**, sur une **nouvelle carte vide de même taille et
   même format** que dans l'application. Le mod ne fait rien dans une partie en cours.
 - Les plus grandes tailles et formats (1:4, 1:5, Énorme…) n'apparaissent qu'avec les **fonctions de
@@ -160,7 +164,7 @@ modifications non enregistrées.
 - Occupation du sol : © ESA WorldCover project 2021 (CC BY 4.0).
 - Icône de rotation : Lucide `rotate-cw` (licence ISC, © Lucide Contributors).
 - Eau, lieux, sites industriels, routes et voies ferrées : © contributeurs OpenStreetMap (ODbL), via
-  l'API Overpass.
+  l'API Overpass, ou les extraits Geofabrik pour les très grandes zones.
 
 ## Contribuer
 

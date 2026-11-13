@@ -13,7 +13,7 @@ import { decodeBil, ignBlocks, ignBlockUrl, ignRaster, pasteBlock, resampleToGri
 import {
   coverRasterFor, worldcoverTilesFor, worldcoverTileUrl, worldcoverWindow, type CoverRaster,
 } from "../core/landcover";
-import { parseOverpassStatus, type Bbox, type OverpassStatus } from "../core/osm";
+import { fetchSplit, overpassRuntimeError, parseOverpassStatus, type Bbox, type OverpassStatus } from "../core/osm";
 import { ensureDir, fileExists, fileStat, joinPath, readBytes, readText, removeFile, renamePath, writeBytes, writeText } from "./fsx";
 import { fetchBytes, looksLikeTiff, type RetryNotice } from "./fetchbytes";
 import { t } from "../i18n/index.svelte";
@@ -31,6 +31,8 @@ const OVERPASS = [
 const STATUS_TIMEOUT_S = 5;
 /** Requests at once: overpass-api.de gives 2 slots per user (FACT-012). */
 const OVERPASS_PARALLEL = 2;
+/** Créneaux annoncés par overpass-api.de (`Rate limit: N` de /api/status), au plus OVERPASS_PARALLEL. */
+let overpassSlots = OVERPASS_PARALLEL;
 
 /** overpass-api.de answers 406 to requests without an identifying User-Agent (FACT-008). */
 export const USER_AGENT = "RealMap/0.9 (Transport Fever 3 map importer)";
@@ -39,11 +41,17 @@ const overpassCache = new Map<string, unknown>();
 /** Answers older than this are fetched again. */
 const OVERPASS_CACHE_MS = 30 * 24 * 3600 * 1000;
 /** Rounds over all servers before giving up, and the pause after each failed round. */
-const ROUND_WAIT_S = [30, 60];
+const ROUND_WAIT_S = [30, 60, 120];
 /** A slot announced further away than this: try the other server instead of waiting. */
 const MAX_SLOT_WAIT_S = 60;
 
 export type OverpassWait = (seconds: number, reason: string) => void;
+
+/** Détails techniques des téléchargements pour le journal (`diag` de l'importeur). */
+let note: (text: string) => void = () => {};
+export function setDownloadNote(fn: (text: string) => void): void {
+  note = fn;
+}
 
 /** Where an answer came from, for the steps and the technical journal. */
 export interface OverpassOrigin {
@@ -58,7 +66,7 @@ export interface OverpassOrigin {
 let overpassRunning = 0;
 const overpassWaiting: (() => void)[] = [];
 async function overpassPlace(): Promise<() => void> {
-  if (overpassRunning >= OVERPASS_PARALLEL) await new Promise<void>((r) => overpassWaiting.push(r));
+  while (overpassRunning >= overpassSlots) await new Promise<void>((r) => overpassWaiting.push(r));
   overpassRunning++;
   return () => {
     overpassRunning--;
@@ -89,25 +97,71 @@ async function overpassStatus(base: string): Promise<OverpassStatus | null> {
  * announced by `/api/status` before sending; on a 429 (rate limit) or 502/504 (server full) move
  * on to the next server, and pause 30 s then 60 s between rounds over all of them. Two requests run
  * at once (the two slots). With `bbox` (the one written in the query), an answer cached for the
- * same query over a larger area is reused: the parsers keep only what lies in the map.
+ * same query over a larger area is reused: `gather` then keeps only what lies near the map (`cropToFrame`).
+ * Une zone trop lourde pour le serveur (erreur d'exécution, `fetchSplit`) est redemandée en
+ * morceaux : `onSplit` le signale, `onOrigin` donne le nombre de morceaux.
  */
-export async function overpass<T>(query: string, onWait?: OverpassWait, bbox?: Bbox, onOrigin?: (o: OverpassOrigin) => void): Promise<T> {
+export async function overpass<T>(
+  query: string,
+  onWait?: OverpassWait,
+  bbox?: Bbox,
+  onOrigin?: (o: OverpassOrigin) => void,
+  onSplit?: (remark: string, depth: number) => void,
+): Promise<T> {
   const t0 = Date.now();
   const cached = await overpassCached<T>(query, bbox);
   if (cached) {
     onOrigin?.({ source: "cache", ageMs: cached.ageMs, ms: Date.now() - t0, bytes: cached.bytes });
     return cached.json;
   }
-  const release = await overpassPlace();
-  try {
-    const got = await overpassNow<T>(query, onWait);
-    if (bbox) await rememberArea(query, bbox, got.file);
-    onOrigin?.({ source: got.server, ageMs: 0, ms: Date.now() - t0, bytes: got.bytes });
-    return got.json;
-  } finally {
-    release();
+  const tooLarge = (remark: string) => new Error(t("net.tooLarge", { remark }));
+  let server = "";
+  let bytes = 0;
+  // Un morceau : son propre cache, puis le serveur, dans un des 2 créneaux.
+  const one = async (q: string): Promise<unknown> => {
+    if (q !== query) {
+      // Cache exact du morceau seulement : une ancienne réponse « pays entier » serait relue
+      // (et analysée, des dizaines de Mo) une fois par case.
+      const c = await overpassCached<unknown>(q);
+      if (c) return c.json;
+    }
+    const release = await overpassPlace();
+    try {
+      const got = await overpassNow<unknown>(q, onWait);
+      server ||= got.server;
+      bytes += got.bytes;
+      return got.json;
+    } finally {
+      release();
+    }
+  };
+  let json: unknown;
+  let parts = 1;
+  if (bbox) ({ json, parts } = await fetchSplit(query, bbox, one, { onSplit, tooLarge }));
+  else {
+    json = await one(query);
+    const remark = overpassRuntimeError(json);
+    if (remark) throw tooLarge(remark);
   }
+  const file = overpassFile(await cacheDir("overpass"), query);
+  // Morceaux fusionnés : la réponse entière est écrite sous la requête d'origine. Trop grosse pour
+  // une seule chaîne (limite de V8) : pas de fichier, les morceaux restent en cache.
+  let written = parts === 1;
+  if (parts > 1) {
+    try {
+      await writeTextAtomic(file, JSON.stringify(json));
+      written = true;
+    } catch (e) {
+      note(`OSM : réponse fusionnée (${parts} morceaux) non écrite en cache : ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  overpassCache.set(query, json);
+  if (bbox && written) await rememberArea(query, bbox, file);
+  onOrigin?.({ source: parts > 1 ? `${server || "cache"} ×${parts}` : server, ageMs: 0, ms: Date.now() - t0, bytes });
+  return json as T;
 }
+
+const overpassFile = (dir: string, query: string) => joinPath(dir, `${hashKey(query)}.json`);
 
 /** `[out:json][timeout:…][maxsize:…];` and the bbox taken out: what the answer depends on. */
 function queryTemplate(query: string, b: Bbox): string {
@@ -155,7 +209,17 @@ async function overpassCached<T>(query: string, bbox?: Bbox): Promise<{ json: T;
     if (!st || Date.now() - st.mtimeMs >= OVERPASS_CACHE_MS) continue;
     const text = await readText(file);
     if (!text) continue;
-    const json = JSON.parse(text) as T;
+    let json: T;
+    try {
+      json = JSON.parse(text) as T;
+    } catch {
+      // Fichier coupé (écrit avant 1.2.3, ou plantage pendant l'écriture) : supprimé, redemandé.
+      note(`OSM : cache illisible supprimé (${file})`);
+      await removeFile(file);
+      continue;
+    }
+    // Réponse tronquée gardée par une version antérieure à 1.2.3 : redemandée.
+    if (overpassRuntimeError(json)) continue;
     overpassCache.set(query, json);
     return { json, ageMs: Date.now() - st.mtimeMs, bytes: text.length };
   }
@@ -171,6 +235,8 @@ async function overpassNow<T>(query: string, onWait?: OverpassWait): Promise<{ j
   for (let round = 0; round <= ROUND_WAIT_S.length; round++) {
     for (const srv of OVERPASS) {
       const status = srv.slots ? await overpassStatus(srv.base) : null;
+      // Jamais plus de requêtes en parallèle que de créneaux par utilisateur (doc « commons »).
+      if (status?.slots) overpassSlots = Math.max(1, Math.min(OVERPASS_PARALLEL, status.slots));
       if (status && status.free === 0 && status.waitS) {
         if (status.waitS > MAX_SLOT_WAIT_S) {
           failures.push(t("net.noSlot", { server: srv.name, s: status.waitS }));
@@ -193,8 +259,12 @@ async function overpassNow<T>(query: string, onWait?: OverpassWait): Promise<{ j
         if (res.ok) {
           const text = await res.text();
           const json = JSON.parse(text) as T;
+          // Erreur d'exécution (HTTP 200 quand même) : ni cache ni autre serveur, l'appelant découpe.
+          if (overpassRuntimeError(json)) return { json, server: srv.name, file: "", bytes: text.length };
+          const remark = (json as { remark?: unknown }).remark;
+          if (remark) note(`OSM : remarque du serveur ${srv.name} : ${String(remark).slice(0, 200)}`);
           overpassCache.set(query, json);
-          await writeText(file, text);
+          await writeTextAtomic(file, text);
           return { json, server: srv.name, file, bytes: text.length };
         }
         // 400 (query), 406 (User-Agent)…: the other server would refuse it too.
@@ -203,6 +273,9 @@ async function overpassNow<T>(query: string, onWait?: OverpassWait): Promise<{ j
           throw new Error(t("net.refused", { status: res.status }));
         }
         failures.push(res.status === 429 ? t("net.rateLimit", { server: srv.name }) : t("net.busy", { server: srv.name, status: res.status }));
+        // 429 = limite de débit : la doc demande 30 s de pause avant une nouvelle requête.
+        // 504 = ressources déclarées indisponibles, 502 = serveur saturé : l'autre serveur tout de suite.
+        if (res.status === 429) await sleep(30, t("net.rateLimit", { server: srv.name }), onWait);
       } catch (e) {
         if (refused) throw e;
         failures.push(t("net.noAnswer", { server: srv.name }));
@@ -213,7 +286,22 @@ async function overpassNow<T>(query: string, onWait?: OverpassWait): Promise<{ j
   throw new Error(t("net.osmDown", { failures: failures.slice(-OVERPASS.length).join(" ; ") }));
 }
 
-async function cacheDir(sub: string): Promise<string> {
+/** Écrit dans `.part` puis renomme : jamais de fichier à moitié écrit en cache. */
+async function writeTextAtomic(file: string, text: string): Promise<void> {
+  const part = `${file}.part`;
+  await writeText(part, text);
+  await removeFile(file);
+  await renamePath(part, file);
+}
+
+async function writeBytesAtomic(file: string, bytes: Uint8Array): Promise<void> {
+  const part = `${file}.part`;
+  await writeBytes(part, bytes);
+  await removeFile(file);
+  await renamePath(part, file);
+}
+
+export async function cacheDir(sub: string): Promise<string> {
   const dir = joinPath(await appCacheDir(), sub);
   await ensureDir(dir);
   return dir;
@@ -246,12 +334,82 @@ async function demTileBytes(name: string, fresh: boolean, onRetry?: RetryNotice)
   return { buf: got.bytes.buffer, cached: false };
 }
 
+interface DemMeta {
+  west: number;
+  north: number;
+  resLon: number;
+  resLat: number;
+  width: number;
+  height: number;
+  noData?: number;
+}
+
+/**
+ * Une dalle Copernicus à un niveau d'aperçu (très grande zone) : seul ce niveau est lu, par requêtes
+ * partielles, puis gardé en cache (`<dalle>.L<n>.bin` + `.json`). Les niveaux d'aperçu n'ont pas leur
+ * propre géoréférencement : origine de l'image pleine résolution, pas multiplié par le rapport des tailles.
+ */
+async function demTileOverview(name: string, level: number, fresh: boolean, onRetry?: RetryNotice): Promise<DemRaster | null> {
+  const dir = await cacheDir("dem");
+  if (await fileExists(joinPath(dir, `${name}.missing`))) return null;
+  const bin = joinPath(dir, `${name}.L${level}.bin`);
+  const metaFile = joinPath(dir, `${name}.L${level}.json`);
+  if (!fresh && (await fileExists(bin)) && (await fileExists(metaFile))) {
+    const meta = JSON.parse((await readText(metaFile)) ?? "") as DemMeta;
+    const bytes = await readBytes(bin);
+    const data = new Float32Array(bytes.slice().buffer);
+    if (data.length === meta.width * meta.height) return { ...meta, data };
+  }
+  const full = joinPath(dir, `${name}.tif`);
+  let tiff;
+  if (await fileExists(full)) tiff = await fromArrayBuffer((await readBytes(full)).slice().buffer);
+  else {
+    const url = copernicusTileUrl(name);
+    const head = await fetch(url, { method: "HEAD", headers: { "User-Agent": USER_AGENT }, signal: AbortSignal.timeout(30_000) });
+    if (head.status === 404 || head.status === 403) {
+      await writeBytes(joinPath(dir, `${name}.missing`), new Uint8Array());
+      return null;
+    }
+    if (!head.ok) throw new Error(`HTTP ${head.status}`);
+    tiff = await fromCustomClient(tauriRangeClient(url, onRetry));
+  }
+  const base = await tiff.getImage(0);
+  const img = await tiff.getImage(Math.min(level, (await tiff.getImageCount()) - 1));
+  const [west, north] = base.getOrigin();
+  const [resLon, resLat] = base.getResolution();
+  const meta: DemMeta = {
+    west,
+    north,
+    resLon: Math.abs(resLon) * (base.getWidth() / img.getWidth()),
+    resLat: Math.abs(resLat) * (base.getHeight() / img.getHeight()),
+    width: img.getWidth(),
+    height: img.getHeight(),
+    noData: base.getGDALNoData() ?? undefined,
+  };
+  const r = await img.readRasters({ samples: [0], interleave: true });
+  const data = r instanceof Float32Array ? r : Float32Array.from(r as ArrayLike<number>);
+  await writeBytesAtomic(bin, new Uint8Array(data.buffer, data.byteOffset, data.byteLength));
+  await writeTextAtomic(metaFile, JSON.stringify(meta));
+  return { ...meta, data };
+}
+
 /**
  * A Copernicus tile (null in the sea). A tile that does not decode (cut short by an earlier
  * download) is deleted and downloaded again; still unreadable after that, the error names it.
  */
-export async function loadDemTile(name: string, onRetry?: RetryNotice): Promise<DemRaster | null> {
+export async function loadDemTile(name: string, onRetry?: RetryNotice, level = 0): Promise<DemRaster | null> {
   let last: unknown = null;
+  if (level > 0) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await demTileOverview(name, level, attempt > 0, onRetry);
+      } catch (e) {
+        last = e;
+        note(`relief ${name} niveau ${level} : ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+    throw new Error(t("msg.demTileFailed", { tile: name, error: last instanceof Error ? last.message : String(last) }));
+  }
   for (let attempt = 0; attempt < 2; attempt++) {
     let got: Awaited<ReturnType<typeof demTileBytes>>;
     try {
@@ -322,7 +480,8 @@ export async function loadLandcover(
     const file = joinPath(dir, `${hashKey(`${url}|${level}|${win.join(",")}`)}.bin`);
     let data: Uint8Array | null = (await fileExists(file)) ? await readBytes(file) : null;
     if (!data) {
-      const head = await fetch(url, { method: "HEAD", headers: { "User-Agent": USER_AGENT } });
+      // Sans délai, une requête HEAD bloquée gelait tout le téléchargement.
+      const head = await fetch(url, { method: "HEAD", headers: { "User-Agent": USER_AGENT }, signal: AbortSignal.timeout(30_000) });
       if (head.status === 404 || head.status === 403) {
         await writeBytes(missing, new Uint8Array());
         continue;
@@ -351,18 +510,33 @@ async function tiffRaster(buf: ArrayBuffer): Promise<DemRaster> {
   return { west, north, resLon: Math.abs(resLon), resLat: Math.abs(resLat), width: img.getWidth(), height: img.getHeight(), data, noData: nd ?? undefined };
 }
 
-/** Bytes of a URL, from the disk cache or downloaded (only kept when `ok(bytes)`); null on failure. */
-async function cachedBytes(sub: string, url: string, ok: (b: Uint8Array) => boolean): Promise<Uint8Array | null> {
+/**
+ * Bytes of a URL, from the disk cache or downloaded (only kept when `ok(bytes)` and complete:
+ * `Content-Length` checked, written atomically); null on failure, the reason in the journal.
+ */
+async function cachedBytes(sub: string, url: string, ok: (b: Uint8Array) => boolean, what: string): Promise<{ bytes: Uint8Array; file: string } | null> {
   const file = joinPath(await cacheDir(sub), `${hashKey(url)}.bin`);
-  if (await fileExists(file)) return readBytes(file);
+  if (await fileExists(file)) return { bytes: await readBytes(file), file };
   try {
-    const res = await fetch(url, { headers: { "User-Agent": USER_AGENT }, signal: AbortSignal.timeout(60_000) });
-    if (!res.ok) return null;
+    const res = await fetch(url, { headers: { "User-Agent": USER_AGENT }, signal: AbortSignal.timeout(120_000) });
+    if (!res.ok) {
+      note(`${what} : HTTP ${res.status}`);
+      return null;
+    }
     const bytes = new Uint8Array(await res.arrayBuffer());
-    if (!ok(bytes)) return null;
-    await writeBytes(file, bytes);
-    return bytes;
-  } catch {
+    const expected = Number(res.headers.get("content-length") ?? NaN);
+    if (Number.isFinite(expected) && expected !== bytes.length) {
+      note(`${what} : réponse coupée (${bytes.length} octets sur ${expected})`);
+      return null;
+    }
+    if (!ok(bytes)) {
+      note(`${what} : réponse inattendue (${new TextDecoder().decode(bytes.subarray(0, 160)).replace(/\s+/g, " ")})`);
+      return null;
+    }
+    await writeBytesAtomic(file, bytes);
+    return { bytes, file };
+  } catch (e) {
+    note(`${what} : ${e instanceof Error ? e.message : String(e)}`);
     return null;
   }
 }
@@ -375,25 +549,35 @@ export async function loadBathymetry(b: Bbox): Promise<{ rasters: DemRaster[]; s
   const box = growBbox(b, 0.02);
   if (inEmodnet(box)) {
     // A GeoTIFF starts with "II*" or "MM*"; an error comes back as XML.
-    const bytes = await cachedBytes("bathymetry", emodnetUrl(box), (x) => x.length > 8 && (x[0] === 0x49 || x[0] === 0x4d));
-    if (bytes) {
+    const got = await cachedBytes("bathymetry", emodnetUrl(box), (x) => x.length > 8 && (x[0] === 0x49 || x[0] === 0x4d), "EMODnet");
+    if (got) {
       try {
-        return { rasters: [await tiffRaster(bytes.slice().buffer)], source: "EMODnet Bathymetry" };
-      } catch {
-        /* unreadable: try ETOPO */
+        return { rasters: [await tiffRaster(got.bytes.slice().buffer)], source: "EMODnet Bathymetry" };
+      } catch (e) {
+        // Illisible : supprimé du cache (sinon le repli sur ETOPO serait définitif).
+        note(`EMODnet illisible, fichier supprimé : ${e instanceof Error ? e.message : String(e)}`);
+        await removeFile(got.file);
       }
     }
+    note("fonds marins : EMODnet indisponible, repli sur ETOPO 1′");
   }
-  const bytes = await cachedBytes("bathymetry", etopoUrl(box), (x) => x.length > 2 && x[0] === 0x7b);
-  if (bytes) {
-    const r = parseEtopoJson(JSON.parse(new TextDecoder().decode(bytes)));
-    if (r) return { rasters: [r], source: "NOAA ETOPO 1′" };
+  const got = await cachedBytes("bathymetry", etopoUrl(box), (x) => x.length > 2 && x[0] === 0x7b, "ETOPO");
+  if (got) {
+    try {
+      const r = parseEtopoJson(JSON.parse(new TextDecoder().decode(got.bytes)));
+      if (r) return { rasters: [r], source: "NOAA ETOPO 1′" };
+      note("ETOPO : réponse sans données");
+    } catch (e) {
+      note(`ETOPO illisible, fichier supprimé : ${e instanceof Error ? e.message : String(e)}`);
+      await removeFile(got.file);
+    }
   }
+  note("fonds marins : aucune source, profondeur par défaut");
   return { rasters: [], source: t("net.noBathy") };
 }
 
 /** Short stable key for a cached request. */
-function hashKey(s: string): string {
+export function hashKey(s: string): string {
   let h1 = 0x811c9dc5;
   let h2 = 0;
   for (let i = 0; i < s.length; i++) {

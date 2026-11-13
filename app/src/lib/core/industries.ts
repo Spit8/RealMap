@@ -109,8 +109,8 @@ export interface IndustrySite {
   why: string;
 }
 
-const PRODUCT_RE = "steel|iron|oil|petroleum|chemical|beer|glass|brick|wood|timber|furniture|food|sugar|dairy|textile|machine|tool|vehicle|car|cement|paper";
-const INDUSTRIAL_RE =
+export const PRODUCT_RE = "steel|iron|oil|petroleum|chemical|beer|glass|brick|wood|timber|furniture|food|sugar|dairy|textile|machine|tool|vehicle|car|cement|paper";
+export const INDUSTRIAL_RE =
   "refinery|oil|steelmaker|steel|metal|chemical|brewery|sawmill|brickyard|brickworks|glassworks|glass|food|food_industry|dairy|sugar|textile|furniture|machinery|machine|tools|automotive|car|vehicle|cement|paper|printing|tyre|tire|mine|mining";
 
 /** One light query (centres only): quarries, mines, wells, platforms, works, industrial sites, ports. */

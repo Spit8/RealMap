@@ -2,41 +2,77 @@
   /**
    * Towns, industries and road / rail lists in a panel over the map (DECISION-015), out of the
    * left panel. A click on a name centres the map on it and opens its sheet.
+   * Filtres et choix en masse (« Cocher les N filtrées »), choix en attente jusqu'à « Actualiser la
+   * carte » (ou la case « Actualiser automatiquement »), largeur réglable à la souris.
    */
   import { errorText, importer } from "$lib/state/importer.svelte";
-  import { foldName, industryColor, industryLabel, industryTitle, needsText, shownTownKeys, townTitle } from "$lib/ui/townMarkers";
+  import { foldName, industryColor, industryLabel, industryTitle, needsText, townTitle } from "$lib/ui/townMarkers";
   import { fmtNum, t, tk } from "$lib/i18n/index.svelte";
+  import { gameTownLimit } from "$lib/core/towns";
   import ResetRoads from "$lib/ui/ResetRoads.svelte";
 
   type ListTab = "towns" | "industries" | "network";
+  type Show = "all" | "on" | "off";
   let { onFocus, onClose }: { onFocus: (kind: "town" | "industry", key: string) => void; onClose: () => void } = $props();
 
   const TAB_KEY = "importcity.listTab";
-  function stored(): ListTab {
+  const WIDTH_KEY = "importcity.listsWidth";
+  function stored(key: string): string | null {
     try {
-      return (localStorage.getItem(TAB_KEY) as ListTab | null) ?? "towns";
+      return localStorage.getItem(key);
     } catch {
-      return "towns";
+      return null;
     }
   }
-  let tab = $state<ListTab>(stored());
-  $effect(() => {
+  function store(key: string, v: string): void {
     try {
-      localStorage.setItem(TAB_KEY, tab);
+      localStorage.setItem(key, v);
     } catch {
       /* storage unavailable */
     }
-  });
+  }
+  let tab = $state<ListTab>((stored(TAB_KEY) as ListTab | null) ?? "towns");
+  $effect(() => store(TAB_KEY, tab));
+
+  // Largeur : 520 px par défaut, réglable par la poignée du bord droit (360 px à 90 % de la carte).
+  let width = $state(Number(stored(WIDTH_KEY)) || 520);
+  let panel: HTMLDivElement | undefined = $state();
+  function startResize(e: PointerEvent): void {
+    e.preventDefault();
+    const x0 = e.clientX;
+    const w0 = width;
+    const max = () => (panel?.parentElement?.clientWidth ?? 1200) * 0.9;
+    const move = (ev: PointerEvent) => (width = Math.round(Math.max(360, Math.min(max(), w0 + ev.clientX - x0))));
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      store(WIDTH_KEY, String(width));
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  }
 
   const pv = $derived(importer.preview);
   const s = $derived(importer.settings);
-  const placedTowns = $derived((pv?.candidates ?? []).filter((c) => c.status === "placed").length);
+  /** Rows shown at most: the filter reaches the others (a whole country has tens of thousands of places). */
+  const MAX_ROWS = 300;
 
-  // Towns: the chosen ones and the 10 most populous others; the rest is reached through « Ajouter ».
-  const listedTowns = $derived.by(() => {
-    const all = pv?.candidates ?? [];
-    const keys = shownTownKeys(all);
-    return all.filter((c) => keys.has(c.key));
+  // ---- Villes ----
+  let townQuery = $state("");
+  let townKind = $state<"all" | "city" | "town" | "village">("all");
+  let townMin = $state(0);
+  let townShow = $state<Show>("all");
+  const townsOn = $derived((pv?.candidates ?? []).filter((c) => importer.townOn(c)).length);
+  const townLimit = $derived(pv ? gameTownLimit(pv.frame) : 0);
+  const townFiltered = $derived.by(() => {
+    const q = foldName(townQuery.trim());
+    return (pv?.candidates ?? []).filter(
+      (c) =>
+        (townKind === "all" || c.place === townKind) &&
+        c.rank >= (townMin || 0) &&
+        (townShow === "all" || (townShow === "on") === importer.townOn(c)) &&
+        (!q || foldName(c.name).includes(q)),
+    );
   });
   const townByKey = $derived(new Map((pv?.towns ?? []).map((x) => [x.key, x])));
   // Towns of the map with no road left (the user removed them all: DECISION-018); an industry's
@@ -50,30 +86,36 @@
     }
     return new Set((pv?.towns ?? []).filter((x) => !linked.has(x.name)).map((x) => x.key));
   });
-  let townQuery = $state("");
-  let townFocus = $state(false);
-  const suggestions = $derived.by(() => {
-    const all = pv?.candidates ?? [];
-    const listed = new Set(listedTowns.map((c) => c.key));
-    const rest = all.filter((c) => c.status === "off" && !listed.has(c.key));
-    const q = foldName(townQuery.trim());
-    return (q ? rest.filter((c) => foldName(c.name).includes(q)) : rest).slice(0, 30);
+  /** Choix en attente : différent de celui du dernier calcul. */
+  const townPending = (c: { key: string; pick: boolean | null }) => (s.townPicks[c.key] ?? null) !== c.pick;
+
+  // ---- Industries ----
+  let indQuery = $state("");
+  let indTag = $state("all");
+  let indOrigin = $state("all");
+  let indShow = $state<Show>("all");
+  const indTags = $derived([...new Set((pv?.industryCandidates ?? []).map((c) => c.tag))].sort((a, b) => industryLabel(a).localeCompare(industryLabel(b))));
+  const indFiltered = $derived.by(() => {
+    const q = foldName(indQuery.trim());
+    return (pv?.industryCandidates ?? []).filter(
+      (c) =>
+        (indTag === "all" || c.tag === indTag) &&
+        (indOrigin === "all" || c.origin === indOrigin) &&
+        (indShow === "all" || (indShow === "on") === importer.industryOn(c)) &&
+        (!q || foldName(c.name).includes(q)),
+    );
   });
-  function addTown(key: string): void {
-    importer.setPick(key, true);
-    townQuery = "";
-    townFocus = false;
-  }
+  const indPending = (c: { key: string; pick: boolean | null }) => (s.industryPicks[c.key] ?? null) !== c.pick;
 
   const km = (m: number) => `${fmtNum(m / 1000, 1)} km`;
   const pct = (v: number) => `${Math.round(v * 100)}`;
 </script>
 
-<div class="lists">
+<div class="lists" bind:this={panel} style:width="min({width}px, calc(100% - 20px))">
   <header>
     <nav>
-      <button class:active={tab === "towns"} onclick={() => (tab = "towns")}>{t("lists.towns")}{pv ? ` · ${placedTowns}` : ""}</button>
-      <button class:active={tab === "industries"} onclick={() => (tab = "industries")}>{t("lists.industries")}{pv ? ` · ${(pv.industries ?? []).length}` : ""}</button>
+      <button class:active={tab === "towns"} onclick={() => (tab = "towns")}>{t("lists.towns")}{pv ? ` · ${townsOn}` : ""}</button>
+      <button class:active={tab === "industries"} onclick={() => (tab = "industries")}>{t("lists.industries")}{pv ? ` · ${(pv.industryCandidates ?? []).filter((c) => importer.industryOn(c)).length}` : ""}</button>
       <button class:active={tab === "network"} onclick={() => (tab = "network")}>{t("lists.network")}</button>
     </nav>
     <button class="close" title={t("lists.close")} onclick={onClose}>✕</button>
@@ -83,35 +125,45 @@
     <p class="empty">{t("lists.empty")}</p>
   {:else if tab === "towns"}
     <svelte:boundary onerror={(e) => importer.report(e, t("lists.towns"))}>
-      <div class="add">
-        <input type="search" placeholder={t("lists.addTown")} bind:value={townQuery}
-          onfocus={() => (townFocus = true)}
-          onblur={() => setTimeout(() => (townFocus = false), 150)}
-          onkeydown={(e) => { if (e.key === "Enter" && suggestions[0]) addTown(suggestions[0].key); }} />
-        {#if townFocus && suggestions.length}
-          <ul class="suggest">
-            {#each suggestions as c (c.key)}
-              <li><button onmousedown={() => addTown(c.key)}>{c.name} <span class="pop">{c.estimated ? "≈ " : ""}{fmtNum(c.rank)}</span></button></li>
-            {/each}
-          </ul>
-        {/if}
-        <button class="small" disabled={!!importer.running} onclick={() => importer.resetPicks("auto")} title={t("lists.allAutoTitle")}>{t("lists.allAuto")}</button>
-        <button class="small" disabled={!!importer.running} onclick={() => importer.resetPicks("none")}>{t("lists.none")}</button>
+      <div class="filters">
+        <input type="search" placeholder={t("lists.search")} bind:value={townQuery} />
+        <select bind:value={townKind} title={t("lists.kindTitle")}>
+          <option value="all">{t("lists.kindAll")}</option>
+          <option value="city">{t("lists.kindCity")}</option>
+          <option value="town">{t("lists.kindTown")}</option>
+          <option value="village">{t("lists.kindVillage")}</option>
+        </select>
+        <label class="min" title={t("lists.minPopTitle")}>≥ <input type="number" min="0" step="500" bind:value={townMin} /></label>
+        <select bind:value={townShow}>
+          <option value="all">{t("lists.showAll")}</option>
+          <option value="on">{t("lists.showOn")}</option>
+          <option value="off">{t("lists.showOff")}</option>
+        </select>
       </div>
+      <div class="bulk">
+        <span class="count">{t("lists.filtered", { n: fmtNum(townFiltered.length) })}</span>
+        <button class="small" disabled={!townFiltered.length} onclick={() => importer.setPicks(townFiltered.map((c) => c.key), true)}>{t("lists.checkFiltered", { n: fmtNum(townFiltered.length) })}</button>
+        <button class="small" disabled={!townFiltered.length} onclick={() => importer.setPicks(townFiltered.map((c) => c.key), false)}>{t("lists.uncheckFiltered", { n: fmtNum(townFiltered.length) })}</button>
+        <button class="small" onclick={() => importer.resetPicks("auto")} title={t("lists.allAutoTitle")}>{t("lists.allAuto")}</button>
+        <button class="small" onclick={() => importer.resetPicks("none")}>{t("lists.none")}</button>
+      </div>
+      {#if townLimit && townsOn > townLimit}<p class="warn line">{t("lists.overLimit", { n: townsOn, limit: townLimit })}</p>{/if}
       <ul class="rows">
-        {#each listedTowns as c (c.key)}
+        {#each townFiltered.slice(0, MAX_ROWS) as c (c.key)}
           {@const town = townByKey.get(c.key)}
-          <li class={c.status} title={townTitle(c) + (town?.needs ? `\n${t("lists.needs", { needs: needsText(town.needs) })}` : "")}>
-            <input type="checkbox" checked={c.status !== "off"} disabled={!!importer.running} onchange={() => importer.toggleTown(c.key)} />
+          {@const pending = townPending(c)}
+          <li class={pending ? "pending" : c.status} title={townTitle(c) + (town?.needs ? `\n${t("lists.needs", { needs: needsText(town.needs) })}` : "")}>
+            <input type="checkbox" checked={importer.townOn(c)} onchange={() => importer.toggleTown(c.key)} />
             <button class="name" onclick={() => onFocus("town", c.key)}>{c.name}{#if c.status === "placed" && roadless.has(c.key)}<span class="warn"> · {t("lists.noRoad")}</span>{/if}</button>
             <span class="pop">{c.estimated ? "≈ " : ""}{fmtNum(c.rank)}</span>
             {#if town?.shares}<span class="pop" title={t("lists.sharesTitle")}>{pct(town.shares.com)}/{pct(town.shares.ind)} %</span>{/if}
             <span class="state">
-              {c.status === "placed" ? c.capacity : c.status === "off" ? "" : t("lists.notPlaced")}
-              {#if c.pick !== null}<button class="link" title={t("lists.autoTitle")} onclick={() => importer.setPick(c.key, null)}>{t("lists.auto")}</button>{/if}
+              {#if pending}<span class="tag" title={t("lists.pendingTitle")}>{t("lists.pendingShort")}</span>{:else}{c.status === "placed" ? c.capacity : c.status === "off" ? "" : t("lists.notPlaced")}{/if}
+              {#if (s.townPicks[c.key] ?? null) !== null}<button class="link" title={t("lists.autoTitle")} onclick={() => importer.setPick(c.key, null)}>{t("lists.auto")}</button>{/if}
             </span>
           </li>
         {/each}
+        {#if townFiltered.length > MAX_ROWS}<li class="more">{t("lists.more", { n: fmtNum(townFiltered.length - MAX_ROWS) })}</li>{/if}
       </ul>
       {#snippet failed(error, reset)}
         <p class="error">{t("lists.error", { what: t("lists.towns"), error: errorText(error) })} <button class="link" onclick={reset}>{t("lists.retry")}</button></p>
@@ -119,24 +171,47 @@
     </svelte:boundary>
   {:else if tab === "industries"}
     <svelte:boundary onerror={(e) => importer.report(e, t("lists.industries"))}>
-      <div class="add">
-        <span class="hint">{t("lists.industryHint")}</span>
-        <button class="small" disabled={!!importer.running} onclick={() => importer.resetIndustryPicks()}>{t("lists.allAuto")}</button>
+      <div class="filters">
+        <input type="search" placeholder={t("lists.search")} bind:value={indQuery} />
+        <select bind:value={indTag}>
+          <option value="all">{t("lists.typeAll")}</option>
+          {#each indTags as tag (tag)}<option value={tag}>{industryLabel(tag)}</option>{/each}
+        </select>
+        <select bind:value={indOrigin}>
+          <option value="all">{t("lists.originAll")}</option>
+          <option value="osm">{tk("originShort.osm")}</option>
+          <option value="landcover">{tk("originShort.landcover")}</option>
+          <option value="chain">{tk("originShort.chain")}</option>
+          <option value="user">{tk("originShort.user")}</option>
+        </select>
+        <select bind:value={indShow}>
+          <option value="all">{t("lists.showAll")}</option>
+          <option value="on">{t("lists.showOn")}</option>
+          <option value="off">{t("lists.showOff")}</option>
+        </select>
+      </div>
+      <div class="bulk">
+        <span class="count">{t("lists.filtered", { n: fmtNum(indFiltered.length) })}</span>
+        <button class="small" disabled={!indFiltered.length} onclick={() => importer.setIndustryPicks(indFiltered.map((c) => c.key), true)}>{t("lists.checkFiltered", { n: fmtNum(indFiltered.length) })}</button>
+        <button class="small" disabled={!indFiltered.length} onclick={() => importer.setIndustryPicks(indFiltered.map((c) => c.key), false)}>{t("lists.uncheckFiltered", { n: fmtNum(indFiltered.length) })}</button>
+        <button class="small" onclick={() => importer.resetIndustryPicks()}>{t("lists.allAuto")}</button>
       </div>
       <ul class="rows">
-        {#each pv.industryCandidates ?? [] as c (c.key)}
-          <li class={c.status} title={industryTitle(c)}>
-            <input type="checkbox" checked={c.status !== "off"} disabled={!!importer.running} onchange={() => importer.toggleIndustry(c.key)} />
+        {#each indFiltered.slice(0, MAX_ROWS) as c (c.key)}
+          {@const pending = indPending(c)}
+          <li class={pending ? "pending" : c.status} title={industryTitle(c)}>
+            <input type="checkbox" checked={importer.industryOn(c)} onchange={() => importer.toggleIndustry(c.key)} />
             <i class="sq" style:background={industryColor(c.tag)}></i>
             <button class="name" onclick={() => onFocus("industry", c.key)}>{c.name}{#if c.missing}<span class="warn"> · {t("sheet.missingShort", { list: c.missing.map(industryLabel).join(", ") })}</span>{/if}</button>
             <span class="pop" title={t("lists.relevanceTitle")}>{tk(`originShort.${c.origin}`)} {c.relevance ? fmtNum(c.relevance, 1) : ""}</span>
             <span class="state">
-              {c.status === "placed" || c.status === "off" ? "" : t("lists.notPlaced")}
-              {#if c.pick !== null}<button class="link" title={t("lists.autoTitle")} onclick={() => importer.setIndustryPick(c.key, null)}>{t("lists.auto")}</button>{/if}
+              {#if pending}<span class="tag" title={t("lists.pendingTitle")}>{t("lists.pendingShort")}</span>{:else}{c.status === "placed" || c.status === "off" ? "" : t("lists.notPlaced")}{/if}
+              {#if (s.industryPicks[c.key] ?? null) !== null}<button class="link" title={t("lists.autoTitle")} onclick={() => importer.setIndustryPick(c.key, null)}>{t("lists.auto")}</button>{/if}
               {#if c.origin === "user"}<button class="del" title={t("lists.deleteIndustry")} onclick={() => importer.removeCustomIndustry(c.key)}>✕</button>{/if}
             </span>
           </li>
         {/each}
+        {#if indFiltered.length > MAX_ROWS}<li class="more">{t("lists.more", { n: fmtNum(indFiltered.length - MAX_ROWS) })}</li>{/if}
       </ul>
       {#snippet failed(error, reset)}
         <p class="error">{t("lists.error", { what: t("lists.industries"), error: errorText(error) })} <button class="link" onclick={reset}>{t("lists.retry")}</button></p>
@@ -164,6 +239,16 @@
       {/each}
     </ul>
   {/if}
+  {#if pv}
+    <footer class="apply">
+      <span class="pending">{importer.pendingPicks ? t("lists.pending", { n: importer.pendingPicks }) : t("lists.upToDate")}</span>
+      <label title={t("lists.autoApplyTitle")}><input type="checkbox" checked={importer.autoApplyPicks} onchange={(e) => importer.setAutoApplyPicks(e.currentTarget.checked)} /> {t("lists.autoApply")}</label>
+      <button class="primary" disabled={!!importer.running || !importer.stale} onclick={() => importer.runPreview()}>
+        {importer.running === "preview" ? t("lists.applying") : t("lists.apply")}
+      </button>
+    </footer>
+  {/if}
+  <div class="grip" role="separator" aria-orientation="vertical" title={t("lists.resize")} onpointerdown={startResize}></div>
 </div>
 
 <style>
@@ -172,7 +257,6 @@
     top: 64px;
     left: 48px;
     bottom: 34px;
-    width: min(400px, calc(100% - 20px));
     display: flex;
     flex-direction: column;
     background: #fff;
@@ -364,5 +448,95 @@
     cursor: pointer;
     font-size: 11px;
     text-decoration: underline;
+  }
+  .filters,
+  .bulk {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    padding: 6px 6px 0;
+  }
+  .bulk {
+    padding-bottom: 6px;
+  }
+  .filters input[type="search"] {
+    flex: 1;
+    min-width: 120px;
+    padding: 4px 6px;
+    border: 1px solid #c3c9d0;
+    border-radius: 4px;
+    font: inherit;
+  }
+  .filters select,
+  .filters input[type="number"] {
+    padding: 3px 4px;
+    border: 1px solid #c3c9d0;
+    border-radius: 4px;
+    font: inherit;
+  }
+  .filters .min input {
+    width: 72px;
+  }
+  .bulk .count {
+    flex: 1;
+    color: #5b6670;
+  }
+  .line {
+    margin: 0;
+    padding: 0 6px 6px;
+  }
+  .rows li.pending {
+    border-left-color: #2a6fdb;
+    background: #f3f7fd;
+  }
+  .rows li.more {
+    border-left-color: transparent;
+    color: #6b747c;
+    font-style: italic;
+    padding: 6px;
+  }
+  .tag {
+    color: #2a6fdb;
+    font-weight: 600;
+  }
+  footer.apply {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px;
+    border-top: 1px solid #d5d9de;
+    background: #fafbfc;
+  }
+  footer.apply .pending {
+    flex: 1;
+    color: #3d4851;
+  }
+  footer.apply label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #5b6670;
+  }
+  footer.apply button.primary {
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px solid #fd9401;
+    background: #fd9401;
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .grip {
+    position: absolute;
+    top: 0;
+    right: -4px;
+    width: 8px;
+    height: 100%;
+    cursor: ew-resize;
+  }
+  .grip:hover {
+    background: rgba(42, 111, 219, 0.25);
   }
 </style>
