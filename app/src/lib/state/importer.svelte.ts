@@ -1216,7 +1216,12 @@ class Importer {
         } else {
           w.terminate();
           if (m.kind === "done") resolve(m);
-          else reject(new Error(m.message));
+          else {
+            // La pile d'appels du worker, sinon le journal n'indique que la ligne de la page.
+            const err = new Error(m.message);
+            if (m.stack) err.stack = m.stack;
+            reject(err);
+          }
         }
       };
       w.onerror = (e) => {

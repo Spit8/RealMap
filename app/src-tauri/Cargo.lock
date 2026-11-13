@@ -1854,7 +1854,7 @@ dependencies = [
 
 [[package]]
 name = "importcity"
-version = "1.2.1"
+version = "1.2.2"
 dependencies = [
  "serde",
  "serde_json",

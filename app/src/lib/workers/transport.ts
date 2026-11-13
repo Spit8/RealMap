@@ -29,6 +29,9 @@ export interface OutMessage {
 /** About 200 000 points (≈ 4 Mio once serialized) per OSM message. */
 export const MAX_POINTS_PER_MESSAGE = 200_000;
 
+/** Au plus 50 000 éléments par message OSM : les éléments ponctuels (lieux, sites) pèsent 1 point. */
+export const MAX_ITEMS_PER_MESSAGE = 50_000;
+
 /** Points in an OSM item (shapes, ways); 1 for a point-like item. */
 export function pointsOf(item: unknown): number {
   const o = item as { rings?: unknown[][]; pts?: unknown[] };
@@ -37,14 +40,17 @@ export function pointsOf(item: unknown): number {
   return 1;
 }
 
-/** Consecutive batches of at most `maxWeight` (an item heavier than that goes alone). */
-export function chunkItems<T>(items: T[], weight: (item: T) => number, maxWeight: number): T[][] {
+/**
+ * Consecutive batches of at most `maxWeight` (an item heavier than that goes alone)
+ * and at most `maxItems` items.
+ */
+export function chunkItems<T>(items: T[], weight: (item: T) => number, maxWeight: number, maxItems = Infinity): T[][] {
   const out: T[][] = [];
   let cur: T[] = [];
   let w = 0;
   for (const item of items) {
     const iw = Math.max(1, weight(item));
-    if (cur.length && w + iw > maxWeight) {
+    if (cur.length && (w + iw > maxWeight || cur.length >= maxItems)) {
       out.push(cur);
       cur = [];
       w = 0;
@@ -76,12 +82,19 @@ export function requestHead(req: TerrainRequest): TerrainRequest {
 export function addPart(req: TerrainRequest, field: PartField, items: unknown[]): void {
   if (field === "land.beaches" || field === "land.business") {
     req.land ??= { beaches: [], business: [] };
-    const list = (field === "land.beaches" ? req.land.beaches : req.land.business) as unknown[];
-    list.push(...items);
+    appendAll((field === "land.beaches" ? req.land.beaches : req.land.business) as unknown[], items);
     return;
   }
   if (field === "cover") req.cover ??= [];
-  (req[field] as unknown[]).push(...items);
+  appendAll(req[field] as unknown[], items);
+}
+
+/**
+ * Ajoute les éléments un par un : `push(...items)` passe chaque élément en argument et dépasse
+ * la pile de V8 vers 65 000 à 125 000 éléments (« Maximum call stack size exceeded »).
+ */
+function appendAll(list: unknown[], items: unknown[]): void {
+  for (const it of items) list.push(it);
 }
 
 /** A raster with its own pixels, so its buffer can be transferred (the page's cache keeps the original). */
@@ -120,7 +133,7 @@ export function* requestMessages(req: TerrainRequest, crop: Bbox | null): Genera
     ["land.business", req.land?.business ?? []],
   ];
   for (const [field, items] of lists) {
-    for (const batch of chunkItems(items, pointsOf, MAX_POINTS_PER_MESSAGE)) {
+    for (const batch of chunkItems(items, pointsOf, MAX_POINTS_PER_MESSAGE, MAX_ITEMS_PER_MESSAGE)) {
       const pts = batch.reduce((n: number, it) => n + pointsOf(it), 0);
       yield { msg: { kind: "part", field, items: batch }, transfer: [], bytes: pts * 16 };
     }

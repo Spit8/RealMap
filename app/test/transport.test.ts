@@ -115,3 +115,32 @@ describe("requestMessages", () => {
     expect(head.area).toEqual(req.area);
   });
 });
+
+// Une grande zone (toute la Pologne) : des centaines de milliers de lieux ponctuels.
+describe("large OSM lists", () => {
+  const place = (i: number) => ({ name: `P${i}`, lon: 19 + i * 1e-6, lat: 52, place: "village" });
+
+  it("adds a batch of 300 000 items without overflowing the stack", () => {
+    const req = requestHead({ places: [], land: { beaches: [], business: [] } } as unknown as TerrainRequest);
+    const items = Array.from({ length: 300_000 }, (_, i) => place(i));
+    expect(() => addPart(req, "places", items)).not.toThrow();
+    expect(() => addPart(req, "land.business", items)).not.toThrow();
+    expect(req.places).toHaveLength(300_000);
+    expect(req.places[0]).toBe(items[0]);
+    expect(req.places.at(-1)).toBe(items.at(-1));
+    expect(req.land!.business).toHaveLength(300_000);
+  });
+
+  it("caps the item count of a batch, order kept", () => {
+    const items = Array.from({ length: 1000 }, (_, i) => place(i));
+    const batches = chunkItems(items, pointsOf, 1_000_000, 300);
+    expect(batches.map((b) => b.length)).toEqual([300, 300, 300, 100]);
+    expect(batches.flat()).toEqual(items);
+  });
+
+  it("sends 120 000 places in several messages", () => {
+    const req = { ...requestHead({ land: undefined } as unknown as TerrainRequest), rasters: [], bathy: [], cover: null, places: Array.from({ length: 120_000 }, (_, i) => place(i)) } as unknown as TerrainRequest;
+    const msgs = [...requestMessages(req, null)].filter((m) => m.msg.kind === "part" && m.msg.field === "places");
+    expect(msgs.length).toBeGreaterThanOrEqual(3);
+  });
+});

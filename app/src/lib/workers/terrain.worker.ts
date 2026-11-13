@@ -110,9 +110,13 @@ export type TerrainMessage =
       width: number;
       height: number;
     }
-  | { kind: "error"; message: string };
+  | { kind: "error"; message: string; stack?: string };
 
 const post = (m: TerrainMessage, transfer: Transferable[] = []) => self.postMessage(m, transfer);
+
+/** L'erreur avec sa pile d'appels, pour qu'elle figure dans le journal de la page. */
+const postError = (e: unknown) =>
+  post({ kind: "error", message: e instanceof Error ? e.message : String(e), stack: e instanceof Error ? e.stack : undefined });
 
 /** The request being received in pieces (`transport.ts`): settings, then parts, then "run". */
 let pending: TerrainRequest | null = null;
@@ -131,7 +135,7 @@ self.onmessage = (ev: MessageEvent<WorkerInput>) => {
     }
   } catch (e) {
     pending = null;
-    post({ kind: "error", message: e instanceof Error ? e.message : String(e) });
+    postError(e);
   }
 };
 
@@ -251,6 +255,6 @@ function build(req: TerrainRequest): void {
       transfer,
     );
   } catch (e) {
-    post({ kind: "error", message: e instanceof Error ? e.message : String(e) });
+    postError(e);
   }
 }
